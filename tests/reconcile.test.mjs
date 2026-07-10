@@ -72,6 +72,31 @@ test('worktree_overrides wins over ancestry', () => {
   rmSync(sc, { recursive: true, force: true });
 });
 
+test('records conflicts when worktree branch is ancestor of >=2 features', () => {
+  const repo = makeRepo();
+  const sc = mkdtempSync(join(tmpdir(), 'sc-'));
+  // both features share ancestry with the worktree branch (branched from master)
+  g(repo, 'branch', 'feature/a');
+  g(repo, 'branch', 'feature/b');
+  writeState(sc, 'feature/a', {
+    feature_branch: 'feature/a', status: 'in_progress', worktrees: {},
+  });
+  writeState(sc, 'feature/b', {
+    feature_branch: 'feature/b', status: 'in_progress', worktrees: {},
+  });
+  const wt = join(repo, '..', `wt-c-${Date.now()}`);
+  g(repo, 'worktree', 'add', wt, '-b', 'worktree-shared', 'master');
+  const res = reconcile(sc, { prefix: 'worktree-', cwd: repo });
+  assert.equal(res.conflicts.length, 1);
+  assert.equal(res.conflicts[0].worktree, 'worktree-shared');
+  assert.deepEqual(res.conflicts[0].features.slice().sort(), ['feature/a', 'feature/b']);
+  assert.ok(!readState(sc, 'feature/a').worktrees['worktree-shared']);
+  assert.ok(!readState(sc, 'feature/b').worktrees['worktree-shared']);
+  g(repo, 'worktree', 'remove', wt, '--force');
+  rmSync(repo, { recursive: true, force: true });
+  rmSync(sc, { recursive: true, force: true });
+});
+
 test('advances pr_open to completed when queryPr returns MERGED', () => {
   const repo = makeRepo();
   const sc = mkdtempSync(join(tmpdir(), 'sc-'));
