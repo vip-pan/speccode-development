@@ -11,7 +11,7 @@ tags: [speccode, workflow, worktree]
 
 1. `read-config` 加载 config。
 2. HEAD 必须在功能分支(`feature/` `bugfix/` `refactor/` `chore/` 之一);否则提示退出。
-3. 运行 `reconcile --cwd .`:
+3. 运行 `node .claude/speccode/bin/speccode.mjs reconcile --cwd . --advance-pr`(带 `--advance-pr`,与 develop-complete/finish/status 一致,顺带推进已合并的 pr_open):
    - `conflicts` 非空 → 报告冲突,提示用户用 `worktree_overrides` 手动指定后退出。
    - `orphans` 非空 → 告知用户,但不阻断创建。
 
