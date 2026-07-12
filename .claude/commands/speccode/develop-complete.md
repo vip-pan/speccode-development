@@ -11,7 +11,7 @@ tags: [speccode, workflow, worktree, merge]
 
 1. `read-config` 加载 config。
 2. HEAD 必须在 worktree 分支(以 `worktree-` 开头);否则退出。
-3. 运行 `reconcile --cwd .`:
+3. 运行 `node .claude/speccode/bin/speccode.mjs reconcile --cwd . --advance-pr`:
    - 用返回的 features 找到当前 worktree 所属的功能分支 F;找不到 → 报错"当前 worktree 无法关联任何 active feature,请先 /speccode:start",退出。
    - `--resume`:若该 feature 的 state 有 `pending_operation.command="develop-complete"`,从其 phase 续跑。
 

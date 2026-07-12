@@ -48,3 +48,18 @@ export function parsePrState(tool, jsonStdout) {
   }
   return 'UNKNOWN';
 }
+
+// Actually invoke gh/glab to fetch current PR/MR state.
+// `opts.run(cmd, args) -> { code, stdout }` can be injected for testing;
+// defaults to a real spawnSync call.
+export function queryPrState(tool, ref, opts = {}) {
+  const { run } = opts;
+  const args = queryPrArgs(tool, ref);
+  const exec = run || ((cmd, a) => {
+    const r = spawnSync(cmd, a, { encoding: 'utf8' });
+    return { code: r.status ?? 1, stdout: r.stdout ?? '' };
+  });
+  const { code, stdout } = exec(tool, args);
+  if (code !== 0) return 'UNKNOWN';
+  return parsePrState(tool, stdout);
+}

@@ -11,7 +11,7 @@ tags: [speccode, workflow, finish]
 
 1. `read-config` 加载 config。
 2. HEAD 必须在功能分支;否则退出。
-3. **跑对账** `reconcile --cwd .`(finish 也对账,建立在真实 git 状态上)。
+3. **跑对账** `node .claude/speccode/bin/speccode.mjs reconcile --cwd . --advance-pr`(finish 也对账,建立在真实 git 状态上,并查询 PR 状态推进 pr_open)。
 4. **门禁检查**:用 `feature-progress --branch <F>`:
    - 存在任何 `pending` / `in_progress` / `pr_open` 的 worktree → 阻止,列出未完成项。
    - 对账 `orphans` 里若有本 feature 的残留 worktree → 提示先清理。

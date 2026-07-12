@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { git } from '../lib/git.mjs';
-import { detectPrToolFromUrl, isInstalled } from '../lib/prtool.mjs';
+import { detectPrToolFromUrl, isInstalled, queryPrState } from '../lib/prtool.mjs';
 import { reconcile } from '../lib/reconcile.mjs';
 import { loadConfig, saveConfig, backupConfig } from '../lib/config.mjs';
 import { readState, writeState, deleteState, WORKTREE_STATUS } from '../lib/state.mjs';
@@ -31,12 +31,19 @@ export function parseArgs(argv) {
   return { verb, flags };
 }
 
-function gitRoot(cwd) {
-  return git(['rev-parse', '--show-toplevel'], { cwd }).stdout.trim();
+// Resolve the *main* repo root even when cwd is inside a linked worktree.
+// `--show-toplevel` would return the worktree's own directory; `--git-common-dir`
+// always points at the main repo's `.git` (shared across all linked worktrees).
+function repoRoot(cwd) {
+  const commonDir = git(
+    ['rev-parse', '--path-format=absolute', '--git-common-dir'],
+    { cwd },
+  ).stdout.trim();
+  return dirname(commonDir);
 }
 
 function speccodeDirOf(cwd) {
-  return join(gitRoot(cwd), '.speccode');
+  return join(repoRoot(cwd), '.speccode');
 }
 
 const VERBS = {
@@ -50,9 +57,17 @@ const VERBS = {
     return { ok: true, remote, url, prToolGuess: guess, installed: isInstalled(guess) };
   },
 
-  reconcile: ({ cwd }) => {
+  reconcile: ({ cwd, 'advance-pr': advancePr }) => {
     const sc = speccodeDirOf(cwd);
-    const res = reconcile(sc, { prefix: 'worktree-', cwd });
+    let queryPr;
+    if (advancePr) {
+      const cfg = loadConfig(sc);
+      const tool = cfg && cfg.pr_tool;
+      if (tool && tool !== 'none') {
+        queryPr = (prNumber) => queryPrState(tool, String(prNumber));
+      }
+    }
+    const res = reconcile(sc, { prefix: 'worktree-', cwd, queryPr });
     return { ok: true, orphans: res.orphans, conflicts: res.conflicts, advanced: res.advanced,
       features: res.features };
   },
