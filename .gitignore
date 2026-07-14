@@ -1,0 +1,5 @@
+# speccode 运行时数据（dogfood 产生，按 R4 设计保持 untracked）
+.speccode/
+
+# IDE
+.idea/
