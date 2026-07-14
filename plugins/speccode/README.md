@@ -98,7 +98,7 @@ origin/<trunk>  (功能最终落地,-complete 分支删除,feature 分支保留�
 - 依赖:
   - `git`(核心,worktree / merge / rebase / reset 等全部操作基于 git)
   - `gh` CLI(GitHub remote)或 `glab` CLI(GitLab remote)—— 用于创建/查询 PR/MR;未安装时 `pr_tool` 自动降级为 `none`,命令会打印等效命令供用户手动执行,不会因缺少 CLI 而失败。
-  - Node.js **≥ 24**(`.claude/speccode/bin/speccode.mjs` 与 `lib/` 下的引擎代码运行在 Node 之上)
+  - Node.js **≥ 24**(`plugins/speccode/bin/speccode.mjs` 与 `lib/` 下的引擎代码运行在 Node 之上)
 
 ## 8. ⚠ 重要警告
 
