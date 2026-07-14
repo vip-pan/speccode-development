@@ -20,7 +20,7 @@ tags: [speccode, workflow, reset]
 
 ## 执行
 
-1. 备份:运行 `node .claude/speccode/bin/speccode.mjs backup-config --cwd .`(config.json.bak.<timestamp>)。
+1. 备份:运行 `speccode.mjs backup-config --cwd .`(config.json.bak.<timestamp>)。
 2. 清理 worktree:`git worktree list --porcelain` 过滤 `worktree-` 前缀 → 逐个 `git worktree remove <path> --force` + `git branch -D <branch>`。
 3. `rm -rf .speccode/state/`。
 4. 用 `write-config --json-stdin` 写回 config(仅保留用户确认保留的字段)。

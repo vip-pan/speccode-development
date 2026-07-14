@@ -11,7 +11,7 @@ tags: [speccode, workflow, finish]
 
 1. `read-config` 加载 config。
 2. HEAD 必须在功能分支;否则退出。
-3. **跑对账** `node .claude/speccode/bin/speccode.mjs reconcile --cwd . --advance-pr`(finish 也对账,建立在真实 git 状态上,并查询 PR 状态推进 pr_open)。
+3. **跑对账** `speccode.mjs reconcile --cwd . --advance-pr`(finish 也对账,建立在真实 git 状态上,并查询 PR 状态推进 pr_open)。
 4. **门禁检查**:用 `feature-progress --branch <F>`:
    - 存在任何 `pending` / `in_progress` / `pr_open` 的 worktree → 阻止,列出未完成项。
    - 对账 `orphans` 里若有本 feature 的残留 worktree → 提示先清理。
@@ -52,7 +52,7 @@ tags: [speccode, workflow, finish]
 ## 收尾
 
 1. 回收 `-complete`:`git branch -D <F>-complete` + `git push origin :<F>-complete`。
-2. 删 state:`node .claude/speccode/bin/speccode.mjs delete-state --cwd . --branch <F>`。
+2. 删 state:`speccode.mjs delete-state --cwd . --branch <F>`。
 3. `git checkout display`(存在)或 `git checkout trunk`(feature 分支保留,不删)。
 4. 打印:功能已交付;若有 display,建议 `/speccode:display-merge-trunk` 同步。
 

@@ -10,7 +10,7 @@ tags: [speccode, workflow, status]
 ## 流程
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
-2. 跑 `node .claude/speccode/bin/speccode.mjs reconcile --cwd . --advance-pr`(顺便自愈状态漂移、查询 PR 状态并推进已合并的 pr_open)。
+2. 跑 `speccode.mjs reconcile --cwd . --advance-pr`(顺便自愈状态漂移、查询 PR 状态并推进已合并的 pr_open)。
 3. 用返回的 `features` 汇总:
    - 每个 feature:`<branch>(from <initial>) X/Y done`。
    - 每个 worktree 一行:状态图标 + 名称 + status。

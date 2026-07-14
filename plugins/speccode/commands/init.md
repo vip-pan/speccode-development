@@ -9,8 +9,8 @@ tags: [speccode, workflow, init]
 
 ## 前置
 
-运行 `node .claude/speccode/bin/speccode.mjs resolve-speccode-dir --cwd .` 获取 `speccodeDir`。
-运行 `node .claude/speccode/bin/speccode.mjs read-config --cwd .` 判断是否已初始化:
+运行 `speccode.mjs resolve-speccode-dir --cwd .` 获取 `speccodeDir`。
+运行 `speccode.mjs read-config --cwd .` 判断是否已初始化:
 - `config` 为 null → 全新 init(走"全新流程")
 - `config` 非 null → 二次 init(走"幂等流程")
 
@@ -29,7 +29,7 @@ tags: [speccode, workflow, init]
 4. **询问 spec 工具**:多选 openspec / superpowers;每个启用项询问 `doc_dir`(默认 openspec→`openspec`,superpowers→`docs/superpowers`)。
 5. **询问 untracked_permanent**:展示默认集合 `.claude .agent .opencode .speccode CLAUDE.md AGENTS.md`,允许增删。
 6. **组装 config** 并写入:字段含 `version:1`、`initialized_at`(用 `speccode.mjs` 无此 verb 时可让 AI 生成 ISO 时间,或直接由用户确认后写)、`trunk`、`remote`、`display`、`pr_tool`、`spec_tools`、`untracked_permanent`、`worktree_prefix:"worktree-"`。
-   - 把组装好的 config JSON 通过 `echo '<json>' | node .claude/speccode/bin/speccode.mjs write-config --cwd . --json-stdin` 写入(该 verb 内部用 `saveConfig` 原子写到 `<root>/.speccode/config.json`,自动满足"临时文件 + mv")。
+   - 把组装好的 config JSON 通过 `echo '<json>' | speccode.mjs write-config --cwd . --json-stdin` 写入(该 verb 内部用 `saveConfig` 原子写到 `<root>/.speccode/config.json`,自动满足"临时文件 + mv")。
 7. 打印 config 摘要 + 下一步指引(`/speccode:start`)。
 
 ## 幂等流程(二次 init)
