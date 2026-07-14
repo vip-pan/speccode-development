@@ -1,0 +1,10 @@
+{
+  "name": "speccode",
+  "version": "0.1.0",
+  "description": "多需求并行开发 + spec 文档托管 + PR/MR 流程标准化的 Claude Code 流程编排插件",
+  "author": { "name": "speccode" },
+  "license": "MIT",
+  "homepage": "https://github.com/<owner>/speccode-development",
+  "repository": "https://github.com/<owner>/speccode-development",
+  "keywords": ["workflow", "git", "worktree", "pr", "openspec"]
+}
