@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   detectPrToolFromUrl, createPrArgs, queryPrArgs, parsePrState, queryPrState,
-} from '../.claude/speccode/lib/prtool.mjs';
+} from '../lib/prtool.mjs';
 
 test('detectPrToolFromUrl maps hosts', () => {
   assert.equal(detectPrToolFromUrl('git@github.com:foo/bar.git'), 'gh');

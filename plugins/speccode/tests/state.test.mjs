@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   WORKTREE_STATUS, stateFilePath, readState, writeState, deleteState, listActiveFeatures,
-} from '../.claude/speccode/lib/state.mjs';
+} from '../lib/state.mjs';
 
 function tmp() { return mkdtempSync(join(tmpdir(), 'speccode-state-')); }
 

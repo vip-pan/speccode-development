@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   TYPES, validateSlug, validateBranch, branchToStateName, stateNameToBranch,
-} from '../.claude/speccode/lib/slug.mjs';
+} from '../lib/slug.mjs';
 
 test('TYPES has the four branch types', () => {
   assert.deepEqual(TYPES, ['feature', 'bugfix', 'refactor', 'chore']);

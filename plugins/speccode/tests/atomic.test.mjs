@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, existsSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { readJson, writeJsonAtomic } from '../.claude/speccode/lib/atomic.mjs';
-import { nowIso } from '../.claude/speccode/lib/timestamp.mjs';
+import { readJson, writeJsonAtomic } from '../lib/atomic.mjs';
+import { nowIso } from '../lib/timestamp.mjs';
 
 function tmp() { return mkdtempSync(join(tmpdir(), 'speccode-atomic-')); }
 

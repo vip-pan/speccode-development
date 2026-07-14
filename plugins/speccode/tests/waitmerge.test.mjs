@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { waitForPrMerge } from '../.claude/speccode/lib/waitmerge.mjs';
+import { waitForPrMerge } from '../lib/waitmerge.mjs';
 
 const noSleep = () => Promise.resolve();
 

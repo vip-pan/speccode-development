@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { makeRepo, commitFile } from './helpers/tmprepo.mjs';
 import {
   git, currentBranch, branchExists, isAncestor, worktreeList,
-} from '../.claude/speccode/lib/git.mjs';
+} from '../lib/git.mjs';
 
 function g(repo, ...args) {
   const r = spawnSync('git', args, { cwd: repo, encoding: 'utf8' });

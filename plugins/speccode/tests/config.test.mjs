@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   DEFAULT_UNTRACKED, configPath, loadConfig, saveConfig, backupConfig, diffFields,
-} from '../.claude/speccode/lib/config.mjs';
+} from '../lib/config.mjs';
 
 function tmp() { return mkdtempSync(join(tmpdir(), 'sc-cfg-')); }
 

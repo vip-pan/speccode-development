@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { makeRepo, commitFile } from './helpers/tmprepo.mjs';
 import {
   enabledDocDirs, existingTrackedDirs, existingWorkingDirs, stripDocs, retrackDocs, backupDocs,
-} from '../.claude/speccode/lib/docstrip.mjs';
+} from '../lib/docstrip.mjs';
 
 function tracked(repo, path) {
   const r = spawnSync('git', ['ls-files', path], { cwd: repo, encoding: 'utf8' });

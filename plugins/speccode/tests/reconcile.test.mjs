@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { makeRepo, commitFile } from './helpers/tmprepo.mjs';
-import { writeState, readState } from '../.claude/speccode/lib/state.mjs';
-import { reconcile } from '../.claude/speccode/lib/reconcile.mjs';
+import { writeState, readState } from '../lib/state.mjs';
+import { reconcile } from '../lib/reconcile.mjs';
 
 function g(repo, ...args) {
   const r = spawnSync('git', args, { cwd: repo, encoding: 'utf8' });

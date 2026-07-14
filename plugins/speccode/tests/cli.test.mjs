@@ -1,12 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { rmSync, mkdirSync, realpathSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { makeRepo } from './helpers/tmprepo.mjs';
-import { parseArgs } from '../.claude/speccode/bin/speccode.mjs';
+import { parseArgs } from '../bin/speccode.mjs';
 
-const BIN = join(process.cwd(), '.claude/speccode/bin/speccode.mjs');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const BIN = join(__dirname, '..', 'bin', 'speccode.mjs');
 
 function runCli(cwd, ...args) {
   const r = spawnSync('node', [BIN, ...args], { cwd, encoding: 'utf8' });
