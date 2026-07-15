@@ -1,3 +1,5 @@
+> **⚠️ DEPRECATED**(2026-07-14):本文件是 speccode 初版实现的 superpowers plan,其中的路径(`.claude/speccode/`、`.claude/commands/speccode/`)已过时。当前结构以 `openspec/changes/restructure-as-claude-code-plugin/` 与 `plugins/speccode/` 为准。保留此文仅作历史记录。
+
 # speccode 插件实现计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

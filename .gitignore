@@ -1,0 +1,14 @@
+# speccode 运行时数据（dogfood 产生，按 R4 设计保持 untracked）
+.speccode/
+
+# IDE
+.idea/
+
+# claude code 使用工具
+.claude
+
+# superpowers 执行过程中生成的文档
+.superpowers
+
+# Mac 生成文件
+.DS_Store
