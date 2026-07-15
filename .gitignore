@@ -9,3 +9,6 @@
 
 # superpowers 执行过程中生成的文档
 .superpowers
+
+# Mac 生成文件
+.DS_Store
