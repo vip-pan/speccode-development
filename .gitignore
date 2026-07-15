@@ -3,3 +3,9 @@
 
 # IDE
 .idea/
+
+# claude code 使用工具
+.claude
+
+# superpowers 执行过程中生成的文档
+.superpowers
