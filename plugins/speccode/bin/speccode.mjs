@@ -59,22 +59,23 @@ const VERBS = {
 
   reconcile: ({ cwd, 'advance-pr': advancePr }) => {
     const sc = speccodeDirOf(cwd);
+    const cfg = loadConfig(sc);
     let queryPr;
     if (advancePr) {
-      const cfg = loadConfig(sc);
       const tool = cfg && cfg.pr_tool;
       if (tool && tool !== 'none') {
-        queryPr = (prNumber) => queryPrState(tool, String(prNumber));
+        queryPr = (prNumber) => queryPrState(tool, String(prNumber), { cwd });
       }
     }
-    const res = reconcile(sc, { prefix: 'worktree-', cwd, queryPr });
+    const res = reconcile(sc, { prefix: cfg?.worktree_prefix || 'worktree-', cwd, queryPr });
     return { ok: true, orphans: res.orphans, conflicts: res.conflicts, advanced: res.advanced,
       features: res.features };
   },
 
   'read-config': ({ cwd }) => ({ ok: true, config: loadConfig(speccodeDirOf(cwd)) }),
 
-  'write-config': ({ cwd }) => {
+  'write-config': ({ cwd, 'json-stdin': jsonStdin }) => {
+    if (!jsonStdin) return { ok: false, error: 'write-config requires --json-stdin (pipe JSON via stdin)' };
     const cfg = JSON.parse(readStdin());
     saveConfig(speccodeDirOf(cwd), cfg);
     return { ok: true };
@@ -82,7 +83,8 @@ const VERBS = {
 
   'backup-config': ({ cwd }) => ({ ok: true, path: backupConfig(speccodeDirOf(cwd)) }),
 
-  'write-state': ({ cwd, branch }) => {
+  'write-state': ({ cwd, branch, 'json-stdin': jsonStdin }) => {
+    if (!jsonStdin) return { ok: false, error: 'write-state requires --json-stdin (pipe JSON via stdin)' };
     const st = JSON.parse(readStdin());
     writeState(speccodeDirOf(cwd), branch, st);
     return { ok: true };
@@ -101,6 +103,15 @@ const VERBS = {
     const completed = Object.values(wts)
       .filter((w) => w.status === WORKTREE_STATUS.COMPLETED).length;
     return { ok: true, total, completed, worktrees: wts };
+  },
+
+  'query-pr': ({ cwd, number }) => {
+    if (!number) return { ok: false, error: 'query-pr requires --number <N>' };
+    const cfg = loadConfig(speccodeDirOf(cwd));
+    if (!cfg) return { ok: false, error: 'no .speccode/config.json; run /speccode:init first' };
+    const tool = cfg.pr_tool;
+    if (!tool || tool === 'none') return { ok: false, error: 'pr_tool is none; cannot query PR state' };
+    return { ok: true, state: queryPrState(tool, String(number), { cwd }) };
   },
 };
 

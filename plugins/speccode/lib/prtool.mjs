@@ -25,7 +25,7 @@ export function createPrArgs(tool, { base, head, title, body }) {
 }
 
 export function queryPrArgs(tool, head) {
-  if (tool === 'gh') return ['pr', 'view', head, '--json', 'state,mergedAt,mergeCommit'];
+  if (tool === 'gh') return ['pr', 'view', head, '--json', 'state,mergedAt,mergeCommit,mergeable'];
   if (tool === 'glab') return ['mr', 'view', head, '--output', 'json'];
   throw new Error(`unsupported pr_tool: ${tool}`);
 }
@@ -33,17 +33,22 @@ export function queryPrArgs(tool, head) {
 export function parsePrState(tool, jsonStdout) {
   let obj;
   try { obj = JSON.parse(jsonStdout); } catch { return 'UNKNOWN'; }
+  if (!obj || typeof obj !== 'object') return 'UNKNOWN';
   const raw = String(obj.state ?? '').toUpperCase();
   if (tool === 'gh') {
     if (raw === 'MERGED') return 'MERGED';
-    if (raw === 'OPEN') return 'OPEN';
     if (raw === 'CLOSED') return 'CLOSED';
+    if (raw === 'OPEN') {
+      return String(obj.mergeable ?? '').toUpperCase() === 'CONFLICTING' ? 'CONFLICTING' : 'OPEN';
+    }
     return 'UNKNOWN';
   }
   if (tool === 'glab') {
     if (raw === 'MERGED') return 'MERGED';
-    if (raw === 'OPENED') return 'OPEN';
     if (raw === 'CLOSED') return 'CLOSED';
+    if (raw === 'OPENED') {
+      return obj.has_conflicts === true ? 'CONFLICTING' : 'OPEN';
+    }
     return 'UNKNOWN';
   }
   return 'UNKNOWN';
@@ -51,12 +56,13 @@ export function parsePrState(tool, jsonStdout) {
 
 // Actually invoke gh/glab to fetch current PR/MR state.
 // `opts.run(cmd, args) -> { code, stdout }` can be injected for testing;
-// defaults to a real spawnSync call.
+// defaults to a real spawnSync call. `opts.cwd` is passed through to that
+// real spawnSync so gh/glab runs in the target repo (main root or worktree).
 export function queryPrState(tool, ref, opts = {}) {
-  const { run } = opts;
+  const { run, cwd } = opts;
   const args = queryPrArgs(tool, ref);
   const exec = run || ((cmd, a) => {
-    const r = spawnSync(cmd, a, { encoding: 'utf8' });
+    const r = spawnSync(cmd, a, { encoding: 'utf8', ...(cwd ? { cwd } : {}) });
     return { code: r.status ?? 1, stdout: r.stdout ?? '' };
   });
   const { code, stdout } = exec(tool, args);

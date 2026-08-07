@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  WORKTREE_STATUS, stateFilePath, readState, writeState, deleteState, listActiveFeatures,
+  WORKTREE_STATUS, stateFilePath, readState, writeState, deleteState, listActiveFeatures, normalizeState,
 } from '../lib/state.mjs';
 
 function tmp() { return mkdtempSync(join(tmpdir(), 'speccode-state-')); }
@@ -61,5 +61,61 @@ test('deleteState removes the file', () => {
   writeState(dir, 'feature/payment', { feature_branch: 'feature/payment', worktrees: {} });
   deleteState(dir, 'feature/payment');
   assert.equal(existsSync(stateFilePath(dir, 'feature/payment')), false);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('normalizeState maps legacy pending_operation.command (finish)', () => {
+  const s = normalizeState({
+    feature_branch: 'feature/p',
+    pending_operation: { command: 'finish', phase: 'waiting_trunk_pr', pr_number: 7 },
+  });
+  assert.equal(s.pending_operation.command, 'finishing-feature');
+  assert.equal(s.pending_operation.phase, 'waiting_trunk_pr');
+});
+
+test('normalizeState maps develop-complete and keeps waiting_display_pr phase untouched', () => {
+  const s = normalizeState({
+    feature_branch: 'feature/p',
+    pending_operation: { command: 'develop-complete', phase: 'waiting_display_pr', pr_number: 3 },
+  });
+  assert.equal(s.pending_operation.command, 'finishing-worktree');
+  assert.equal(s.pending_operation.phase, 'waiting_display_pr');
+});
+
+test('normalizeState passes through states without pending_operation or with new names', () => {
+  const plain = { feature_branch: 'feature/p', worktrees: {} };
+  assert.deepEqual(normalizeState(plain), plain);
+  const fresh = { feature_branch: 'feature/p', pending_operation: { command: 'finishing-feature', phase: 'waiting_trunk_pr' } };
+  assert.deepEqual(normalizeState(fresh), fresh);
+  assert.equal(normalizeState(null), null);
+});
+
+test('normalizeState does not match inherited Object.prototype keys (toString)', () => {
+  const s = normalizeState({
+    feature_branch: 'feature/p',
+    pending_operation: { command: 'toString', phase: 'waiting_trunk_pr' },
+  });
+  assert.equal(s.pending_operation.command, 'toString');
+  assert.equal(s.pending_operation.phase, 'waiting_trunk_pr');
+});
+
+test('readState normalizes legacy pending_operation.command', () => {
+  const dir = tmp();
+  writeState(dir, 'feature/p', {
+    feature_branch: 'feature/p',
+    pending_operation: { command: 'finish', phase: 'waiting_trunk_pr', pr_number: 7 },
+  });
+  assert.equal(readState(dir, 'feature/p').pending_operation.command, 'finishing-feature');
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('listActiveFeatures normalizes legacy pending_operation.command', () => {
+  const dir = tmp();
+  writeState(dir, 'feature/p', {
+    feature_branch: 'feature/p',
+    pending_operation: { command: 'develop-complete', phase: 'waiting_worktree_pr', pr_number: 9 },
+  });
+  const [s] = listActiveFeatures(dir);
+  assert.equal(s.pending_operation.command, 'finishing-worktree');
   rmSync(dir, { recursive: true, force: true });
 });

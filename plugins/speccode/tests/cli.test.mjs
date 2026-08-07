@@ -4,7 +4,7 @@ import { rmSync, mkdirSync, realpathSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { makeRepo } from './helpers/tmprepo.mjs';
+import { makeRepo, commitFile } from './helpers/tmprepo.mjs';
 import { parseArgs } from '../bin/speccode.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -143,5 +143,103 @@ test('reconcile with --advance-pr and no config at all does not crash', () => {
   assert.equal(code, 0);
   assert.ok(json.ok);
   assert.deepEqual(json.advanced, []);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('query-pr requires --number', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'query-pr', '--cwd', repo);
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('query-pr returns ok:false when config missing', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'query-pr', '--cwd', repo, '--number', '42');
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('query-pr returns ok:false when pr_tool is none', () => {
+  const repo = makeRepo();
+  spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ version: 1, pr_tool: 'none' }), encoding: 'utf8' });
+  const { code, json } = runCli(repo, 'query-pr', '--cwd', repo, '--number', '42');
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-config without --json-stdin returns ok:false and exit 1', () => {
+  const repo = makeRepo();
+  const r = spawnSync('node', [BIN, 'write-config', '--cwd', repo],
+    { cwd: repo, input: JSON.stringify({ version: 1 }), encoding: 'utf8' });
+  assert.equal(r.status, 1);
+  const json = JSON.parse(r.stdout.trim());
+  assert.equal(json.ok, false);
+  assert.ok(json.error.includes('--json-stdin'));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-state without --json-stdin returns ok:false and exit 1', () => {
+  const repo = makeRepo();
+  const r = spawnSync('node', [BIN, 'write-state', '--cwd', repo, '--branch', 'feature/x'],
+    { cwd: repo, input: JSON.stringify({}), encoding: 'utf8' });
+  assert.equal(r.status, 1);
+  assert.equal(JSON.parse(r.stdout.trim()).ok, false);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('reconcile uses config worktree_prefix when present', () => {
+  const repo = makeRepo();
+  mkdirSync(join(repo, '.speccode', 'state', 'features'), { recursive: true });
+  spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ version: 1, worktree_prefix: 'wt-' }), encoding: 'utf8' });
+  // real branches: feature/p with a commit, then wt-p on top of it
+  const co1 = spawnSync('git', ['checkout', '-b', 'feature/p'], { cwd: repo, encoding: 'utf8' });
+  assert.equal(co1.status, 0, co1.stderr);
+  commitFile(repo, 'p.txt', 'p\n', 'feature p commit');
+  const state = JSON.stringify({ feature_branch: 'feature/p', status: 'in_progress', worktrees: {} });
+  spawnSync('node', [BIN, 'write-state', '--cwd', repo, '--branch', 'feature/p', '--json-stdin'],
+    { cwd: repo, input: state, encoding: 'utf8' });
+  const co2 = spawnSync('git', ['checkout', '-b', 'wt-p'], { cwd: repo, encoding: 'utf8' });
+  assert.equal(co2.status, 0, co2.stderr);
+  commitFile(repo, 'wt.txt', 'wt\n', 'wt-p commit');
+
+  const { code, json } = runCli(repo, 'reconcile', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.ok(json.ok);
+  assert.deepEqual(json.conflicts, []);
+  assert.deepEqual(json.orphans, []);
+  // wt-p only matches prefix 'wt-'; with the default 'worktree-' it would be ignored
+  const after = runCli(repo, 'feature-progress', '--cwd', repo, '--branch', 'feature/p');
+  assert.equal(after.json.worktrees['wt-p'].status, 'in_progress');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('reconcile treats empty-string worktree_prefix as the default prefix', () => {
+  const repo = makeRepo();
+  mkdirSync(join(repo, '.speccode', 'state', 'features'), { recursive: true });
+  spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ version: 1, worktree_prefix: '' }), encoding: 'utf8' });
+  // HEAD on a non-worktree branch: with prefix '' every branch matches startsWith(''),
+  // so feature/p would be bogusly self-registered as its own worktree; the default
+  // 'worktree-' fallback must filter it out instead.
+  const co = spawnSync('git', ['checkout', '-b', 'feature/p'], { cwd: repo, encoding: 'utf8' });
+  assert.equal(co.status, 0, co.stderr);
+  commitFile(repo, 'p.txt', 'p\n', 'feature p commit');
+  const state = JSON.stringify({ feature_branch: 'feature/p', status: 'in_progress', worktrees: {} });
+  spawnSync('node', [BIN, 'write-state', '--cwd', repo, '--branch', 'feature/p', '--json-stdin'],
+    { cwd: repo, input: state, encoding: 'utf8' });
+
+  const { code, json } = runCli(repo, 'reconcile', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.ok(json.ok);
+  assert.deepEqual(json.orphans, []);
+  assert.deepEqual(json.conflicts, []);
+  const after = runCli(repo, 'feature-progress', '--cwd', repo, '--branch', 'feature/p');
+  assert.deepEqual(after.json.worktrees, {});
   rmSync(repo, { recursive: true, force: true });
 });

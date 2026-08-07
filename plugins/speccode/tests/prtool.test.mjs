@@ -27,7 +27,7 @@ test('createPrArgs for glab', () => {
 
 test('queryPrArgs for gh and glab', () => {
   assert.deepEqual(queryPrArgs('gh', 'feature/x'),
-    ['pr', 'view', 'feature/x', '--json', 'state,mergedAt,mergeCommit']);
+    ['pr', 'view', 'feature/x', '--json', 'state,mergedAt,mergeCommit,mergeable']);
   assert.deepEqual(queryPrArgs('glab', 'feature/x'),
     ['mr', 'view', 'feature/x', '--output', 'json']);
 });
@@ -48,10 +48,27 @@ test('parsePrState unknown on garbage', () => {
   assert.equal(parsePrState('gh', 'not json'), 'UNKNOWN');
 });
 
+test('parsePrState unknown on JSON null and non-object values', () => {
+  assert.equal(parsePrState('gh', 'null'), 'UNKNOWN');
+  assert.equal(parsePrState('gh', '42'), 'UNKNOWN');
+  assert.equal(parsePrState('glab', 'null'), 'UNKNOWN');
+});
+
+test('parsePrState gh maps OPEN + mergeable=CONFLICTING to CONFLICTING', () => {
+  assert.equal(parsePrState('gh', '{"state":"OPEN","mergeable":"CONFLICTING"}'), 'CONFLICTING');
+  assert.equal(parsePrState('gh', '{"state":"OPEN","mergeable":"MERGEABLE"}'), 'OPEN');
+  assert.equal(parsePrState('gh', '{"state":"MERGED","mergeable":"CONFLICTING"}'), 'MERGED');
+});
+
+test('parsePrState glab maps opened + has_conflicts to CONFLICTING', () => {
+  assert.equal(parsePrState('glab', '{"state":"opened","has_conflicts":true}'), 'CONFLICTING');
+  assert.equal(parsePrState('glab', '{"state":"opened","has_conflicts":false}'), 'OPEN');
+});
+
 test('queryPrState returns MERGED via injected run for gh', () => {
   const run = (cmd, args) => {
     assert.equal(cmd, 'gh');
-    assert.deepEqual(args, ['pr', 'view', 'feature/x', '--json', 'state,mergedAt,mergeCommit']);
+    assert.deepEqual(args, ['pr', 'view', 'feature/x', '--json', 'state,mergedAt,mergeCommit,mergeable']);
     return { code: 0, stdout: '{"state":"MERGED","mergedAt":"2026-07-10T00:00:00Z"}' };
   };
   assert.equal(queryPrState('gh', 'feature/x', { run }), 'MERGED');

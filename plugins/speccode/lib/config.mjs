@@ -3,10 +3,6 @@ import { join } from 'node:path';
 import { readJson, writeJsonAtomic } from './atomic.mjs';
 import { nowIso } from './timestamp.mjs';
 
-export const DEFAULT_UNTRACKED = [
-  '.claude', '.agent', '.opencode', '.speccode', 'CLAUDE.md', 'AGENTS.md',
-];
-
 export function configPath(speccodeDir) {
   return join(speccodeDir, 'config.json');
 }
