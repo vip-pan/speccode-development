@@ -106,7 +106,10 @@ const VERBS = {
     return { ok: true, total, completed, worktrees: wts };
   },
 
-  'detect-knowledge-tools': ({ cwd }) => ({ ok: true, tools: detectKnowledgeTools(cwd) }),
+  // Resolve against the main repo root (same --git-common-dir invariant as the
+  // other verbs) so .mcp.json / project dirs are found from subdirs and
+  // linked worktrees too.
+  'detect-knowledge-tools': ({ cwd }) => ({ ok: true, tools: detectKnowledgeTools(repoRoot(cwd)) }),
 
   'resolve-worktree-dir': ({ cwd }) => {
     const cfg = loadConfig(speccodeDirOf(cwd));

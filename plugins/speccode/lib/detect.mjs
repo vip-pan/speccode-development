@@ -32,6 +32,9 @@ export function detectKnowledgeTools(cwd, opts = {}) {
   const mcpKeys = [
     ...Object.keys(projectMcp?.mcpServers ?? {}).map((k) => `.mcp.json:${k}`),
     ...Object.keys(userMcp?.mcpServers ?? {}).map((k) => `~/.claude.json:${k}`),
+    // `claude mcp add` local scope lands under projects["<repo abs path>"].mcpServers
+    ...Object.keys(userMcp?.projects?.[cwd]?.mcpServers ?? {})
+      .map((k) => `~/.claude.json[projects]:${k}`),
   ];
 
   const found = [];

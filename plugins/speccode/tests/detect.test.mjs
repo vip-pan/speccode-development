@@ -36,6 +36,18 @@ test('detects an MCP server from project .mcp.json and user .claude.json', () =>
   ]);
 });
 
+test('detects a local-scope MCP server from ~/.claude.json projects[cwd].mcpServers', () => {
+  const readJson = (p) => (p.endsWith('/home/u/.claude.json')
+    ? { projects: { '/repo': { mcpServers: { graphify: {} } } } }
+    : null);
+  const tools = detectKnowledgeTools('/repo', {
+    homeDir: '/home/u', readJson, commandV: () => false, exists: () => false,
+  });
+  assert.deepEqual(tools, [
+    { id: 'graphify', kind: 'mcp', evidence: '~/.claude.json[projects]:graphify' },
+  ]);
+});
+
 test('detects a CLI binary via command -v', () => {
   const tools = detectKnowledgeTools('/repo', {
     homeDir: '/home/u', readJson: () => null,
@@ -63,6 +75,22 @@ test('plugin wins over cli for the same tool (precedence), and no hits returns [
     homeDir: '/home/u', readJson: () => null, commandV: () => false, exists: () => false,
   });
   assert.deepEqual(none, []);
+});
+
+test('mcp wins over cli for the same tool (precedence)', () => {
+  const readJson = (p) => (p.endsWith('/repo/.mcp.json') ? { mcpServers: { codemap: {} } } : null);
+  const tools = detectKnowledgeTools('/repo', {
+    homeDir: '/home/u', readJson, commandV: (bin) => bin === 'codemap', exists: () => false,
+  });
+  assert.deepEqual(tools, [{ id: 'codemap', kind: 'mcp', evidence: '.mcp.json:codemap' }]);
+});
+
+test('cli wins over project-dir for the same tool (precedence)', () => {
+  const tools = detectKnowledgeTools('/repo', {
+    homeDir: '/home/u', readJson: () => null,
+    commandV: (bin) => bin === 'lightrag', exists: (p) => p === '/repo/.lightrag',
+  });
+  assert.deepEqual(tools, [{ id: 'lightrag', kind: 'cli', evidence: 'lightrag' }]);
 });
 
 test('resolveWorktreeDir three states', () => {
