@@ -64,3 +64,7 @@ node plugins/speccode/bin/speccode.mjs <verb> --cwd . [--flags]
 ## OpenSpec 工作流
 
 本仓库自身用 OpenSpec 管理变更(`openspec/`)。规格改动走 change 流程:`/opsx:propose` → 实现 → `/opsx:sync`(delta specs 同步到 `openspec/specs/`)→ `/opsx:archive`。`openspec validate <spec> --strict` 校验;`openspec list` 看 active changes。
+
+## Brainstorm 文档落地(强制)
+
+每次执行 brainstorming(脑暴/查漏补缺/设计精化)后,**无论是否已存在 openspec 文档**,MUST 把脑暴结论落地为独立文档:`docs/superpowers/specs/YYYY-MM-DD-<topic>-brainstorm.md`(含背景、方法、发现/决策、处置结果),并提交 git。openspec 工件是规格契约,brainstorm 文档是思考过程记录,二者不可互相替代。
