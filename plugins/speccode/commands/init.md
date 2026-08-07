@@ -30,7 +30,7 @@ tags: [speccode, workflow, init]
 5. **询问 untracked_permanent**:展示默认集合 `.claude .agent .opencode .speccode CLAUDE.md AGENTS.md`,允许增删。
 6. **组装 config** 并写入:字段含 `version:1`、`initialized_at`(用 `speccode.mjs` 无此 verb 时可让 AI 生成 ISO 时间,或直接由用户确认后写)、`trunk`、`remote`、`display`、`pr_tool`、`spec_tools`、`untracked_permanent`、`worktree_prefix:"worktree-"`。
    - 把组装好的 config JSON 通过 `echo '<json>' | speccode.mjs write-config --cwd . --json-stdin` 写入(该 verb 内部用 `saveConfig` 原子写到 `<root>/.speccode/config.json`,自动满足"临时文件 + mv")。
-7. 打印 config 摘要 + 下一步指引(`/speccode:start`)。
+7. 打印 config 摘要 + 下一步指引(`/speccode:creating-feature`)。
 
 ## 幂等流程(二次 init)
 

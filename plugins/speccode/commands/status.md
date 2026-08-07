@@ -16,18 +16,18 @@ tags: [speccode, workflow, status]
    - 每个 worktree 一行:状态图标 + 名称 + status。
    - 若该 feature 有 `pending_operation`,单独一行:`⏸ pending: <command>(<phase>, PR #<n>)`。
 4. 报告 `orphans` / `conflicts`(若有),提示如何处理。
-5. 末尾打印 config 摘要:`trunk / display / pr_tool`。
+5. 末尾打印 config 摘要:`trunk / pr_tool`。
 6. 若无 active feature:打印"当前无 active feature",仅显示 config 摘要。
 
 ## 输出示例(供格式参考)
 
 ```
 speccode — 2 active features
-● feature/payment (from display) 2/3 done
+● feature/payment (from master) 2/3 done
     ✓ worktree-payment           completed
     ✓ worktree-payment-api       completed
     ○ worktree-payment-dashboard in_progress
-● feature/auth (from display) 0/1 done
+● feature/auth (from master) 0/1 done
     ⧗ worktree-auth              pr_open (PR #51)
-config: trunk=master display=display pr_tool=gh
+config: trunk=master pr_tool=gh
 ```
