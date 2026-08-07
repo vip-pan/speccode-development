@@ -67,7 +67,7 @@ const VERBS = {
         queryPr = (prNumber) => queryPrState(tool, String(prNumber), { cwd });
       }
     }
-    const res = reconcile(sc, { prefix: cfg?.worktree_prefix ?? 'worktree-', cwd, queryPr });
+    const res = reconcile(sc, { prefix: cfg?.worktree_prefix || 'worktree-', cwd, queryPr });
     return { ok: true, orphans: res.orphans, conflicts: res.conflicts, advanced: res.advanced,
       features: res.features };
   },

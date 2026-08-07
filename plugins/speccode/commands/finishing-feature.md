@@ -25,6 +25,7 @@ tags: [speccode, workflow, finish]
 3. 轮询等合并(每 30s 调 `speccode.mjs query-pr --cwd . --number <N>`,超时 30min):
    - MERGED → 进入收尾。
    - CLOSED 或 CONFLICTING → 报错退出。
+   - UNKNOWN → 视为查询失败:连续 3 次 UNKNOWN 则中止轮询并报告(提示检查 gh/glab 认证与网络),不计入 30min 超时等待。
    - TIMEOUT → 写 `pending_operation`(command=`finishing-feature`, phase=`waiting_trunk_pr`, pr_number, updated_at),提示 `--resume`。
 
 全流程 MUST NOT 创建 `<F>-complete` 分支,MUST NOT 执行任何 `git rm --cached` 文档剥离操作——`speccode/` 文档随本 PR 一并进入 trunk。

@@ -48,6 +48,12 @@ test('parsePrState unknown on garbage', () => {
   assert.equal(parsePrState('gh', 'not json'), 'UNKNOWN');
 });
 
+test('parsePrState unknown on JSON null and non-object values', () => {
+  assert.equal(parsePrState('gh', 'null'), 'UNKNOWN');
+  assert.equal(parsePrState('gh', '42'), 'UNKNOWN');
+  assert.equal(parsePrState('glab', 'null'), 'UNKNOWN');
+});
+
 test('parsePrState gh maps OPEN + mergeable=CONFLICTING to CONFLICTING', () => {
   assert.equal(parsePrState('gh', '{"state":"OPEN","mergeable":"CONFLICTING"}'), 'CONFLICTING');
   assert.equal(parsePrState('gh', '{"state":"OPEN","mergeable":"MERGEABLE"}'), 'OPEN');

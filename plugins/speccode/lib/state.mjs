@@ -20,7 +20,7 @@ const LEGACY_COMMAND_NAMES = {
 export function normalizeState(state) {
   if (!state || typeof state !== 'object') return state;
   const po = state.pending_operation;
-  if (po && typeof po === 'object' && LEGACY_COMMAND_NAMES[po.command]) {
+  if (po && typeof po === 'object' && Object.hasOwn(LEGACY_COMMAND_NAMES, po.command)) {
     return { ...state, pending_operation: { ...po, command: LEGACY_COMMAND_NAMES[po.command] } };
   }
   return state;

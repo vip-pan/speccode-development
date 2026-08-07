@@ -90,6 +90,15 @@ test('normalizeState passes through states without pending_operation or with new
   assert.equal(normalizeState(null), null);
 });
 
+test('normalizeState does not match inherited Object.prototype keys (toString)', () => {
+  const s = normalizeState({
+    feature_branch: 'feature/p',
+    pending_operation: { command: 'toString', phase: 'waiting_trunk_pr' },
+  });
+  assert.equal(s.pending_operation.command, 'toString');
+  assert.equal(s.pending_operation.phase, 'waiting_trunk_pr');
+});
+
 test('readState normalizes legacy pending_operation.command', () => {
   const dir = tmp();
   writeState(dir, 'feature/p', {

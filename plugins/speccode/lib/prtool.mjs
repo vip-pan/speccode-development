@@ -33,6 +33,7 @@ export function queryPrArgs(tool, head) {
 export function parsePrState(tool, jsonStdout) {
   let obj;
   try { obj = JSON.parse(jsonStdout); } catch { return 'UNKNOWN'; }
+  if (!obj || typeof obj !== 'object') return 'UNKNOWN';
   const raw = String(obj.state ?? '').toUpperCase();
   if (tool === 'gh') {
     if (raw === 'MERGED') return 'MERGED';
@@ -55,7 +56,8 @@ export function parsePrState(tool, jsonStdout) {
 
 // Actually invoke gh/glab to fetch current PR/MR state.
 // `opts.run(cmd, args) -> { code, stdout }` can be injected for testing;
-// defaults to a real spawnSync call.
+// defaults to a real spawnSync call. `opts.cwd` is passed through to that
+// real spawnSync so gh/glab runs in the target repo (main root or worktree).
 export function queryPrState(tool, ref, opts = {}) {
   const { run, cwd } = opts;
   const args = queryPrArgs(tool, ref);

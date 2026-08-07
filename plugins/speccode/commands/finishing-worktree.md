@@ -39,15 +39,18 @@ tags: [speccode, workflow, worktree, merge]
 4. **路径 1(等待)**:每 30s 调 `speccode.mjs query-pr --cwd . --number <N>`,超时 30min:
    - MERGED → 「清理」+ state 置 `completed` + `completed_at`。
    - CLOSED 或 CONFLICTING → 报错退出(PR 被关闭或存在合并冲突,需人工处理)。
+   - UNKNOWN → 视为查询失败:连续 3 次 UNKNOWN 则中止轮询并报告(提示检查 gh/glab 认证与网络),不计入 30min 超时等待。
    - TIMEOUT → 写 `pending_operation`(command=`finishing-worktree`, phase=`waiting_worktree_pr`, pr_number, updated_at),提示 `--resume`。
 5. **路径 2(不等待)**:state 置 `pr_open` + 记 `pr_number`,**不清理** worktree,不阻塞。
 
 ## 路径 3:本地 squash
 
-1. `git checkout <F>`。
-2. `git merge --squash <worktree>`。
-3. `git commit`(用户填 commit message,遵守 git 提交规范)。
-4. **复测**:对合并后的 F 复跑全量测试(同门禁探测)。失败 → 停止,保留 worktree 与分支现场(未推送,可恢复),提示用户调查。
+主仓操作一律用 `git -C <主仓根>` 执行(主仓根 = `speccode.mjs resolve-speccode-dir --cwd .` 返回的 speccodeDir 的父目录);当前 cwd 保持在 worktree 内,**不切换当前 worktree 的 HEAD**。
+
+1. 确认主仓 checkout 在 F:`git -C <主仓根> rev-parse --abbrev-ref HEAD`;不是 F → 先 `git -C <主仓根> checkout <F>`。
+2. `git -C <主仓根> merge --squash <worktree>`。
+3. `git -C <主仓根> commit`(用户填 commit message,遵守 git 提交规范)。
+4. **复测**:在「主仓根的 F」上对合并后的结果复跑全量测试(同门禁探测)。失败 → 停止,保留 worktree 与分支现场(未推送,可恢复),提示用户调查。
 5. 「清理」+ state 置 `completed` + `completed_at`。
 
 ## 路径 4:保留 worktree
@@ -62,10 +65,10 @@ tags: [speccode, workflow, worktree, merge]
 
 ## 清理(来源限定)
 
-仅当该 worktree 满足「分支名带 `config.worktree_prefix` 且(路径位于 worktree 目录之下或在 state 中有登记)」时执行:
-- `git worktree remove <path> --force` + `git branch -D <worktree>`;
+仅当该 worktree 满足「分支名带 `config.worktree_prefix` 且(路径位于 worktree 目录之下或在 state 中有登记)」时执行。操作顺序:**先离开被清理的 worktree**(`cd <主仓根>`,或全程用 `git -C <主仓根>` 不切换 cwd;主仓根 = `speccode.mjs resolve-speccode-dir --cwd .` 返回的 speccodeDir 的父目录),再执行删除——绝不在被删的 worktree 内删它自己:
+- `git -C <主仓根> worktree remove <path> --force` + `git -C <主仓根> branch -D <worktree>`;
 - 询问是否删远端(`git push origin :<worktree>`);
-- `git worktree prune`。
+- `git -C <主仓根> worktree prune`。
 不满足 → 原样保留并打印原因(宿主环境创建的 worktree 不由 speccode 清理)。
 注:本阶段 worktree 目录固定 `.claude/worktrees`;配置化(resolve-worktree-dir)随后续版本接入。
 
