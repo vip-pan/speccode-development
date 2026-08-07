@@ -1,8 +1,8 @@
 ---
-name: "SpecCode: Start"
-description: "从初始分支(display 优先,否则 trunk)切出功能分支并推送,登记 state"
+name: "SpecCode: Creating Feature"
+description: "从主干分支(trunk)切出功能分支并推送,登记 state"
 category: Workflow
-tags: [speccode, workflow, start]
+tags: [speccode, workflow, feature]
 ---
 
 创建一个新的功能分支。全程中文交互。
@@ -10,8 +10,7 @@ tags: [speccode, workflow, start]
 ## 前置
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
-2. 计算 initial 分支:`display.enabled` 为真 → `display.branch`,否则 `trunk`。
-3. 校验当前 HEAD(`git rev-parse --abbrev-ref HEAD`)必须等于 initial 分支;不符 → 提示 `git checkout <initial>` 后退出。
+2. 校验当前 HEAD(`git rev-parse --abbrev-ref HEAD`)必须等于 `config.trunk`;不符 → 提示 `git checkout <trunk>` 后退出。
 
 ## 决定分支名
 
@@ -28,7 +27,7 @@ tags: [speccode, workflow, start]
 
 ## 创建
 
-1. `git checkout -b <branch>`(从 initial 分支)。
+1. `git checkout -b <branch>`(从 trunk)。
 2. `git push -u origin <branch>`。
-3. 写 state:通过 `echo '<json>' | speccode.mjs write-state --cwd . --branch <branch> --json-stdin`,内容含 `feature_branch`、`created_at`(ISO UTC)、`initial_branch`、`status:"in_progress"`、`worktrees:{}`。
-4. 打印:已创建 <branch>,下一步 `/speccode:develop-start`。
+3. 写 state:通过 `echo '<json>' | speccode.mjs write-state --cwd . --branch <branch> --json-stdin`,内容含 `feature_branch`、`created_at`(ISO UTC)、`initial_branch`(= config.trunk)、`status:"in_progress"`、`worktrees:{}`。
+4. 打印:已创建 <branch>,下一步 `/speccode:creating-worktree`。
