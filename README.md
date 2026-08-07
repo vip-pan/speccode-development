@@ -16,7 +16,7 @@ Claude Code marketplace：托管 speccode 及未来相关插件。
 /plugin install speccode@speccode-development
 
 # 远端（推到 GitHub 后）
-/plugin marketplace add <owner>/speccode-development
+/plugin marketplace add vip-pan/speccode-development
 /plugin install speccode@speccode-development
 ```
 
