@@ -3,16 +3,9 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import {
-  DEFAULT_UNTRACKED, configPath, loadConfig, saveConfig, backupConfig, diffFields,
-} from '../lib/config.mjs';
+import { configPath, loadConfig, saveConfig, backupConfig, diffFields } from '../lib/config.mjs';
 
 function tmp() { return mkdtempSync(join(tmpdir(), 'sc-cfg-')); }
-
-test('DEFAULT_UNTRACKED lists the permanent set', () => {
-  assert.deepEqual(DEFAULT_UNTRACKED,
-    ['.claude', '.agent', '.opencode', '.speccode', 'CLAUDE.md', 'AGENTS.md']);
-});
 
 test('save then load round-trips', () => {
   const dir = tmp();
