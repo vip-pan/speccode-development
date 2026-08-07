@@ -4,18 +4,18 @@
 
 ## P1 拓扑收敛与改名(核心风险先行)
 
-- [ ] 1.1 删除命令文件:`commands/display-merge-trunk.md`、`display-rebase-trunk.md`、`display-reset-to-trunk.md`
-- [ ] 1.2 删除 `lib/docstrip.mjs`、`lib/waitmerge.mjs`、`tests/docstrip.test.mjs`、`tests/waitmerge.test.mjs`
-- [ ] 1.3 命令改名(新文件 + 删旧文件):`start.md`→`creating-feature.md`、`develop-start.md`→`creating-worktree.md`、`develop-complete.md`→`finishing-worktree.md`、`finish.md`→`finishing-feature.md`;命令正文内 name/交叉引用同步更新
-- [ ] 1.4 `finishing-feature.md` 简化为单 PR 流:删路径 A/B 分支、-complete 创建、`git rm --cached` 剥离、未跟踪文档警告;保留门禁对账、阻塞等待、`pending_operation`(command=`finishing-feature`, phase=`waiting_trunk_pr`)、`--resume`、delete-state、切回 trunk;prose 增加「检测到 `waiting_display_pr` 报错并打印手动收尾指引」
-- [ ] 1.5 `creating-feature.md`:initial 恒为 trunk,删 display 优先逻辑
-- [ ] 1.6 `state.mjs`:新增 `normalizeState()`(`LEGACY_COMMAND_NAMES = {'develop-complete':'finishing-worktree','finish':'finishing-feature'}` 映射 `pending_operation.command`;`waiting_display_pr` 原样保留),`readState` 与 `listActiveFeatures` 共同调用
-- [ ] 1.7 `bin/speccode.mjs`:reconcile verb 的 prefix 改为 `loadConfig(sc)?.worktree_prefix ?? 'worktree-'`(**兜底必须保留**);新增 `query-pr` verb(--number,pr_tool=none/无 config 返回 `{ok:false}`);写 verb(write-config/write-state)缺 `--json-stdin` 时返回 `{ok:false}`
-- [ ] 1.7a `lib/prtool.mjs` 扩展 CONFLICTING:查询参数加 mergeable/冲突字段(gh: `gh pr view --json state,mergedAt,mergeCommit,mergeable`;glab 对应标记),`parsePrState`/`queryPrState` 产出五态 `{MERGED, OPEN, CLOSED, CONFLICTING, UNKNOWN}`,查询调用透传 cwd;`prtool.test.mjs` 补冲突映射用例
-- [ ] 1.8 **finishing-worktree.md 融合改写**(承接 D12 与 git-workflow-lifecycle 两条 ADDED requirement,改名不产生新行为,必须显式改写):①任何合并路径前跑全量测试,失败即停不呈现菜单;②菜单恰好四项「PR + 等待合并」「PR + 不等待」「本地 squash」「保留 worktree」;③丢弃不进菜单,显式要求时先展示分支名/commit 列表/worktree 路径,逐字输入 `discard` 才执行;④清理走「前缀 + (worktree_dir 下 或 state 登记)」判据;⑤本地 squash 合并后复跑全量测试,失败即停;⑥PR 等待改为 query-pr 轮询(30s/30min),CONFLICTING 立即报错,TIMEOUT 写 `pending_operation{command:"finishing-worktree", phase:"waiting_worktree_pr"}`
-- [ ] 1.9 测试更新:`state.test.mjs` 补 listActiveFeatures 规范化用例;`cli.test.mjs` 补 query-pr(含 CONFLICTING、无 config)与 --json-stdin 必填用例,**保留两个 no-config reconcile 测试不动**;`config.test.mjs` 删除 `DEFAULT_UNTRACKED` import 与对应专项测试
-- [ ] 1.9 交叉引用改名盘点:`status.md`、`reset.md`、README 之外的保留命令中全部旧命令名引用改为新名
-- [ ] 1.10 P1 验收:全量测试绿;`git grep -n "display" plugins/speccode/lib plugins/speccode/bin` 零命中
+- [x] 1.1 删除命令文件:`commands/display-merge-trunk.md`、`display-rebase-trunk.md`、`display-reset-to-trunk.md`
+- [x] 1.2 删除 `lib/docstrip.mjs`、`lib/waitmerge.mjs`、`tests/docstrip.test.mjs`、`tests/waitmerge.test.mjs`
+- [x] 1.3 命令改名(新文件 + 删旧文件):`start.md`→`creating-feature.md`、`develop-start.md`→`creating-worktree.md`、`develop-complete.md`→`finishing-worktree.md`、`finish.md`→`finishing-feature.md`;命令正文内 name/交叉引用同步更新
+- [x] 1.4 `finishing-feature.md` 简化为单 PR 流:删路径 A/B 分支、-complete 创建、`git rm --cached` 剥离、未跟踪文档警告;保留门禁对账、阻塞等待、`pending_operation`(command=`finishing-feature`, phase=`waiting_trunk_pr`)、`--resume`、delete-state、切回 trunk;prose 增加「检测到 `waiting_display_pr` 报错并打印手动收尾指引」
+- [x] 1.5 `creating-feature.md`:initial 恒为 trunk,删 display 优先逻辑
+- [x] 1.6 `state.mjs`:新增 `normalizeState()`(`LEGACY_COMMAND_NAMES = {'develop-complete':'finishing-worktree','finish':'finishing-feature'}` 映射 `pending_operation.command`;`waiting_display_pr` 原样保留),`readState` 与 `listActiveFeatures` 共同调用
+- [x] 1.7 `bin/speccode.mjs`:reconcile verb 的 prefix 改为 `loadConfig(sc)?.worktree_prefix ?? 'worktree-'`(**兜底必须保留**);新增 `query-pr` verb(--number,pr_tool=none/无 config 返回 `{ok:false}`);写 verb(write-config/write-state)缺 `--json-stdin` 时返回 `{ok:false}`
+- [x] 1.7a `lib/prtool.mjs` 扩展 CONFLICTING:查询参数加 mergeable/冲突字段(gh: `gh pr view --json state,mergedAt,mergeCommit,mergeable`;glab 对应标记),`parsePrState`/`queryPrState` 产出五态 `{MERGED, OPEN, CLOSED, CONFLICTING, UNKNOWN}`,查询调用透传 cwd;`prtool.test.mjs` 补冲突映射用例
+- [x] 1.8 **finishing-worktree.md 融合改写**(承接 D12 与 git-workflow-lifecycle 两条 ADDED requirement,改名不产生新行为,必须显式改写):①任何合并路径前跑全量测试,失败即停不呈现菜单;②菜单恰好四项「PR + 等待合并」「PR + 不等待」「本地 squash」「保留 worktree」;③丢弃不进菜单,显式要求时先展示分支名/commit 列表/worktree 路径,逐字输入 `discard` 才执行;④清理走「前缀 + (worktree_dir 下 或 state 登记)」判据;⑤本地 squash 合并后复跑全量测试,失败即停;⑥PR 等待改为 query-pr 轮询(30s/30min),CONFLICTING 立即报错,TIMEOUT 写 `pending_operation{command:"finishing-worktree", phase:"waiting_worktree_pr"}`
+- [x] 1.9 测试更新:`state.test.mjs` 补 listActiveFeatures 规范化用例;`cli.test.mjs` 补 query-pr(含 CONFLICTING、无 config)与 --json-stdin 必填用例,**保留两个 no-config reconcile 测试不动**;`config.test.mjs` 删除 `DEFAULT_UNTRACKED` import 与对应专项测试
+- [x] 1.9 交叉引用改名盘点:`status.md`、`reset.md`、README 之外的保留命令中全部旧命令名引用改为新名
+- [x] 1.10 P1 验收:全量测试绿;`git grep -n "display" plugins/speccode/lib plugins/speccode/bin` 零命中
 
 ## P2 init 增强与 config v2
 
