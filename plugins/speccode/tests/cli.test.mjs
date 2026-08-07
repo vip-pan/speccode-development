@@ -243,3 +243,36 @@ test('reconcile treats empty-string worktree_prefix as the default prefix', () =
   assert.deepEqual(after.json.worktrees, {});
   rmSync(repo, { recursive: true, force: true });
 });
+
+test('detect-knowledge-tools returns a tools array', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'detect-knowledge-tools', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.ok(json.ok);
+  assert.ok(Array.isArray(json.tools));
+  for (const t of json.tools) {
+    assert.ok(t.id && t.kind && t.evidence);
+    assert.ok(['plugin', 'mcp', 'cli', 'project-dir'].includes(t.kind));
+  }
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('resolve-worktree-dir returns default when config lacks the key', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'resolve-worktree-dir', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.deepEqual({ dir: json.dir, source: json.source },
+    { dir: '.claude/worktrees', source: 'default' });
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('resolve-worktree-dir returns config value when present', () => {
+  const repo = makeRepo();
+  const w = spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ version: 2, worktree_dir: '.wt' }), encoding: 'utf8' });
+  assert.equal(w.status, 0);
+  const { code, json } = runCli(repo, 'resolve-worktree-dir', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.deepEqual({ dir: json.dir, source: json.source }, { dir: '.wt', source: 'config' });
+  rmSync(repo, { recursive: true, force: true });
+});
