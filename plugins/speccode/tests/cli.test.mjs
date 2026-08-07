@@ -145,3 +145,60 @@ test('reconcile with --advance-pr and no config at all does not crash', () => {
   assert.deepEqual(json.advanced, []);
   rmSync(repo, { recursive: true, force: true });
 });
+
+test('query-pr requires --number', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'query-pr', '--cwd', repo);
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('query-pr returns ok:false when config missing', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'query-pr', '--cwd', repo, '--number', '42');
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('query-pr returns ok:false when pr_tool is none', () => {
+  const repo = makeRepo();
+  spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ version: 1, pr_tool: 'none' }), encoding: 'utf8' });
+  const { code, json } = runCli(repo, 'query-pr', '--cwd', repo, '--number', '42');
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-config without --json-stdin returns ok:false and exit 1', () => {
+  const repo = makeRepo();
+  const r = spawnSync('node', [BIN, 'write-config', '--cwd', repo],
+    { cwd: repo, input: JSON.stringify({ version: 1 }), encoding: 'utf8' });
+  assert.equal(r.status, 1);
+  const json = JSON.parse(r.stdout.trim());
+  assert.equal(json.ok, false);
+  assert.ok(json.error.includes('--json-stdin'));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-state without --json-stdin returns ok:false and exit 1', () => {
+  const repo = makeRepo();
+  const r = spawnSync('node', [BIN, 'write-state', '--cwd', repo, '--branch', 'feature/x'],
+    { cwd: repo, input: JSON.stringify({}), encoding: 'utf8' });
+  assert.equal(r.status, 1);
+  assert.equal(JSON.parse(r.stdout.trim()).ok, false);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('reconcile uses config worktree_prefix when present', () => {
+  const repo = makeRepo();
+  mkdirSync(join(repo, '.speccode', 'state', 'features'), { recursive: true });
+  spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ version: 1, worktree_prefix: 'wt-' }), encoding: 'utf8' });
+  const { code, json } = runCli(repo, 'reconcile', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.ok(json.ok);
+  rmSync(repo, { recursive: true, force: true });
+});
