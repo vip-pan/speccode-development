@@ -12,6 +12,7 @@ tags: [speccode, workflow, archive]
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
 2. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix`(默认 `worktree-`)开头;否则退出并提示"请在 worktree 分支上运行本命令"(防止直提 trunk)。
 3. 确定 slug:默认取当前 worktree 所属 feature 的 slug 段;用户也可在命令参数中显式指定。`speccode/changes/<slug>/` 不存在 → 报错退出。
+4. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ## 归档前检查(警告不硬阻断)
 
@@ -48,6 +49,16 @@ echo '{"command":"archiving","feature_branch":"<F>","worktree_branch":"<W>"}' | 
 ```
 
 输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+
+**写记忆**:把本命令产出的决策/进度摘要(归档路径、sync 状态,经用户确认或按本命令内置判据)追加到本 feature 的 memory。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,摘要含单引号也会破壳):
+
+```bash
+speccode.mjs write-memory --cwd . --branch <F> --json-stdin <<'EOF'
+{"mode":"append","content":"<摘要>"}
+EOF
+```
+
+**长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①一个开发阶段/任务完成且距上次写入已隔多个阶段;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。
 
 ## 输出摘要
 

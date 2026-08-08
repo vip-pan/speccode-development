@@ -67,13 +67,13 @@
 
 ## P7 memory
 
-- [ ] 7.1 `lib/atomic.mjs`:新增 `writeTextAtomic(path, text)`(tmp+rename 同构)
-- [ ] 7.2 `lib/memory.mjs`:memoryDir/memoryPath(branchToStateName 复用)/readMemory(null 缺失)/writeMemory(replace|append,走 writeTextAtomic)
-- [ ] 7.3 bin 新增 verb:`read-memory`、`write-memory`(--json-stdin,`{mode, content}`)
-- [ ] 7.4 `tests/memory.test.mjs`:replace/append/缺失→null/原子性
-- [ ] 7.5 命令接入(入口读/出口写清单见 session-memory spec「命令读写时机」);creating-feature 出口建 memory 骨架,**读取 `_exploring.md`(若存在)迁入结论后清空该文件**;exploring 出口按归属写 memory(无归属写 `_exploring.md`)
-- [ ] 7.6 各命令 prose 写入「超大会话主动发现」触发判据(阶段完成/上下文显著增长/compact 恢复后主动 write-memory,内容经用户确认或按既定判据)
-- [ ] 7.7 P7 验收:全量测试绿;`/clear` 后新会话语境下由 executing-plans 入口读 memory 恢复
+- [x] 7.1 `lib/atomic.mjs`:新增 `writeTextAtomic(path, text)`(tmp+rename 同构)
+- [x] 7.2 `lib/memory.mjs`:memoryDir/memoryPath(branchToStateName 复用)/readMemory(null 缺失)/writeMemory(replace|append,走 writeTextAtomic)
+- [x] 7.3 bin 新增 verb:`read-memory`、`write-memory`(--json-stdin,`{mode, content}`)
+- [x] 7.4 `tests/memory.test.mjs`:replace/append/缺失→null/原子性
+- [x] 7.5 命令接入(入口读/出口写清单见 session-memory spec「命令读写时机」);creating-feature 出口建 memory 骨架,**读取 `_exploring.md`(若存在)迁入结论后清空该文件**;exploring 出口按归属写 memory(无归属写 `_exploring.md`)
+- [x] 7.6 各命令 prose 写入「超大会话主动发现」触发判据(阶段完成/上下文显著增长/compact 恢复后主动 write-memory,内容经用户确认或按既定判据)
+- [x] 7.7 P7 验收:全量测试绿;`/clear` 后新会话语境下由 executing-plans 入口读 memory 恢复
 
 ## P8 文档与校验
 

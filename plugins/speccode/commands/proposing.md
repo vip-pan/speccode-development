@@ -14,6 +14,7 @@ tags: [speccode, workflow, propose, specs]
 3. 计算 slug = F 的 slug 段(`feature/payment-api` → `payment-api`)。
 4. **冲突检查**:若 `speccode/changes/<slug>/` 已存在且未归档 → 用 AskUserQuestion 询问:「续写补充 / 先 archiving 再重建 / 取消」。取消 → 退出;先归档 → 引导用户先执行 `/speccode:archiving` 后重跑本命令;续写 → 在既有内容上增量修改。
 5. **知识库工具咨询**:若 `knowledge_tools` 非空且其能力在会话中可用,参考代码时优先使用;不可用回退 Grep/Glob/Read,不报错。
+6. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ## 需求澄清(提问环节)
 
@@ -52,6 +53,16 @@ echo '{"command":"proposing","feature_branch":"<F>","worktree_branch":"<W>"}' | 
 ```
 
 输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+
+**写记忆**:把本命令产出的决策/进度摘要(经用户确认或按本命令内置判据)追加到本 feature 的 memory。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,摘要含单引号也会破壳):
+
+```bash
+speccode.mjs write-memory --cwd . --branch <F> --json-stdin <<'EOF'
+{"mode":"append","content":"<摘要>"}
+EOF
+```
+
+**长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①一个开发阶段/任务完成且距上次写入已隔多个阶段;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。
 
 ## 下一步引导
 

@@ -12,3 +12,10 @@ export function writeJsonAtomic(path, obj) {
   writeFileSync(tmp, JSON.stringify(obj, null, 2) + '\n', 'utf8');
   renameSync(tmp, path);
 }
+
+export function writeTextAtomic(path, text) {
+  mkdirSync(dirname(path), { recursive: true });
+  const tmp = `${path}.${process.pid}.tmp`;
+  writeFileSync(tmp, text);
+  renameSync(tmp, path);
+}
