@@ -20,7 +20,7 @@ tags: [speccode, workflow, sync, specs]
 
 - delta 源 = `speccode/changes/<slug>/propose/` 下的文档:`specs/<capability>/spec.md` 是必须源;proposal.md / design.md / tasks.md 用于理解意图。
 - **brainstorm 残余吸收**:若 `speccode/changes/<slug>/brainstorm/` 存在,先读其中的设计文档,与 propose/ 文档对照:brainstorm 结论中**未回写**到 propose/ 的变更,先补入你对 delta 的理解(以 brainstorm 为更新的权威),再执行合并;已全部回写则直接进入合并。
-- 找不到任何 delta spec(`propose/specs/` 为空或不存在)→ 报告"无 delta 可同步"并停止,不从其他工件臆测。
+- `propose/` 存在但 `propose/specs/` 为空或不存在 → 报告"无 delta 可同步"并停止,不从其他工件臆测。
 - `propose/` 不存在(纯 brainstorming 路径)时:若 `brainstorm/` 存在,以 brainstorm/ 文档提炼 delta 进行合并;若两者都不存在,报告无 delta 并停止。
 
 ## 合并语义(对每个 capability delta)
@@ -49,7 +49,7 @@ git add speccode/spec/ speccode/changes/<slug>/
 git commit -m "docs(speccode): sync <slug> into main specs"
 ```
 
-(add 后亦可用 `git diff --cached --quiet` 复验:为空同样跳过提交。`git add` 同时写两个路径,护栏末句的「回写 propose/ 一并提交」由此可达。)
+(add 后亦可用 `git diff --cached --quiet` 复验:为空同样跳过提交。`git add` 同时写两个路径,护栏末句的「回写落在 speccode/changes/<slug>/,一并提交」由此可达。)
 
 真实产生 commit 后触发 onSynced 钩子(「无变更(幂等)」短路路径 MUST NOT 触发):
 
