@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 speccode 是一个 **Claude Code 流程编排插件**,用 21 个 `/speccode:*` slash 命令固化「多需求并行开发 + spec 文档托管 + PR/MR 流程标准化 + SDD 方法论(探索/文档/计划/子代理执行/评审)+ hooks/memory」工作流。它管理 trunk / feature / worktree 三层分支拓扑;spec 文档(`speccode/`)在所有分支 tracked,随 PR 链路上 trunk。SDD 方法论命令自包含移植自 superpowers(v6.2.0),目标项目零外部依赖。
 
-完整设计文档见 `plugins/speccode/README.md`(定位、21 命令表、三层分支拓扑图、风险 R1-R13)。规格已归档在 `openspec/specs/`(5 个 capability,46 requirements)与 `openspec/changes/archive/2026-07-13-add-speccode-plugin/`。
+完整设计文档见 `plugins/speccode/README.md`(定位、21 命令表、三层分支拓扑图、风险 R1-R13)。规格已归档在 `openspec/specs/`(8 个 capability,74 requirements)与 `openspec/changes/archive/`。
 
 ## 常用命令
 
@@ -66,7 +66,7 @@ node plugins/speccode/bin/speccode.mjs <verb> --cwd . [--flags]
 
 ## 测试约定
 
-- 全量 **131 个用例**。涉及 git 的测试用 `plugins/speccode/tests/helpers/tmprepo.mjs` 的 `makeRepo()` / `commitFile()` 建**真实临时 git 仓库**,用完清理。
+- 全量 **132 个用例**。涉及 git 的测试用 `plugins/speccode/tests/helpers/tmprepo.mjs` 的 `makeRepo()` / `commitFile()` 建**真实临时 git 仓库**,用完清理。
 - PR/等待类逻辑(`prtool` / reconcile 的 pr_open 推进)通过**依赖注入**(注入 `run` / `queryPr` / `spawn`)做单测,不依赖真实 `gh`/`glab` 或真实等待。
 - 每个 lib 模块对应一个 `plugins/speccode/tests/<module>.test.mjs`;CLI verb 在 `plugins/speccode/tests/cli.test.mjs` 用 `spawnSync('node', [BIN, ...])` 端到端测(写 verb 用 `input` 传 stdin),`BIN` 已用 `import.meta.url` 定位,与 cwd 无关。
 
