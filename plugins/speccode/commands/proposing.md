@@ -32,6 +32,7 @@ tags: [speccode, workflow, propose, specs]
    - `## ADDED Requirements` / `## MODIFIED Requirements` / `## REMOVED Requirements` / `## RENAMED Requirements`(FROM:/TO: 格式)
    - 每条 requirement:`### Requirement: <名称>` + 含 SHALL/MUST 的正文 + 至少一个 `#### Scenario:`(WHEN/THEN 可验证)
    - MODIFIED/REMOVED 的名称必须与既有主规格(`speccode/spec/<capability>/spec.md`,若存在)逐字一致
+   - 新增 capability(主规格尚不存在)的 delta SHOULD 带 `## Purpose` 段,供 syncing 播种新建主规格;修改既有 capability 的 delta 不带。
 4. **tasks.md** — 实现步骤清单,`- [ ]` 复选框,按依赖排序分组。
 
 每写完一个文件展示一行进度("已创建 proposal.md")。全部写完后展示摘要:需求目录路径、四类文档清单、复杂度评估结论。

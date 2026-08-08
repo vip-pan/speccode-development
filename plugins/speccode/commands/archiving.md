@@ -10,7 +10,8 @@ tags: [speccode, workflow, archive]
 ## 前置
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
-2. 确定 slug:默认取当前 worktree 所属 feature 的 slug 段;用户也可在命令参数中显式指定。`speccode/changes/<slug>/` 不存在 → 报错退出。
+2. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix`(默认 `worktree-`)开头;否则退出并提示"请在 worktree 分支上运行本命令"(防止直提 trunk)。
+3. 确定 slug:默认取当前 worktree 所属 feature 的 slug 段;用户也可在命令参数中显式指定。`speccode/changes/<slug>/` 不存在 → 报错退出。
 
 ## 归档前检查(警告不硬阻断)
 
@@ -43,6 +44,10 @@ git commit -m "docs(speccode): archive <slug>"
 ## 输出摘要
 
 展示:归档的需求、归档目标路径、sync 状态(已同步 / 用户选择跳过 / 无 delta)、警告(未完成任务数等)。
+
+## 下一步引导
+
+- 归档完成并提交后,引导用户执行 `/speccode:finishing-worktree` 合并本 worktree 成果回功能分支。
 
 ## 护栏
 

@@ -10,7 +10,8 @@ tags: [speccode, workflow, sync, specs]
 ## 前置
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
-2. 确定 slug:从当前 worktree 所属 feature 分支取 slug 段(可用 `speccode.mjs reconcile --cwd .` 的 features 判定归属);`speccode/changes/<slug>/` 不存在 → 报错"未找到需求目录,请先 /speccode:proposing",退出。
+2. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix`(默认 `worktree-`)开头;否则退出并提示"请在 worktree 分支上运行本命令"(防止直提 trunk)。
+3. 确定 slug:从当前 worktree 所属 feature 分支取 slug 段(可用 `speccode.mjs reconcile --cwd .` 的 features 判定归属);`speccode/changes/<slug>/` 不存在 → 报错"未找到需求目录,请先 /speccode:proposing",退出。
 
 ## delta 源契约
 
@@ -37,14 +38,22 @@ tags: [speccode, workflow, sync, specs]
 
 ## 落盘即提交(必须)
 
+先做空变更短路(幂等保证):若 `git status --porcelain speccode/` 无输出,说明本次合并没有产生任何落盘变更 → 跳过提交并报告「无变更(幂等)」,不创建空 commit。有变更时再执行:
+
 ```bash
-git add speccode/spec/
+git add speccode/spec/ speccode/changes/<slug>/
 git commit -m "docs(speccode): sync <slug> into main specs"
 ```
+
+(add 后亦可用 `git diff --cached --quiet` 复验:为空同样跳过提交。`git add` 同时写两个路径,护栏末句的「回写 propose/ 一并提交」由此可达。)
 
 ## 输出摘要
 
 合并完成后展示:更新了哪些 capability、各做了什么(新增/修改/删除/改名)、哪些新建主规格的 Purpose 是占位待补。
+
+## 下一步引导
+
+- 合并完成并提交后,引导用户执行 `/speccode:archiving` 归档本次变更。
 
 ## 护栏
 
