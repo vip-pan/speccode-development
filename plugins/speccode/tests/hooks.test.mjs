@@ -54,6 +54,17 @@ test('runHook executes configured command via sh -c with JSON on stdin', () => {
   assert.deepEqual(JSON.parse(calls[0].input), { event: 'onSynced', cwd: '/repo' });
 });
 
+test('runHook newline-terminates the JSON payload on stdin', () => {
+  const calls = [];
+  const spawn = (command, input) => { calls.push({ command, input }); return { code: 0 }; };
+  const r = runHook({ hooks: { onSynced: 'cat >> /tmp/h.log' } }, 'onSynced',
+    { event: 'onSynced', cwd: '/repo' }, { spawn });
+  assert.deepEqual(r, { ran: true, ok: true });
+  assert.equal(calls.length, 1);
+  assert.ok(calls[0].input.endsWith('\n'), 'hook stdin input must end with a newline');
+  assert.deepEqual(JSON.parse(calls[0].input), { event: 'onSynced', cwd: '/repo' });
+});
+
 test('runHook reports non-zero exit without throwing', () => {
   const spawn = () => ({ code: 1, stderr: 'boom' });
   const r = runHook({ hooks: { onArchived: 'false' } }, 'onArchived', {}, { spawn });

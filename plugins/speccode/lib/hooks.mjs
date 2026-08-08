@@ -43,7 +43,7 @@ export function runHook(config, event, payload, opts = {}) {
       });
       return { code: r.status, signal: r.signal, error: r.error, stderr: r.stderr };
     });
-    const r = spawn(cmd, JSON.stringify(payload));
+    const r = spawn(cmd, JSON.stringify(payload) + '\n');
     if (r.error || r.code === null || r.code === undefined) {
       return { ran: true, ok: false, error: String(r.error?.message || `terminated by ${r.signal}`) };
     }
