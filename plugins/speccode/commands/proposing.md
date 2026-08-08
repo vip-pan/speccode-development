@@ -45,6 +45,14 @@ git add speccode/changes/<slug>/
 git commit -m "docs(speccode): propose <slug>"
 ```
 
+commit 成功后触发 onProposed 钩子:
+
+```bash
+echo '{"command":"proposing","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onProposed
+```
+
+输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+
 ## 下一步引导
 
 - 复杂度高的需求:建议 `/speccode:brainstorming` 精化设计(会回写本目录文档保持一致)。

@@ -36,12 +36,17 @@ tags: [speccode, workflow, worktree, merge]
 1. **同步 base**:`git push origin <F>`;若 non-fast-forward → 中止并提示用户处理分叉。
 2. `git push -u origin <worktree>`。
 3. 用 pr_tool 创建 PR:参数同 `createPrArgs`(base=F, head=worktree)。`pr_tool=none` → 打印等效命令并中止。
-4. **路径 1(等待)**:每 30s 调 `speccode.mjs query-pr --cwd . --number <N>`,超时 30min:
+4. PR 创建成功后触发 onPrOpened 钩子(payload 带 `"pr_number": <N>`):
+   ```bash
+   echo '{"command":"finishing-worktree","feature_branch":"<F>","worktree_branch":"<worktree>","pr_number":<N>}' | speccode.mjs run-hook --cwd . --event onPrOpened
+   ```
+   输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+5. **路径 1(等待)**:每 30s 调 `speccode.mjs query-pr --cwd . --number <N>`,超时 30min:
    - MERGED → 「清理」+ state 置 `completed` + `completed_at`。
    - CLOSED 或 CONFLICTING → 报错退出(PR 被关闭或存在合并冲突,需人工处理)。
    - UNKNOWN → 视为查询失败:连续 3 次 UNKNOWN 则中止轮询并报告(提示检查 gh/glab 认证与网络),不计入 30min 超时等待。
    - TIMEOUT → 写 `pending_operation`(command=`finishing-worktree`, phase=`waiting_worktree_pr`, pr_number, updated_at),提示 `--resume`。
-5. **路径 2(不等待)**:state 置 `pr_open` + 记 `pr_number`,**不清理** worktree,不阻塞。
+6. **路径 2(不等待)**:state 置 `pr_open` + 记 `pr_number`,**不清理** worktree,不阻塞。
 
 ## 路径 3:本地 squash
 
@@ -74,6 +79,11 @@ tags: [speccode, workflow, worktree, merge]
 ## 收尾
 
 1. 用 `feature-progress --branch <F>` 取进度。
-2. 打印状态报告:`<F> 进度 X/Y done` + 每个 worktree 状态;若全部 completed,建议 `/speccode:finishing-feature`。
+2. 本 worktree 开发完成(路径 1 MERGED / 路径 2 已开 PR / 路径 3 squash 完成)时,触发 onWorktreeFinished 钩子(已创建 PR 的附带 `"pr_number": <N>`):
+   ```bash
+   echo '{"command":"finishing-worktree","feature_branch":"<F>","worktree_branch":"<worktree>","pr_number":<N>}' | speccode.mjs run-hook --cwd . --event onWorktreeFinished
+   ```
+   输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+3. 打印状态报告:`<F> 进度 X/Y done` + 每个 worktree 状态;若全部 completed,建议 `/speccode:finishing-feature`。
 
 > **状态写入约定**:本命令中所有"state 置 X"(completed / pr_open / pending_operation / 删除条目)MUST 通过 `write-state --cwd . --branch <F> --json-stdin` verb 完成——先取当前 state(reconcile 返回或 read),改字段后整体写回。绝不由 AI 手写 JSON 文件。

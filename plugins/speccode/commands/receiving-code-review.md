@@ -112,6 +112,14 @@ tags: [speccode, workflow, review]
   4. 验证没有回归
 ```
 
+全部反馈处理完成(逐项实施、单独测试、无回归)后,触发 onCodeReviewCompleted 钩子:
+
+```bash
+echo '{"command":"receiving-code-review","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onCodeReviewCompleted
+```
+
+输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+
 ## 何时反驳(When To Push Back)
 
 以下情况要反驳:

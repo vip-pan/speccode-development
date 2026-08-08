@@ -22,7 +22,12 @@ tags: [speccode, workflow, finish]
 
 1. `git push origin <F>`;若 non-fast-forward → 中止并提示用户处理分叉。
 2. 用 pr_tool 创建 PR(base=`config.trunk`, head=F)。`pr_tool=none` → 打印等效命令(如 `gh pr create --base <trunk> --head <F> --title ...`)并中止。
-3. 轮询等合并(每 30s 调 `speccode.mjs query-pr --cwd . --number <N>`,超时 30min):
+3. PR 创建成功后触发 onPrOpened 钩子(payload 带 `"pr_number": <N>`):
+   ```bash
+   echo '{"command":"finishing-feature","feature_branch":"<F>","pr_number":<N>}' | speccode.mjs run-hook --cwd . --event onPrOpened
+   ```
+   输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+4. 轮询等合并(每 30s 调 `speccode.mjs query-pr --cwd . --number <N>`,超时 30min):
    - MERGED → 进入收尾。
    - CLOSED 或 CONFLICTING → 报错退出。
    - UNKNOWN → 视为查询失败:连续 3 次 UNKNOWN 则中止轮询并报告(提示检查 gh/glab 认证与网络),不计入 30min 超时等待。
@@ -33,7 +38,12 @@ tags: [speccode, workflow, finish]
 ## 收尾
 
 1. 删 state:`speccode.mjs delete-state --cwd . --branch <F>`。
-2. `git checkout <trunk>`(feature 分支保留,不删,作为历史)。
-3. 打印:功能已交付,`<F>` 已合并进 `<trunk>`。
+2. 触发 onFeatureFinished 钩子:
+   ```bash
+   echo '{"command":"finishing-feature","feature_branch":"<F>","pr_number":<N>}' | speccode.mjs run-hook --cwd . --event onFeatureFinished
+   ```
+   输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+3. `git checkout <trunk>`(feature 分支保留,不删,作为历史)。
+4. 打印:功能已交付,`<F>` 已合并进 `<trunk>`。
 
 > **状态写入约定**:本命令中写 `pending_operation`(超时挂起)MUST 通过 `write-state --cwd . --branch <F> --json-stdin`(取当前 state → 加 `pending_operation` 字段 → 整体写回)。`--resume` 时读回该字段决定续跑阶段。绝不由 AI 手写 JSON 文件。

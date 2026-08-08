@@ -251,6 +251,14 @@ digraph process {
 - `Task <N>: complete (commits <base7>..<head7>, review clean)`
 - `Task <N>: complete (commits <base7>..<head7>, <K> parked)`(熔断触发后)
 
+同一完成点触发 onTaskCompleted 钩子(每个 task 完成时,payload 带 `"task": <N>`):
+
+```bash
+echo '{"command":"subagent-driven-development","feature_branch":"<F>","worktree_branch":"<W>","task":<N>}' | speccode.mjs run-hook --cwd . --event onTaskCompleted
+```
+
+输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+
 然后把 todo 标记完成,继续前进。只要审查还有既未修复、也未在熔断处带 ruling park 的 Critical/Important 未决项,就永远不要进入下一个任务。
 
 ## 终审(Final Review)

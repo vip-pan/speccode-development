@@ -32,6 +32,11 @@ tags: [speccode, workflow, plan, execute]
 2. 严格按各步执行(plan 的步是一口大小的)
 3. 按规定运行验证
 4. 标记为 completed
+5. 触发 onTaskCompleted 钩子(每个 task 完成时,payload 带 `"task": <N>`):
+   ```bash
+   echo '{"command":"executing-plans","feature_branch":"<F>","worktree_branch":"<W>","task":<N>}' | speccode.mjs run-hook --cwd . --event onTaskCompleted
+   ```
+   输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
 
 ### 第 3 步:完成开发
 

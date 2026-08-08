@@ -84,6 +84,11 @@ tags: [speccode, workflow, brainstorm, design]
 
 **批准后提交:**
 - `git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): brainstorm <slug>"`
+- commit 成功后触发 onBrainstormed 钩子:
+  ```bash
+  echo '{"command":"brainstorming","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onBrainstormed
+  ```
+  输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
 
 **衔接实现:**
 - 调用 `/speccode:writing-plans` 创建详细实现计划。这是唯一终态——MUST NOT 直接开始实现。

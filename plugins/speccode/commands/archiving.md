@@ -41,6 +41,14 @@ git commit -m "docs(speccode): archive <slug>"
 
 (`git add` 同时写两个路径,让 git 记录为移动。)
 
+commit 成功后触发 onArchived 钩子:
+
+```bash
+echo '{"command":"archiving","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onArchived
+```
+
+输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+
 ## 输出摘要
 
 展示:归档的需求、归档目标路径、sync 状态(已同步 / 用户选择跳过 / 无 delta)、警告(未完成任务数等)。

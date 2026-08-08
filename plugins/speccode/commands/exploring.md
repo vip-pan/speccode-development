@@ -46,7 +46,14 @@ tags: [speccode, workflow, explore, thinking]
 
 ## 完成后的衔接(必须)
 
-当用户表示探索结束(或结论已明朗)时:
+当用户表示探索结束(或结论已明朗)时,先触发 onExplored 钩子(探索在 trunk 上进行、尚无分支上下文,payload 只带 `command`):
+
+```bash
+echo '{"command":"exploring"}' | speccode.mjs run-hook --cwd . --event onExplored
+```
+
+输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+
 - **手动模式**:用 AskUserQuestion 询问是否执行 `/speccode:creating-feature` 创建功能分支,以及随后 `/speccode:creating-worktree` 创建开发分支。
 - **auto 模式**(当前会话处于 Claude Code 自动接受/bypass、Codex auto 等自主执行模式):自动衔接执行 creating-feature 与 creating-worktree。判断依据不充分时 MUST 默认询问而非自动衔接。
 
