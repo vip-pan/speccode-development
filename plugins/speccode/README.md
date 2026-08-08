@@ -6,7 +6,7 @@ speccode 是一个 Claude Code 流程编排插件,用 21 个 `/speccode:*` slash
 
 **适用场景**:在同一仓库内**并行开发多个需求**的小团队或个人开发者——当你需要同时跑几个 feature、每个 feature 下再拆多个 worktree 并行施工,又不想在「文档放哪」「该从哪个分支切」「PR 谁来开」这些问题上反复纠结时,speccode 提供了一条端到端的默认路径。
 
-**v2 起**,speccode 内置了完整的 SDD 方法论(探索 → 文档 → 计划 → 子代理执行 → 评审 → 收尾)与 hooks / memory 能力;分支拓扑从四层精简为**三层**(trunk / feature / worktree)。方法论部分移植自 superpowers(v6.2.0)并自包含在插件内,目标项目**零外部依赖**。
+**0.2 起**,speccode 内置了完整的 SDD 方法论(探索 → 文档 → 计划 → 子代理执行 → 评审 → 收尾)与 hooks / memory 能力;分支拓扑从四层精简为**三层**(trunk / feature / worktree)。方法论部分移植自 superpowers(v6.2.0)并自包含在插件内,目标项目**零外部依赖**。
 
 ## 2. 21 个命令快速参考表
 
@@ -14,7 +14,7 @@ speccode 是一个 Claude Code 流程编排插件,用 21 个 `/speccode:*` slash
 
 | 命令 | 作用 | 前置(运行分支) |
 |---|---|---|
-| `/speccode:init` | 初始化/更新:探测远端、主干、知识库工具,配置 worktree 目录与 hooks,写 `.speccode/config.json`(config v2) | 任意分支(首次通常在 trunk) |
+| `/speccode:init` | 初始化/更新:探测远端、主干、知识库工具,配置 worktree 目录与 hooks,写 `.speccode/config.json`(config 0.2) | 任意分支(首次通常在 trunk) |
 | `/speccode:exploring` | 探索需求(不产文档,结论在会话上下文;知识库工具优先) | trunk |
 | `/speccode:creating-feature` | 从 trunk 切出功能分支并推送,登记 state,建 memory 骨架 | trunk |
 | `/speccode:creating-worktree` | 从功能分支切出 worktree(worktree_dir 可配置、check-ignore 校验、项目 setup、基线测试) | feature/bugfix/refactor/chore 分支 |
@@ -114,14 +114,14 @@ speccode/
 
 ```
 .speccode/
-├── config.json                          # 静态配置(config v2),只在 init / reset 改
-├── config.json.bak.<timestamp>          # init/reset 写 config 前的自动备份
+├── config.json                          # 静态配置(config 0.2),init / reset 整体写入;creating-worktree 可回写 worktree_dir
+├── config.json.bak.<timestamp>          # init 幂等 / reset 流程改写 config 前的显式备份(backup-config verb)
 ├── state/features/<type>__<slug>.json   # 动态状态,按 feature 维度隔离
 ├── memory/                              # feature 级记忆 + _exploring.md(自忽略 .gitignore)
 └── sdd/                                 # SDD 执行工件:task brief / review 包 / ledger(自忽略 .gitignore)
 ```
 
-- **`config.json`**:全局静态配置,config v2 字段集:`version`(=2)、`initialized_at`、`trunk`、`remote`、`pr_tool`、`worktree_prefix`、`worktree_dir`、`knowledge_tools`;`hooks` 仅在用户配置时存在。只在 `/speccode:init`(全新或幂等)与 `/speccode:reset` 写入,写入前自动备份为 `config.json.bak.<timestamp>`。
+- **`config.json`**:全局静态配置,config 0.2 字段集:`version`(=2)、`initialized_at`、`trunk`、`remote`、`pr_tool`、`worktree_prefix`、`worktree_dir`、`knowledge_tools`;`hooks` 仅在用户配置时存在。整体写入只发生在 `/speccode:init`(全新或幂等)与 `/speccode:reset`;此外 `/speccode:creating-worktree` 在 config 缺少 `worktree_dir` 时会询问存放目录,并经 `write-config` 把该字段回写进 config(读当前 config → 加字段 → 整体写回)。**备份不是 `write-config` 的自动行为**:`config.json.bak.<timestamp>` 由 init 幂等流程与 reset 流程在改写前显式调用 `backup-config` 生成,creating-worktree 的单字段回写不产生备份。
 - **`state/features/`**:每个 active feature 一个独立文件(`<type>__<slug>.json`,双下划线分隔 type 与 slug),记录 worktree 进度(`pending | in_progress | pr_open | completed`)与挂起的 `pending_operation`(供 `--resume` 续跑)。多 feature 并行各写各的文件,无需加锁。
 - **`memory/`**:feature 级会话记忆(见第 8 节),插件自写 `.gitignore`(内容 `*`)使其对 `git status` 隐身、免于 `git clean -fd`。
 - **`sdd/`**:SDD 执行工件,归属**当前 worktree 根**(而非主仓根),随 `git worktree remove` 一并清理;同样自忽略。
@@ -203,7 +203,7 @@ speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>_
 
 迁移步骤:
 
-1. **config 重新 init 升 v2**:直接运行 `/speccode:init`,幂等流程会逐字段 diff;旧 config(v1 或无 `version`)的 `display` / `spec_tools` / `untracked_permanent` 三字段会标记为「移除」,接受升级后写入 `version: 2`,不存在混合态。旧值自动备份为 `config.json.bak.<timestamp>`。
+1. **config 重新 init 升 0.2**:直接运行 `/speccode:init`,幂等流程会逐字段 diff;旧 config(`version` 为 1 或缺失)的 `display` / `spec_tools` / `untracked_permanent` 三字段会标记为「移除」,接受升级后写入 `version: 2`,不存在混合态。改写前的旧值经 `backup-config` 显式备份为 `config.json.bak.<timestamp>`。
 2. **遗留 display 分支**:v0.2 不再使用 display 层。已无 active feature 的仓库可直接删除 display 分支;spec 文档在 v0.2 全分支 tracked,不再需要专门的「标的分支」托管。
 3. **遗留 `waiting_display_pr` 挂起态**:v0.1 finish 阶段卡在 display PR 的 feature,其 state 的 `pending_operation` 无法被 v0.2 自动续跑。按 `/speccode:finishing-feature` 命令文档中的手动指引处理:① 检查当时的 display PR 是否已合并;② 已合并则 `git checkout <trunk> && git pull`,手动创建 `<feature> → <trunk>` 的 PR;③ 用 `write-state` 清除该 feature 的 `pending_operation` 后重新执行 `/speccode:finishing-feature`。v0.1 的 `<feature>-complete` 临时分支若仍残留,确认 trunk PR 已合并后手动删除即可。
 
