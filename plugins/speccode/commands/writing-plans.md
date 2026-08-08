@@ -43,12 +43,15 @@ tags: [speccode, workflow, plan]
 > Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [一句话目标]
+
 **Architecture:** [2-3 句方法]
+
 **Tech Stack:** [关键技术]
 
 ## Global Constraints
 [项目级要求——版本下限、依赖限制、命名与文案规则、平台要求——每行一条,
 精确值从设计文档逐字拷贝。每个任务的要求隐含包含本节。]
+
 ---
 ```
 
@@ -56,7 +59,7 @@ tags: [speccode, workflow, plan]
 
 ## 任务结构
 
-```markdown
+````markdown
 ### Task N: [组件名]
 
 **Files:**
@@ -66,15 +69,40 @@ tags: [speccode, workflow, plan]
 
 **Interfaces:**
 - Consumes: [本任务用到前序任务的什么——精确签名]
-- Produces: [后续任务依赖什么——精确函数名、参数与返回类型;
-  实现者只看得到自己的任务,这一块是他们了解相邻任务命名与类型的唯一途径]
+- Produces: [后续任务依赖什么——精确函数名、参数与返回类型;实现者只看得到自己的任务,这一块是他们了解相邻任务命名与类型的唯一途径]
 
-- [ ] **Step 1: 写失败测试**      <真实测试代码块>
-- [ ] **Step 2: 运行确认失败**    Run: <cmd>  Expected: FAIL with "..."
-- [ ] **Step 3: 写最小实现**      <真实代码块>
-- [ ] **Step 4: 运行确认通过**    Run: <cmd>  Expected: PASS
-- [ ] **Step 5: 提交**            <git add + git commit -m>
+- [ ] **Step 1: 写失败测试**
+
+```python
+def test_specific_behavior():
+    result = function(input)
+    assert result == expected
 ```
+
+- [ ] **Step 2: 运行确认失败**
+
+Run: `pytest tests/path/test.py::test_name -v`
+Expected: FAIL with "function not defined"
+
+- [ ] **Step 3: 写最小实现**
+
+```python
+def function(input):
+    return expected
+```
+
+- [ ] **Step 4: 运行确认通过**
+
+Run: `pytest tests/path/test.py::test_name -v`
+Expected: PASS
+
+- [ ] **Step 5: 提交**
+
+```bash
+git add tests/path/test.py src/path/file.py
+git commit -m "feat: add specific feature"
+```
+````
 
 TDD 烙进步骤模板本身——每个任务都是「红-绿-提交」循环;步骤 2-5 分钟;`- [ ]` 复选框是执行时的跟踪机制。
 

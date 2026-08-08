@@ -33,9 +33,9 @@ tags: [speccode, workflow, brainstorm, design]
 5. **呈现设计** — 分段、每段详略随复杂度,每段后确认
 6. **写设计文档** — 落到 `speccode/changes/<slug>/brainstorm/YYYY-MM-DD-<topic>-design.md`
 7. **回写 propose/** — 若 propose/ 存在,把结论性变更写回受影响文档,保持两处一致
-8. **落盘即提交** — `git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): brainstorm <slug>"`
-9. **规格自查** — 占位符/内部一致性/范围/歧义四项 inline 检查(见下)
-10. **用户审阅** — 请用户审阅写好的设计文档
+8. **规格自查** — 占位符/内部一致性/范围/歧义四项 inline 检查(见下)
+9. **用户审阅** — 请用户审阅写好的设计文档
+10. **落盘即提交** — `git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): brainstorm <slug>"`
 11. **衔接实现计划** — 调用 `/speccode:writing-plans`
 
 ## 过程
@@ -70,7 +70,6 @@ tags: [speccode, workflow, brainstorm, design]
 **文档与回写:**
 - 把验证过的设计写入 `speccode/changes/<slug>/brainstorm/YYYY-MM-DD-<topic>-design.md`
 - **回写 propose/**:设计结论与 `propose/` 文档不一致之处(方案替换、范围调整、决策变更),MUST 同步修改 propose/ 下对应文档(proposal.md 的 What Changes、design.md 的 Decisions、specs delta、tasks.md 受影响处),保证两处不矛盾
-- 落盘即提交:`git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): brainstorm <slug>"`
 
 **规格自查(写完后以新鲜眼光过一遍,inline 修复):**
 1. **占位符扫描**:有没有 TBD、TODO、未完成小节、模糊要求?修掉。
@@ -79,9 +78,12 @@ tags: [speccode, workflow, brainstorm, design]
 4. **歧义检查**:任何要求会有两种解读吗?有就选定一种写明确。
 
 **用户审阅门:**
-> "设计文档已写好并提交到 `<path>`。请审阅,如需修改告诉我,然后我们再开始写实现计划。"
+> "设计文档已写好,落在 `<path>`。请审阅,如需修改告诉我;批准后我会提交并衔接 writing-plans。"
 
 等用户回复。有修改就改并重跑自查。批准后才继续。
+
+**批准后提交:**
+- `git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): brainstorm <slug>"`
 
 **衔接实现:**
 - 调用 `/speccode:writing-plans` 创建详细实现计划。这是唯一终态——MUST NOT 直接开始实现。

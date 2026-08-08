@@ -77,9 +77,9 @@ tags: [speccode, workflow, brainstorm, design]
 5. **呈现设计** — 分段、每段详略随复杂度,每段后确认
 6. **写设计文档** — 落到 `speccode/changes/<slug>/brainstorm/YYYY-MM-DD-<topic>-design.md`
 7. **回写 propose/** — 若 propose/ 存在,把结论性变更写回受影响文档,保持两处一致
-8. **落盘即提交** — `git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): brainstorm <slug>"`
-9. **规格自查** — 占位符/内部一致性/范围/歧义四项 inline 检查(见下)
-10. **用户审阅** — 请用户审阅写好的设计文档
+8. **规格自查** — 占位符/内部一致性/范围/歧义四项 inline 检查(见下)
+9. **用户审阅** — 请用户审阅写好的设计文档
+10. **落盘即提交** — `git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): brainstorm <slug>"`
 11. **衔接实现计划** — 调用 `/speccode:writing-plans`
 
 ## 过程
@@ -114,7 +114,6 @@ tags: [speccode, workflow, brainstorm, design]
 **文档与回写:**
 - 把验证过的设计写入 `speccode/changes/<slug>/brainstorm/YYYY-MM-DD-<topic>-design.md`
 - **回写 propose/**:设计结论与 `propose/` 文档不一致之处(方案替换、范围调整、决策变更),MUST 同步修改 propose/ 下对应文档(proposal.md 的 What Changes、design.md 的 Decisions、specs delta、tasks.md 受影响处),保证两处不矛盾
-- 落盘即提交:`git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): brainstorm <slug>"`
 
 **规格自查(写完后以新鲜眼光过一遍,inline 修复):**
 1. **占位符扫描**:有没有 TBD、TODO、未完成小节、模糊要求?修掉。
@@ -123,9 +122,12 @@ tags: [speccode, workflow, brainstorm, design]
 4. **歧义检查**:任何要求会有两种解读吗?有就选定一种写明确。
 
 **用户审阅门:**
-> "设计文档已写好并提交到 `<path>`。请审阅,如需修改告诉我,然后我们再开始写实现计划。"
+> "设计文档已写好,落在 `<path>`。请审阅,如需修改告诉我;批准后我会提交并衔接 writing-plans。"
 
 等用户回复。有修改就改并重跑自查。批准后才继续。
+
+**批准后提交:**
+- `git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): brainstorm <slug>"`
 
 **衔接实现:**
 - 调用 `/speccode:writing-plans` 创建详细实现计划。这是唯一终态——MUST NOT 直接开始实现。
@@ -219,7 +221,7 @@ git commit -m "feat(references): port visual companion (paths remapped to .specc
 
 - [ ] **Step 1: 写新文件** — `plugins/speccode/commands/writing-plans.md` 完整内容:
 
-````markdown
+`````markdown
 ---
 name: "SpecCode: Writing Plans"
 description: "把批准的设计转化为细粒度实现计划(每任务 2-5 分钟步,精确文件路径/完整代码/验证步骤),落 plan/ 并提交"
@@ -265,12 +267,15 @@ tags: [speccode, workflow, plan]
 > Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [一句话目标]
+
 **Architecture:** [2-3 句方法]
+
 **Tech Stack:** [关键技术]
 
 ## Global Constraints
 [项目级要求——版本下限、依赖限制、命名与文案规则、平台要求——每行一条,
 精确值从设计文档逐字拷贝。每个任务的要求隐含包含本节。]
+
 ---
 ```
 
@@ -288,14 +293,39 @@ tags: [speccode, workflow, plan]
 
 **Interfaces:**
 - Consumes: [本任务用到前序任务的什么——精确签名]
-- Produces: [后续任务依赖什么——精确函数名、参数与返回类型;
-  实现者只看得到自己的任务,这一块是他们了解相邻任务命名与类型的唯一途径]
+- Produces: [后续任务依赖什么——精确函数名、参数与返回类型;实现者只看得到自己的任务,这一块是他们了解相邻任务命名与类型的唯一途径]
 
-- [ ] **Step 1: 写失败测试**      <真实测试代码块>
-- [ ] **Step 2: 运行确认失败**    Run: <cmd>  Expected: FAIL with "..."
-- [ ] **Step 3: 写最小实现**      <真实代码块>
-- [ ] **Step 4: 运行确认通过**    Run: <cmd>  Expected: PASS
-- [ ] **Step 5: 提交**            <git add + git commit -m>
+- [ ] **Step 1: 写失败测试**
+
+```python
+def test_specific_behavior():
+    result = function(input)
+    assert result == expected
+```
+
+- [ ] **Step 2: 运行确认失败**
+
+Run: `pytest tests/path/test.py::test_name -v`
+Expected: FAIL with "function not defined"
+
+- [ ] **Step 3: 写最小实现**
+
+```python
+def function(input):
+    return expected
+```
+
+- [ ] **Step 4: 运行确认通过**
+
+Run: `pytest tests/path/test.py::test_name -v`
+Expected: PASS
+
+- [ ] **Step 5: 提交**
+
+```bash
+git add tests/path/test.py src/path/file.py
+git commit -m "feat: add specific feature"
+```
 ````
 
 TDD 烙进步骤模板本身——每个任务都是「红-绿-提交」循环;步骤 2-5 分钟;`- [ ]` 复选框是执行时的跟踪机制。
@@ -332,7 +362,7 @@ TDD 烙进步骤模板本身——每个任务都是「红-绿-提交」循环;�
 
 - 选 1 → 调用 `/speccode:subagent-driven-development`
 - 选 2 → 调用 `/speccode:executing-plans`
-````
+`````
 
 - [ ] **Step 2: 验证**
 
@@ -388,3 +418,4 @@ git commit -m "docs(openspec): check off P4 tasks of speccode-v2-sdd-flow"
 - **Placeholder 扫描**:无 TBD;两个命令为完整成稿;references 拷贝源路径与改行行号精确给出。
 - **一致性**:slug/归属判定与 P3 命令同构;`speccode/changes/<slug>/{brainstorm,plan}/` 命名与 spec 目录布局逐字一致;companion 启动路径 `${CLAUDE_PLUGIN_ROOT}/references/visual-companion-scripts/` 在 T1 与 T2 一致。
 - **移植保真**:HARD-GATE/反模式/检查清单/过程/自查/审阅门/just-in-time offer 文案/逐问题决策判据均保留;writing-plans 的 header 模板、任务结构、No Placeholders、Self-Review、Execution Handoff 全保留,REQUIRED SUB-SKILL 改 `/speccode:` 形式;legacy 两个 reviewer-prompt 显式不移植。
+- P4 终审修复波次:F1 提交顺序后移 / F2 恢复 worked example / F3 header 模板空行,已同步进对应 Task 成稿。
