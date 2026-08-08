@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 speccode 是一个 **Claude Code 流程编排插件**,用 21 个 `/speccode:*` slash 命令固化「多需求并行开发 + spec 文档托管 + PR/MR 流程标准化 + SDD 方法论(探索/文档/计划/子代理执行/评审)+ hooks/memory」工作流。它管理 trunk / feature / worktree 三层分支拓扑;spec 文档(`speccode/`)在所有分支 tracked,随 PR 链路上 trunk。SDD 方法论命令自包含移植自 superpowers(v6.2.0),目标项目零外部依赖。
 
-完整设计文档见 `plugins/speccode/README.md`(定位、21 命令表、三层分支拓扑图、风险 R1-R12)。规格已归档在 `openspec/specs/`(4 个 capability,35 requirements)与 `openspec/changes/archive/2026-07-13-add-speccode-plugin/`。
+完整设计文档见 `plugins/speccode/README.md`(定位、21 命令表、三层分支拓扑图、风险 R1-R13)。规格已归档在 `openspec/specs/`(5 个 capability,46 requirements)与 `openspec/changes/archive/2026-07-13-add-speccode-plugin/`。
 
 ## 常用命令
 
@@ -33,9 +33,9 @@ node plugins/speccode/bin/speccode.mjs <verb> --cwd . [--flags]
 
 代码分三层(外加 `references/` 辅助层),改动前先定位属于哪一层——**确定性逻辑绝不写进命令 markdown,一律下沉到 lib**:
 
-1. **引擎 lib**(`plugins/speccode/lib/*.mjs`)—— 12 个经单测的纯逻辑模块(atomic / config / detect / git / hooks / memory / prtool / reconcile / sdd / slug / state / timestamp)。所有 git 操作、JSON 读写、对账、hooks/memory、文档剥离都在这里。改逻辑改这里,并配套改 `tests/`。
+1. **引擎 lib**(`plugins/speccode/lib/*.mjs`)—— 12 个经单测的纯逻辑模块(atomic / config / detect / git / hooks / memory / prtool / reconcile / sdd / slug / state / timestamp)。所有 git 操作、JSON 读写、对账、hooks/memory、SDD 工件都在这里。改逻辑改这里,并配套改 `tests/`。
 2. **CLI 枢纽**(`plugins/speccode/bin/speccode.mjs`)—— 把 lib 暴露为输出 JSON 的 18 个 verb。读 verb 直接返回;**写 verb 必须走 `--json-stdin`**(`echo '<json>' | node ... write-state --json-stdin`),从 stdin 读 JSON 而不从 argv 读,避免超长/转义。未知 verb 或抛错 → `{ok:false,error}` + exit 1。
-3. **命令交互层**(`plugins/speccode/commands/*.md`)—— 21 个 slash 命令的 prose 指令,只负责提问/确认/调用 CLI verb/解析 JSON/报告。**不重复实现逻辑**,纯 git 动作(如 `git rm -r --cached`)可直接写,其余走 verb。
+3. **命令交互层**(`plugins/speccode/commands/*.md`)—— 21 个 slash 命令的 prose 指令,只负责提问/确认/调用 CLI verb/解析 JSON/报告。**不重复实现逻辑**,纯 git 动作(如 `git worktree add`)可直接写,其余走 verb。
 4. **references 层**(`plugins/speccode/references/`)—— 命令可引用的辅助文档(评审提示 / 调试与防御方法 / 测试要点等),与命令 markdown 分离、不承载交互逻辑,随插件源码跟踪。
 
 ### 关键不变量(跨文件才能看清)
