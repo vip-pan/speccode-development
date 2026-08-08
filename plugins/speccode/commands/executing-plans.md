@@ -43,6 +43,9 @@ tags: [speccode, workflow, plan, execute]
 
 所有任务完成并验证后:
 - **写记忆**:把本命令产出的执行进度摘要(完成的任务、验证结果,经用户确认或按本命令内置判据)经 `echo '{"mode":"append","content":"<摘要>"}' | speccode.mjs write-memory --cwd . --branch <F> --json-stdin` 追加到本 feature 的 memory。
+
+**长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①每个 task 完成时;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。
+
 - 宣布:"我在用 finishing-worktree 完成这项工作。"
 - **REQUIRED SUB-SKILL:** 使用 `/speccode:finishing-worktree`
 - 按该命令验证测试、呈现选项、执行选择

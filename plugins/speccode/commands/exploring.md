@@ -58,6 +58,8 @@ echo '{"command":"exploring"}' | speccode.mjs run-hook --cwd . --event onExplore
 - 归属既有 feature → `echo '{"mode":"append","content":"<摘要>"}' | speccode.mjs write-memory --cwd . --branch <F> --json-stdin` 追加到该 feature 的 memory。
 - 无归属(尚无 feature)→ 追加到 trunk 级 `.speccode/memory/_exploring.md`:`echo '{"mode":"append","content":"<摘要>"}' | speccode.mjs write-memory --cwd . --branch _exploring --json-stdin`,供后续 creating-feature 承接。
 
+**长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①一个开发阶段/任务完成且距上次写入已隔多个阶段;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。
+
 - **手动模式**:用 AskUserQuestion 询问是否执行 `/speccode:creating-feature` 创建功能分支,以及随后 `/speccode:creating-worktree` 创建开发分支。
 - **auto 模式**(当前会话处于 Claude Code 自动接受/bypass、Codex auto 等自主执行模式):自动衔接执行 creating-feature 与 creating-worktree。判断依据不充分时 MUST 默认询问而非自动衔接。
 

@@ -32,6 +32,9 @@ tags: [speccode, workflow, feature]
 3. 写 state:通过 `echo '<json>' | speccode.mjs write-state --cwd . --branch <branch> --json-stdin`,内容含 `feature_branch`、`created_at`(ISO UTC)、`initial_branch`(= config.trunk)、`status:"in_progress"`、`worktrees:{}`。
 4. **建立 memory 骨架(承接 exploring 结论)**:先运行 `speccode.mjs read-memory --cwd . --branch _exploring` 读 trunk 级 `_exploring.md`;随后经 `echo '{"mode":"replace","content":"# <branch> 记忆\n- 创建于 <ISO UTC 时间>\n- exploring 结论:<上一步非 null 时迁入其内容;为 null 时填「无」>"}' | speccode.mjs write-memory --cwd . --branch <branch> --json-stdin` 写入骨架(mode=replace)。
 5. **清空 `_exploring.md`**:仅当上一步 read-memory 返回非 null 时执行——`echo '{"mode":"replace","content":""}' | speccode.mjs write-memory --cwd . --branch _exploring --json-stdin`(mode=replace、内容为空串),避免下一个 feature 重复承接同一份探索结论;为 null 时跳过。
+
+**长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①一个开发阶段/任务完成且距上次写入已隔多个阶段;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。
+
 6. 触发 onFeatureCreated 钩子:
    ```bash
    echo '{"command":"creating-feature","feature_branch":"<branch>"}' | speccode.mjs run-hook --cwd . --event onFeatureCreated
