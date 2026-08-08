@@ -36,7 +36,7 @@ tags: [speccode, workflow, brainstorm, design]
 7. **回写 propose/** — 若 propose/ 存在,把结论性变更写回受影响文档,保持两处一致
 8. **规格自查** — 占位符/内部一致性/范围/歧义四项 inline 检查(见下)
 9. **用户审阅** — 请用户审阅写好的设计文档
-10. **落盘即提交** — `git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): brainstorm <slug>"`
+10. **批准后提交(落盘即 commit)** — `git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): brainstorm <slug>"`
 11. **衔接实现计划** — 调用 `/speccode:writing-plans`
 
 ## 过程

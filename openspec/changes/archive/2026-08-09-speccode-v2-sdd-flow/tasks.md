@@ -77,13 +77,13 @@
 
 ## P8 文档与校验
 
-- [ ] 8.1 `plugins/speccode/README.md` 全量重写:三层拓扑图、21 命令表(生命周期/文档流/方法论三组)、文档目录 + hooks + memory + 知识工具节、R1–R13(R1/R7/R10 删除;新增 R11 hook 失败 warn-only / R12 memory last-writer-wins / R13 trunk 文档体积)、「从 0.1 迁移」对照表、**理念节完整收录五条(测试驱动 / 系统化优于临时发挥 / 降低复杂度 / 证据优于断言 / 不要过度自信-不确定先询问)**、移植基线 superpowers v6.2.0 记录
-- [ ] 8.2 `CLAUDE.md` 更新:lib 13 模块清单、21 命令、references/、新不变量(run-hook 永远 exit 0、memory 走 writeTextAtomic、SDD 工作区 show-toplevel 与主仓定位差异、写 verb 必须 --json-stdin)、删 finish 双 PR 不变量改单 PR
-- [ ] 8.3 `plugin.json`:version 0.1.0→0.2.0,keywords 增 `"sdd"`、`"tdd"`、`"hooks"`、`"memory"`,description 更新
-- [ ] 8.4 前提确认(已满足):`restructure-as-claude-code-plugin` 已归档,`openspec/specs/plugin-packaging/spec.md` 主 spec 已落地,v2 delta 的 4 条 MODIFIED 直接作用于主 spec
-- [ ] 8.5 `/opsx:sync speccode-v2-sdd-flow`(agent 流):合并全部 delta;含 plugin-packaging 四条 MODIFIED(命令命名空间 / plugin.json 元数据 / 文档三层分离 / 命令正文手写路径与引擎一致)
-- [ ] 8.6 `git rm -r openspec/specs/spec-docs-tracking-control/`(REMOVED-all 后空壳主 spec 过不了校验,必须删目录)
-- [ ] 8.7 校验:`openspec validate speccode-v2-sdd-flow --strict`;剩余 6 个主 spec 逐一 `--strict`;断言 spec-docs-tracking-control 目录不存在
-- [ ] 8.8 回归断言:`git grep -n "display" plugins/speccode/lib plugins/speccode/bin` 零命中;`git grep -n "docstrip\|waitForPrMerge" plugins/speccode` 零命中;`git grep -rn "develop-complete\|develop-start" plugins/speccode/commands plugins/speccode/README.md` 零命中(迁移对照表除外)
-- [ ] 8.9 全量测试绿 + dogfood 全流程走查(见计划/设计验证节:init→exploring→creating-feature→creating-worktree→proposing→brainstorming→writing-plans→SDD 单 task→**requesting-code-review**→syncing→archiving→finishing-worktree→finishing-feature→status/reset;中途 /clear 验 memory 恢复与 `_exploring.md` 承接)
-- [ ] 8.10 `/opsx:archive speccode-v2-sdd-flow`(agent 流,**不用裸 openspec archive**)
+- [x] 8.1 `plugins/speccode/README.md` 全量重写:三层拓扑图、21 命令表(生命周期/文档流/方法论三组)、文档目录 + hooks + memory + 知识工具节、R1–R13(R1/R7/R10 删除;新增 R11 hook 失败 warn-only / R12 memory last-writer-wins / R13 trunk 文档体积)、「从 0.1 迁移」对照表、**理念节完整收录五条(测试驱动 / 系统化优于临时发挥 / 降低复杂度 / 证据优于断言 / 不要过度自信-不确定先询问)**、移植基线 superpowers v6.2.0 记录
+- [x] 8.2 `CLAUDE.md` 更新:lib 13 模块清单、21 命令、references/、新不变量(run-hook 永远 exit 0、memory 走 writeTextAtomic、SDD 工作区 show-toplevel 与主仓定位差异、写 verb 必须 --json-stdin)、删 finish 双 PR 不变量改单 PR
+- [x] 8.3 `plugin.json`:version 0.1.0→0.2.0,keywords 增 `"sdd"`、`"tdd"`、`"hooks"`、`"memory"`,description 更新
+- [x] 8.4 前提确认(已满足):`restructure-as-claude-code-plugin` 已归档,`openspec/specs/plugin-packaging/spec.md` 主 spec 已落地,v2 delta 的 4 条 MODIFIED 直接作用于主 spec
+- [x] 8.5 `/opsx:sync speccode-v2-sdd-flow`(agent 流):合并全部 delta;含 plugin-packaging 四条 MODIFIED(命令命名空间 / plugin.json 元数据 / 文档三层分离 / 命令正文手写路径与引擎一致)
+- [x] 8.6 `git rm -r openspec/specs/spec-docs-tracking-control/`(REMOVED-all 后空壳主 spec 过不了校验,必须删目录)
+- [x] 8.7 校验:`openspec validate speccode-v2-sdd-flow --strict`;剩余 6 个主 spec 逐一 `--strict`;断言 spec-docs-tracking-control 目录不存在
+- [x] 8.8 回归断言:`git grep -n "display" plugins/speccode/lib plugins/speccode/bin` 零命中;`git grep -n "docstrip\|waitForPrMerge" plugins/speccode` 零命中;`git grep -rn "develop-complete\|develop-start" plugins/speccode/commands plugins/speccode/README.md` 零命中(迁移对照表除外)
+- [x] 8.9 全量测试绿 + dogfood 全流程走查(见计划/设计验证节:init→exploring→creating-feature→creating-worktree→proposing→brainstorming→writing-plans→SDD 单 task→**requesting-code-review**→syncing→archiving→finishing-worktree→finishing-feature→status/reset;中途 /clear 验 memory 恢复与 `_exploring.md` 承接)
+- [x] 8.10 `/opsx:archive speccode-v2-sdd-flow`(agent 流,**不用裸 openspec archive**)（已执行 agent 流归档）
