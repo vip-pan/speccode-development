@@ -1,0 +1,53 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync, existsSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { memoryDir, memoryPath, readMemory, writeMemory } from '../lib/memory.mjs';
+
+function tmp() { return mkdtempSync(join(tmpdir(), 'speccode-mem-')); }
+
+test('memoryPath reuses the double-underscore state naming', () => {
+  assert.equal(memoryPath('/x/.speccode', 'feature/payment-api'),
+    '/x/.speccode/memory/feature__payment-api.md');
+  assert.equal(memoryPath('/x/.speccode', '_exploring'), '/x/.speccode/memory/_exploring.md');
+});
+
+test('readMemory returns null when absent', () => {
+  const dir = tmp();
+  assert.equal(readMemory(dir, 'feature/none'), null);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('writeMemory replace then read round-trips, dir auto-created', () => {
+  const dir = tmp();
+  const p = writeMemory(dir, 'feature/x', '# memory\n', 'replace');
+  assert.equal(p, memoryPath(dir, 'feature/x'));
+  assert.equal(readMemory(dir, 'feature/x'), '# memory\n');
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('writeMemory append preserves existing content', () => {
+  const dir = tmp();
+  writeMemory(dir, 'feature/x', 'first\n', 'replace');
+  writeMemory(dir, 'feature/x', 'second\n', 'append');
+  assert.equal(readMemory(dir, 'feature/x'), 'first\nsecond\n');
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('writeMemory append on missing file behaves as replace', () => {
+  const dir = tmp();
+  writeMemory(dir, 'feature/y', 'only\n', 'append');
+  assert.equal(readMemory(dir, 'feature/y'), 'only\n');
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('writeMemory is atomic (no tmp residue, no partial state)', () => {
+  const dir = tmp();
+  writeMemory(dir, 'feature/x', 'v1', 'replace');
+  writeMemory(dir, 'feature/x', 'v2', 'replace');
+  const files = readdirSync(memoryDir(dir));
+  assert.deepEqual(files, ['feature__x.md']);
+  assert.equal(readMemory(dir, 'feature/x'), 'v2');
+  rmSync(dir, { recursive: true, force: true });
+});
