@@ -1,0 +1,54 @@
+---
+name: "SpecCode: Syncing"
+description: "把 changes/<slug>/ 的 delta specs 智能合并进 speccode/spec/ 主规格(brainstorm 优先吸收),幂等,落盘即提交"
+category: Workflow
+tags: [speccode, workflow, sync, specs]
+---
+
+把本次变更的增量规格合并进主规格。这是 **agent 驱动的智能合并**——你直接读 delta 并编辑主规格(允许部分更新,如只加一个 scenario)。全程中文交互。**应在 worktree-* 分支上运行**。
+
+## 前置
+
+1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
+2. 确定 slug:从当前 worktree 所属 feature 分支取 slug 段(可用 `speccode.mjs reconcile --cwd .` 的 features 判定归属);`speccode/changes/<slug>/` 不存在 → 报错"未找到需求目录,请先 /speccode:proposing",退出。
+
+## delta 源契约
+
+- delta 源 = `speccode/changes/<slug>/propose/` 下的文档:`specs/<capability>/spec.md` 是必须源;proposal.md / design.md / tasks.md 用于理解意图。
+- **brainstorm 残余吸收**:若 `speccode/changes/<slug>/brainstorm/` 存在,先读其中的设计文档,与 propose/ 文档对照:brainstorm 结论中**未回写**到 propose/ 的变更,先补入你对 delta 的理解(以 brainstorm 为更新的权威),再执行合并;已全部回写则直接进入合并。
+- 找不到任何 delta spec(`propose/specs/` 为空或不存在)→ 报告"无 delta 可同步"并停止,不从其他工件臆测。
+
+## 合并语义(对每个 capability delta)
+
+读 delta 文件与对应主规格 `speccode/spec/<capability>/spec.md`(可能尚不存在),然后:
+
+- **ADDED Requirements**:主规格没有 → 追加;已存在 → 更新为 delta 内容(视为隐式 MODIFIED)。
+- **MODIFIED Requirements**:按名称(逐字)定位主规格中的 requirement,应用部分更新——可以只加 scenario、改 scenario、改正文;delta 未提及的既有内容 MUST 保留。
+- **REMOVED Requirements**:从主规格删除整个 requirement 块。
+- **RENAMED Requirements**:按 FROM 名称定位,改名为 TO。
+- **`## Purpose`**:主规格已有 Purpose → 主规格的权威,不动;新建主规格 → 逐字复制 delta 的 `## Purpose` 正文(没有则写一句简短占位并提示用户补充)。
+- **新建主规格**:capability 目录不存在 → 创建 `speccode/spec/<capability>/spec.md`,结构为 `# <capability> Specification` / `## Purpose` / `## Requirements`(MUST NOT 出现 ADDED/MODIFIED/REMOVED/RENAMED 操作头)。
+
+## 要求
+
+- **幂等**:重复执行 MUST 得到相同结果(按 requirement 标题/段落去重;合并后再跑一遍 MUST 无 diff)。
+- 合并过程中向用户展示你在改什么(每个 capability 一行:新增/修改/删除/改名了哪些 requirement)。
+- 主规格保持 Main Spec 格式;MUST NOT 把 delta 文件原样拷进主规格。
+
+## 落盘即提交(必须)
+
+```bash
+git add speccode/spec/
+git commit -m "docs(speccode): sync <slug> into main specs"
+```
+
+## 输出摘要
+
+合并完成后展示:更新了哪些 capability、各做了什么(新增/修改/删除/改名)、哪些新建主规格的 Purpose 是占位待补。
+
+## 护栏
+
+- delta 源只来自 `speccode/changes/<slug>/`(propose 为主、brainstorm 残余吸收),不从会话记忆臆测。
+- 主规格已有内容未被 delta 提及 MUST 原样保留。
+- 有不清楚的地方先问用户,不猜测。
+- syncing 只动 `speccode/spec/` 并提交;不归档(那是 archiving)、不改 changes/ 内容(brainstorm 残余吸收只影响合并理解,必要时可先把补充回写 propose/ 并一并提交)。
