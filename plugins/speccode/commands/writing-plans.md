@@ -14,6 +14,7 @@ tags: [speccode, workflow, plan]
 1. **分支校验**:`git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix` 开头;否则退出(`read-config` 先跑,为 null → 提示先 `/speccode:init` 并退出)。
 2. 运行 `speccode.mjs reconcile --cwd .` 找到所属功能分支 F,计算 slug。
 3. **读输入文档(优先级固定)**:先读 `speccode/changes/<slug>/brainstorm/`(存在则以其为输入);不存在 → 回退读 `speccode/changes/<slug>/propose/`;两者都不存在 → 报错"未找到设计或需求文档,请先 `/speccode:proposing` 或 `/speccode:brainstorming`",退出。
+4. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ## 范围检查
 
@@ -131,6 +132,7 @@ TDD 烙进步骤模板本身——每个任务都是「红-绿-提交」循环;�
   echo '{"command":"writing-plans","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onPlanned
   ```
   输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+- **写记忆**:把本命令产出的决策/进度摘要(经用户确认或按本命令内置判据)经 `echo '{"mode":"append","content":"<摘要>"}' | speccode.mjs write-memory --cwd . --branch <F> --json-stdin` 追加到本 feature 的 memory。
 
 ## 执行交接
 

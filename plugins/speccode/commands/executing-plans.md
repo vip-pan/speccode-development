@@ -24,6 +24,7 @@ tags: [speccode, workflow, plan, execute]
 3. 批判性审查——找出 plan 中任何疑问或顾虑
 4. 有顾虑:开始前向人类伙伴提出
 5. 无顾虑:为 plan 各项建 todo,继续
+6. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ### 第 2 步:执行任务
 
@@ -41,6 +42,7 @@ tags: [speccode, workflow, plan, execute]
 ### 第 3 步:完成开发
 
 所有任务完成并验证后:
+- **写记忆**:把本命令产出的执行进度摘要(完成的任务、验证结果,经用户确认或按本命令内置判据)经 `echo '{"mode":"append","content":"<摘要>"}' | speccode.mjs write-memory --cwd . --branch <F> --json-stdin` 追加到本 feature 的 memory。
 - 宣布:"我在用 finishing-worktree 完成这项工作。"
 - **REQUIRED SUB-SKILL:** 使用 `/speccode:finishing-worktree`
 - 按该命令验证测试、呈现选项、执行选择

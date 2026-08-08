@@ -12,6 +12,7 @@ tags: [speccode, workflow, archive]
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
 2. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix`(默认 `worktree-`)开头;否则退出并提示"请在 worktree 分支上运行本命令"(防止直提 trunk)。
 3. 确定 slug:默认取当前 worktree 所属 feature 的 slug 段;用户也可在命令参数中显式指定。`speccode/changes/<slug>/` 不存在 → 报错退出。
+4. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ## 归档前检查(警告不硬阻断)
 
@@ -48,6 +49,8 @@ echo '{"command":"archiving","feature_branch":"<F>","worktree_branch":"<W>"}' | 
 ```
 
 输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+
+**写记忆**:把本命令产出的决策/进度摘要(归档路径、sync 状态,经用户确认或按本命令内置判据)经 `echo '{"mode":"append","content":"<摘要>"}' | speccode.mjs write-memory --cwd . --branch <F> --json-stdin` 追加到本 feature 的 memory。
 
 ## 输出摘要
 

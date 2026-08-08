@@ -132,6 +132,8 @@ digraph process {
 
 把你发现的一切作为一个批量问题呈给人类伙伴——每条发现旁边附上 mandate 它的 plan 文本,问哪个为准——在执行开始之前问,而不是在 plan 执行中途每发现一条打断一次。如果扫描干净,不做评论直接继续。审查循环仍是兜住那些只有实现中才暴露的冲突的网。
 
+**读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
+
 ## 模型选择(Model Selection)
 
 每个角色用够用的最弱模型,以省成本、提速度。
@@ -274,6 +276,8 @@ echo '{"command":"subagent-driven-development","feature_branch":"<F>","worktree_
 ## 收尾(Finish)
 
 当整支终审干净且其修复已合并,删除本 plan 的工作区(`rm -rf <workspace>`)——git 历史从此就是记录。兄弟目录属于别的 plan;别动它们。
+
+**写记忆**:把本命令产出的决策/进度摘要(经用户确认或按本命令内置判据)经 `echo '{"mode":"append","content":"<摘要>"}' | speccode.mjs write-memory --cwd . --branch <F> --json-stdin` 追加到本 feature 的 memory。
 
 调用 `/speccode:finishing-worktree`。
 

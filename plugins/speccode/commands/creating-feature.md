@@ -30,9 +30,11 @@ tags: [speccode, workflow, feature]
 1. `git checkout -b <branch>`(从 trunk)。
 2. `git push -u origin <branch>`。
 3. 写 state:通过 `echo '<json>' | speccode.mjs write-state --cwd . --branch <branch> --json-stdin`,内容含 `feature_branch`、`created_at`(ISO UTC)、`initial_branch`(= config.trunk)、`status:"in_progress"`、`worktrees:{}`。
-4. 触发 onFeatureCreated 钩子:
+4. **建立 memory 骨架(承接 exploring 结论)**:先运行 `speccode.mjs read-memory --cwd . --branch _exploring` 读 trunk 级 `_exploring.md`;随后经 `echo '{"mode":"replace","content":"# <branch> 记忆\n- 创建于 <ISO UTC 时间>\n- exploring 结论:<上一步非 null 时迁入其内容;为 null 时填「无」>"}' | speccode.mjs write-memory --cwd . --branch <branch> --json-stdin` 写入骨架(mode=replace)。
+5. **清空 `_exploring.md`**:仅当上一步 read-memory 返回非 null 时执行——`echo '{"mode":"replace","content":""}' | speccode.mjs write-memory --cwd . --branch _exploring --json-stdin`(mode=replace、内容为空串),避免下一个 feature 重复承接同一份探索结论;为 null 时跳过。
+6. 触发 onFeatureCreated 钩子:
    ```bash
    echo '{"command":"creating-feature","feature_branch":"<branch>"}' | speccode.mjs run-hook --cwd . --event onFeatureCreated
    ```
    输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
-5. 打印:已创建 <branch>,下一步 `/speccode:creating-worktree`。
+7. 打印:已创建 <branch>,下一步 `/speccode:creating-worktree`。

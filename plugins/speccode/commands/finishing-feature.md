@@ -17,6 +17,7 @@ tags: [speccode, workflow, finish]
    - 对账 `orphans` 里若有本 feature 的残留 worktree → 提示先清理。
 5. `--resume`:若 state 有 `pending_operation.command="finishing-feature"`,按 `phase` 续跑。
    - **若 `phase="waiting_display_pr"`(v0.1 遗留挂起态)→ 报错退出**:该挂起态依赖已下线的 display 分支流程,无法自动续跑。打印手动收尾指引:① 检查当时的 display PR 是否已合并;② 已合并则 `git checkout <trunk> && git pull`,手动创建 `<F> → <trunk>` 的 PR;③ 用 write-state 清除该 feature 的 `pending_operation` 后重新执行本命令。
+6. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ## 单 PR 流程(feature → trunk)
 
@@ -45,5 +46,6 @@ tags: [speccode, workflow, finish]
    输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
 3. `git checkout <trunk>`(feature 分支保留,不删,作为历史)。
 4. 打印:功能已交付,`<F>` 已合并进 `<trunk>`。
+5. **写记忆**:把本命令产出的决策/进度摘要(交付结论、PR 号,经用户确认或按本命令内置判据)经 `echo '{"mode":"append","content":"<摘要>"}' | speccode.mjs write-memory --cwd . --branch <F> --json-stdin` 追加到本 feature 的 memory。
 
 > **状态写入约定**:本命令中写 `pending_operation`(超时挂起)MUST 通过 `write-state --cwd . --branch <F> --json-stdin`(取当前 state → 加 `pending_operation` 字段 → 整体写回)。`--resume` 时读回该字段决定续跑阶段。绝不由 AI 手写 JSON 文件。

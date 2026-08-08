@@ -15,6 +15,7 @@ tags: [speccode, workflow, worktree, merge]
    - 用返回的 features 找到当前 worktree 所属的功能分支 F;找不到 → 报错"当前 worktree 无法关联任何 active feature,请先 /speccode:creating-feature",退出。
    - `conflicts` 非空 → 报告冲突并退出。
    - `--resume`:若该 feature 的 state 有 `pending_operation.command="finishing-worktree"`,从其 phase 续跑(legacy 旧值由引擎自动规范化,无需特判)。
+4. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ## 全量测试门禁
 
@@ -89,5 +90,6 @@ tags: [speccode, workflow, worktree, merge]
    ```
    输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
 3. 打印状态报告:`<F> 进度 X/Y done` + 每个 worktree 状态;若全部 completed,建议 `/speccode:finishing-feature`。
+4. **写记忆**:把本命令产出的决策/进度摘要(合并方式、PR 号、state 变化,经用户确认或按本命令内置判据)经 `echo '{"mode":"append","content":"<摘要>"}' | speccode.mjs write-memory --cwd . --branch <F> --json-stdin` 追加到本 feature 的 memory。
 
 > **状态写入约定**:本命令中所有"state 置 X"(completed / pr_open / pending_operation / 删除条目)MUST 通过 `write-state --cwd . --branch <F> --json-stdin` verb 完成——先取当前 state(reconcile 返回或 read),改字段后整体写回。绝不由 AI 手写 JSON 文件。

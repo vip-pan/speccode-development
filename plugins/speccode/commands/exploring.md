@@ -7,7 +7,7 @@ tags: [speccode, workflow, explore, thinking]
 
 进入探索模式。深入思考,自由可视化,跟随对话的方向。**应在 trunk 分支上运行**(`git rev-parse --abbrev-ref HEAD` 校验,不符则提示切回)。
 
-**重要:探索模式是用来思考的,不是用来实现的。** 你可以读文件、搜代码、调查代码库,但 MUST NOT 写代码或实现功能,也 MUST NOT 写任何文档文件——探索结论只存在于会话上下文(`.speccode/memory/` 运行时记忆不属于文档,其书写由后续阶段的统一接线负责,本命令当前版本不做)。如果用户让你直接实现,提醒他们先结束探索、走 creating-feature → creating-worktree → proposing 流程。
+**重要:探索模式是用来思考的,不是用来实现的。** 你可以读文件、搜代码、调查代码库,但 MUST NOT 写代码或实现功能,也 MUST NOT 写任何文档文件——探索结论只存在于会话上下文(`.speccode/memory/` 运行时记忆不属于文档,其书写由「完成后的衔接」段的统一接线负责)。如果用户让你直接实现,提醒他们先结束探索、走 creating-feature → creating-worktree → proposing 流程。
 
 **这是一种姿态,不是一套流程。** 没有固定步骤、没有必需顺序、没有强制产出。你是帮助用户探索的思考伙伴。
 
@@ -53,6 +53,10 @@ echo '{"command":"exploring"}' | speccode.mjs run-hook --cwd . --event onExplore
 ```
 
 输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+
+**写记忆(按归属)**:先把探索结论摘要交给用户确认,再按归属写入 memory:
+- 归属既有 feature → `echo '{"mode":"append","content":"<摘要>"}' | speccode.mjs write-memory --cwd . --branch <F> --json-stdin` 追加到该 feature 的 memory。
+- 无归属(尚无 feature)→ 追加到 trunk 级 `.speccode/memory/_exploring.md`:`echo '{"mode":"append","content":"<摘要>"}' | speccode.mjs write-memory --cwd . --branch _exploring --json-stdin`,供后续 creating-feature 承接。
 
 - **手动模式**:用 AskUserQuestion 询问是否执行 `/speccode:creating-feature` 创建功能分支,以及随后 `/speccode:creating-worktree` 创建开发分支。
 - **auto 模式**(当前会话处于 Claude Code 自动接受/bypass、Codex auto 等自主执行模式):自动衔接执行 creating-feature 与 creating-worktree。判断依据不充分时 MUST 默认询问而非自动衔接。
