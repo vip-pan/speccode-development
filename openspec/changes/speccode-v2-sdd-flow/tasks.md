@@ -59,7 +59,7 @@
 
 ## P6 hooks
 
-- [x] 6.1 `lib/hooks.mjs`:`HOOK_EVENTS`(14 事件)、`buildHookPayload(event, fields, cwd)`(补 timestamp/repo_root/cwd/command)、`runHook(config, event, payload, opts)`(spawn/timeoutMs=30000 可注入;未配置→`{ran:false,ok:true}`;枚举外→warning;失败→`{ran:true,ok:false,...}`;**整体 try/catch 兜底**)
+- [x] 6.1 `lib/hooks.mjs`:`HOOK_EVENTS`(14 事件)、`buildHookPayload(event, fields, ctx)`(ctx 带 repoRoot/cwd;command 由调用方经 fields 传入)、`runHook(config, event, payload, opts)`(spawn/timeoutMs=30000 可注入;未配置→`{ran:false,ok:true}`;枚举外→warning;失败→`{ran:true,ok:false,...}`;**整体 try/catch 兜底**)
 - [x] 6.2 bin 新增 `run-hook` verb(--event,payload 片段 stdin 传入;**永远 exit 0**)
 - [x] 6.3 `tests/hooks.test.mjs`:未配置 no-op / 枚举外 warning / 非零退出 / 超时 / spawn 异常吞掉
 - [x] 6.4 各命令统一接线 14 个事件点,逐命令点名:exploring→onExplored;creating-feature→onFeatureCreated;creating-worktree→onWorktreeCreated;proposing→onProposed;brainstorming→onBrainstormed;writing-plans→onPlanned;subagent-driven-development 与 executing-plans 每 task 完成→onTaskCompleted;requesting-code-review→onCodeReviewRequested;receiving-code-review→onCodeReviewCompleted;finishing-worktree→onWorktreeFinished(PR 创建后另触发 onPrOpened);finishing-feature→onFeatureFinished(及 onPrOpened);syncing→onSynced;archiving→onArchived

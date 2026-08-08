@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
+import { isatty } from 'node:tty';
 import { git } from '../lib/git.mjs';
 import { detectPrToolFromUrl, isInstalled, queryPrState } from '../lib/prtool.mjs';
 import { reconcile } from '../lib/reconcile.mjs';
@@ -158,15 +159,28 @@ const VERBS = {
         return { ok: true, hook: { ran: false, ok: true, warning: 'run-hook called without --event' } };
       }
       const cfg = loadConfig(speccodeDirOf(cwd));
+      // isatty(0) is a side-effect-free syscall. Probing process.stdin.isTTY
+      // instead would put fd 0 into non-blocking mode, and readFileSync(0)
+      // could then throw EAGAIN before a slow producer fills the pipe,
+      // silently dropping the fragment.
       let fragment = {};
-      if (!process.stdin.isTTY) {
+      let stdinWarning;
+      if (!isatty(0)) {
         try {
           const raw = readStdin();
           if (raw.trim()) fragment = JSON.parse(raw);
-        } catch { fragment = {}; }
+        } catch (err) {
+          fragment = {};
+          stdinWarning = `stdin fragment ignored: ${err?.message || err}`;
+        }
       }
-      const payload = buildHookPayload(event, fragment, { repoRoot: repoRoot(cwd), cwd });
-      return { ok: true, hook: runHook(cfg, event, payload) };
+      const root = repoRoot(cwd);
+      const payload = buildHookPayload(event, fragment, { repoRoot: root, cwd: resolve(cwd) });
+      const hook = runHook(cfg, event, payload, { spawnCwd: root });
+      if (stdinWarning) {
+        hook.warning = hook.warning ? `${hook.warning}; ${stdinWarning}` : stdinWarning;
+      }
+      return { ok: true, hook };
     } catch (err) {
       return { ok: true, hook: { ran: false, ok: false, error: String(err?.message || err) } };
     }

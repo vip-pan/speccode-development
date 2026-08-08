@@ -79,9 +79,13 @@ tags: [speccode, workflow, worktree, merge]
 ## 收尾
 
 1. 用 `feature-progress --branch <F>` 取进度。
-2. 本 worktree 开发完成(路径 1 MERGED / 路径 2 已开 PR / 路径 3 squash 完成)时,触发 onWorktreeFinished 钩子(已创建 PR 的附带 `"pr_number": <N>`):
+2. 本 worktree 开发完成(路径 1 MERGED / 路径 2 已开 PR / 路径 3 squash 完成)时,触发 onWorktreeFinished 钩子。有 PR 时(路径 1/2)载荷附带 `"pr_number": <N>`:
    ```bash
    echo '{"command":"finishing-worktree","feature_branch":"<F>","worktree_branch":"<worktree>","pr_number":<N>}' | speccode.mjs run-hook --cwd . --event onWorktreeFinished
+   ```
+   无 PR 时(路径 3 本地 squash)省略 `pr_number` 字段:
+   ```bash
+   echo '{"command":"finishing-worktree","feature_branch":"<F>","worktree_branch":"<worktree>"}' | speccode.mjs run-hook --cwd . --event onWorktreeFinished
    ```
    输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
 3. 打印状态报告:`<F> 进度 X/Y done` + 每个 worktree 状态;若全部 completed,建议 `/speccode:finishing-feature`。

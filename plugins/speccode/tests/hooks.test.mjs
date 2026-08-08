@@ -20,6 +20,17 @@ test('buildHookPayload fills the envelope and merges caller fields', () => {
   assert.ok(!Number.isNaN(Date.parse(p.timestamp)));
 });
 
+test('buildHookPayload envelope fields are authoritative over caller fields', () => {
+  const p = buildHookPayload('onProposed',
+    { event: 'onArchived', timestamp: 'bogus', repo_root: '/fake', cwd: '/fake', command: 'proposing' },
+    { repoRoot: '/repo', cwd: '/repo/wt' });
+  assert.equal(p.event, 'onProposed');
+  assert.equal(p.repo_root, '/repo');
+  assert.equal(p.cwd, '/repo/wt');
+  assert.notEqual(p.timestamp, 'bogus');
+  assert.equal(p.command, 'proposing');
+});
+
 test('runHook no-ops when event not configured', () => {
   assert.deepEqual(runHook({}, 'onProposed', {}), { ran: false, ok: true });
   assert.deepEqual(runHook({ hooks: {} }, 'onProposed', {}), { ran: false, ok: true });
@@ -49,6 +60,15 @@ test('runHook reports non-zero exit without throwing', () => {
   assert.equal(r.ran, true);
   assert.equal(r.ok, false);
   assert.equal(r.exitCode, 1);
+});
+
+test('runHook falls back to exit code in error when stderr is empty', () => {
+  const spawn = () => ({ code: 3, stderr: '' });
+  const r = runHook({ hooks: { onArchived: 'exit 3' } }, 'onArchived', {}, { spawn });
+  assert.equal(r.ran, true);
+  assert.equal(r.ok, false);
+  assert.equal(r.exitCode, 3);
+  assert.equal(r.error, 'exit code 3');
 });
 
 test('runHook reports spawn error/timeout without throwing', () => {

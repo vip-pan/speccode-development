@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { rmSync, mkdirSync, realpathSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { makeRepo, commitFile } from './helpers/tmprepo.mjs';
 import { parseArgs } from '../bin/speccode.mjs';
 
@@ -431,5 +431,74 @@ test('run-hook reports hook failure in JSON and still exits 0', () => {
   assert.equal(json.hook.ran, true);
   assert.equal(json.hook.ok, false);
   assert.equal(json.hook.exitCode, 3);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+// spawn with stdin written only after a delay: spawnSync cannot express this.
+function runCliDelayedStdin(cwd, args, input, delayMs) {
+  return new Promise((resolvePromise, reject) => {
+    const child = spawn('node', [BIN, ...args], { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (d) => { stdout += d; });
+    child.stderr.on('data', (d) => { stderr += d; });
+    child.on('error', reject);
+    child.on('close', (code) => resolvePromise({ code, stdout, stderr }));
+    setTimeout(() => {
+      child.stdin.write(input);
+      child.stdin.end();
+    }, delayMs);
+  });
+}
+
+test('run-hook survives a delayed stdin producer (no EAGAIN race)', async () => {
+  const repo = makeRepo();
+  const log = join(repo, 'hook.log');
+  const cfg = JSON.stringify({ version: 2, hooks: { onSynced: `cat >> ${log}` } });
+  spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: cfg, encoding: 'utf8' });
+  // The producer needs ~300ms to start writing; merely touching process.stdin
+  // in the CLI would flip fd 0 to non-blocking and readFileSync(0) would throw
+  // EAGAIN before the fragment arrives, silently dropping it.
+  const r = await runCliDelayedStdin(repo,
+    ['run-hook', '--cwd', repo, '--event', 'onSynced'],
+    '{"command":"syncing"}', 300);
+  assert.equal(r.code, 0, r.stderr);
+  const json = JSON.parse(r.stdout.trim());
+  assert.equal(json.ok, true);
+  assert.deepEqual(json.hook, { ran: true, ok: true });
+  const line = JSON.parse(readFileSync(log, 'utf8').trim());
+  assert.equal(line.command, 'syncing');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('run-hook from a subdirectory runs the hook at the main repo root', () => {
+  const repo = realpathSync(makeRepo());
+  const subdir = join(repo, 'sub', 'dir');
+  mkdirSync(subdir, { recursive: true });
+  const log = join(repo, 'hook.log');
+  const cfg = JSON.stringify({ version: 2, hooks: { onSynced: `pwd >> ${log}` } });
+  spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: cfg, encoding: 'utf8' });
+  const r = spawnSync('node', [BIN, 'run-hook', '--cwd', '.', '--event', 'onSynced'],
+    { cwd: subdir, input: '{}', encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  const json = JSON.parse(r.stdout.trim());
+  assert.deepEqual(json.hook, { ran: true, ok: true });
+  const logged = readFileSync(log, 'utf8').trim();
+  assert.equal(realpathSync(logged), realpathSync(repo));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('run-hook with invalid JSON stdin still exits 0 and surfaces a warning', () => {
+  const repo = makeRepo();
+  const r = spawnSync('node', [BIN, 'run-hook', '--cwd', repo, '--event', 'onSynced'],
+    { cwd: repo, input: '{not json', encoding: 'utf8' });
+  assert.equal(r.status, 0);
+  const json = JSON.parse(r.stdout.trim());
+  assert.equal(json.ok, true);
+  assert.equal(json.hook.ran, false);
+  assert.equal(json.hook.ok, true);
+  assert.ok(json.hook.warning.includes('stdin fragment ignored'));
   rmSync(repo, { recursive: true, force: true });
 });
