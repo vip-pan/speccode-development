@@ -4,7 +4,7 @@
 
 **Goal:** 落地配置驱动的生命周期 hooks:`lib/hooks.mjs`(14 固定事件、payload 构建、warn-only 执行)+ `run-hook` verb(唯一永远 exit 0 的 verb)+ 15 个命令文件的 14 个事件点统一接线。
 
-**Architecture:** 对应 OpenSpec change `speccode-v2-sdd-flow` 的 P6 阶段;spec 锚点 `hook-event-integration`(5 条 requirement)。引擎侧全 TDD;命令接线为 prose 增加固定形态的事件触发行。
+**Architecture:** 对应 OpenSpec change `speccode-v2-sdd-flow` 的 P6 阶段;spec 锚点 `hook-event-integration`(6 条 requirement)。引擎侧全 TDD;命令接线为 prose 增加固定形态的事件触发行。
 
 **Tech Stack:** Node ≥ 24,纯 ESM,零依赖,node:test,tmprepo。
 
@@ -13,8 +13,8 @@
 - 测试命令 MUST 用 glob 形式:`node --test ./plugins/speccode/tests/*.test.mjs`。
 - **run-hook 是唯一永远 exit 0 的 verb**:handler 整体 try/catch 兜底、永不返回 `ok:false`(失败体现在输出 JSON 的 `hook.ok`/`hook.warning`)。
 - 14 个固定事件(逐字,顺序无关):`onExplored, onFeatureCreated, onWorktreeCreated, onProposed, onBrainstormed, onPlanned, onTaskCompleted, onCodeReviewRequested, onCodeReviewCompleted, onWorktreeFinished, onFeatureFinished, onPrOpened, onSynced, onArchived`。
-- payload 分工:引擎只补 envelope 四字段(`event/timestamp/repo_root/cwd`);`command` 与事件上下文字段(feature_branch/worktree_branch/pr_number/task)由调用方在 stdin 片段传入。stdin 为空或非法 JSON 时按 `{}` 处理,不阻塞不报错(TTY 时跳过读取)。
-- hook 执行:`sh -c <cmd>`,cwd=目标项目根(payload.cwd 由 `--cwd` 传入),默认 30s 超时;非零退出/超时/不可执行 → `{ran:true, ok:false, ...}`,主命令继续。
+- payload 分工:引擎只补 envelope 四字段(`event/timestamp/repo_root/cwd`,权威、片段不可覆盖);`command` 与事件上下文字段(feature_branch/worktree_branch/pr_number/task)由调用方在 stdin 片段传入。stdin 为空按 `{}` 处理;读取失败或非法 JSON 降级为 `{}` 并在 hook 字段附 `warning`(TTY 经 `isatty(0)` 判定跳过读取——绝不触碰 `process.stdin`,否则 fd 0 被置非阻塞、慢生产者场景 readFileSync(0) 抛 EAGAIN 静默丢片段)。
+- hook 执行:`sh -c <cmd>`,cwd=目标项目根(spawnCwd=主仓根,由 bin 经 `repoRoot` 解析传入;payload.cwd 为 `--cwd` 的绝对路径,仅作 envelope 信息字段),默认 30s 超时;非零退出/超时/不可执行 → `{ran:true, ok:false, ...}`,主命令继续。
 - 未配置事件 → `{ran:false, ok:true}`;枚举外事件名 → `{ran:false, ok:true, warning}`。
 - lib/hooks.mjs 的 spawn 必须可注入;单测 MUST NOT 依赖真实 shell 行为(cli 层可用 `cat >> <tmpfile>` 这类无害 stub 做端到端)。
 - 命令 prose 全程中文;事件触发行的形态全插件统一(见 Task 3 模板)。
@@ -127,8 +127,8 @@ import { spawnSync } from 'node:child_process';
 import { nowIso } from './timestamp.mjs';
 
 // Config-driven lifecycle hooks. Failure semantics are warn-only: a hook must
-// never break the invoking command, so runHook never throws and never returns
-// a top-level ok:false (the CLI's run-hook verb always exits 0).
+// never break the invoking command. runHook never throws; the CLI's run-hook
+// verb folds every outcome into the hook field and always exits 0.
 export const HOOK_EVENTS = [
   'onExplored', 'onFeatureCreated', 'onWorktreeCreated', 'onProposed',
   'onBrainstormed', 'onPlanned', 'onTaskCompleted', 'onCodeReviewRequested',
@@ -138,14 +138,16 @@ export const HOOK_EVENTS = [
 
 // ctx carries what only the caller can know: repoRoot (bin resolves it via
 // --git-common-dir) and cwd. Event context fields (command, feature_branch,
-// worktree_branch, pr_number, task) come from the caller via `fields`.
+// worktree_branch, pr_number, task) come from the caller via `fields`. The
+// engine's four envelope fields spread last: they are authoritative and a
+// caller fragment can never override them.
 export function buildHookPayload(event, fields, ctx) {
   return {
+    ...fields,
     event,
     timestamp: nowIso(),
     repo_root: ctx.repoRoot,
     cwd: ctx.cwd,
-    ...fields,
   };
 }
 
@@ -157,9 +159,12 @@ export function runHook(config, event, payload, opts = {}) {
     const cmd = config?.hooks?.[event];
     if (!cmd) return { ran: false, ok: true };
     const timeoutMs = opts.timeoutMs ?? 30000;
+    // opts.spawnCwd (bin passes the main repo root) wins; payload.cwd is an
+    // informational envelope field, not an exec directive.
+    const spawnCwd = opts.spawnCwd ?? payload?.cwd ?? undefined;
     const spawn = opts.spawn ?? ((command, input) => {
       const r = spawnSync('sh', ['-c', command], {
-        input, encoding: 'utf8', timeout: timeoutMs, cwd: payload?.cwd || undefined,
+        input, encoding: 'utf8', timeout: timeoutMs, cwd: spawnCwd,
       });
       return { code: r.status, signal: r.signal, error: r.error, stderr: r.stderr };
     });
@@ -168,7 +173,8 @@ export function runHook(config, event, payload, opts = {}) {
       return { ran: true, ok: false, error: String(r.error?.message || `terminated by ${r.signal}`) };
     }
     if (r.code !== 0) {
-      return { ran: true, ok: false, exitCode: r.code, error: String(r.stderr || '').slice(0, 500) };
+      const detail = String(r.stderr || '').slice(0, 500) || `exit code ${r.code}`;
+      return { ran: true, ok: false, exitCode: r.code, error: detail };
     }
     return { ran: true, ok: true };
   } catch (err) {
@@ -271,9 +277,10 @@ Expected: FAIL(unknown verb)
 
 - [ ] **Step 3: 实现** — `plugins/speccode/bin/speccode.mjs`:
 
-(a) import 行加:
+(a) import 行加(`node:path` 的 import 同时补 `resolve`):
 
 ```js
+import { isatty } from 'node:tty';
 import { buildHookPayload, runHook } from '../lib/hooks.mjs';
 ```
 
@@ -288,15 +295,28 @@ import { buildHookPayload, runHook } from '../lib/hooks.mjs';
         return { ok: true, hook: { ran: false, ok: true, warning: 'run-hook called without --event' } };
       }
       const cfg = loadConfig(speccodeDirOf(cwd));
+      // isatty(0) is a side-effect-free syscall. Probing process.stdin.isTTY
+      // instead would put fd 0 into non-blocking mode, and readFileSync(0)
+      // could then throw EAGAIN before a slow producer fills the pipe,
+      // silently dropping the fragment.
       let fragment = {};
-      if (!process.stdin.isTTY) {
+      let stdinWarning;
+      if (!isatty(0)) {
         try {
           const raw = readStdin();
           if (raw.trim()) fragment = JSON.parse(raw);
-        } catch { fragment = {}; }
+        } catch (err) {
+          fragment = {};
+          stdinWarning = `stdin fragment ignored: ${err?.message || err}`;
+        }
       }
-      const payload = buildHookPayload(event, fragment, { repoRoot: repoRoot(cwd), cwd });
-      return { ok: true, hook: runHook(cfg, event, payload) };
+      const root = repoRoot(cwd);
+      const payload = buildHookPayload(event, fragment, { repoRoot: root, cwd: resolve(cwd) });
+      const hook = runHook(cfg, event, payload, { spawnCwd: root });
+      if (stdinWarning) {
+        hook.warning = hook.warning ? `${hook.warning}; ${stdinWarning}` : stdinWarning;
+      }
+      return { ok: true, hook };
     } catch (err) {
       return { ok: true, hook: { ran: false, ok: false, error: String(err?.message || err) } };
     }
@@ -396,7 +416,7 @@ git commit -m "docs(openspec): check off P6 tasks of speccode-v2-sdd-flow"
 
 ## Self-Review 记录
 
-- **Spec 覆盖**:hook-event-integration 5 条 — hooks 配置字段(T2 no-config/未配置 no-op 测试)、事件名固定枚举(T1 HOOK_EVENTS 14 + 枚举外 warning)、事件载荷(T1 buildHookPayload 分工 + T2 envelope 端到端 + stdin 空容忍)、失败不阻断(T1 非零/超时/抛错 + T2 exit 0 四形态)、run-hook verb 与调用节点(T3 映射表 15 文件 14 事件)。
+- **Spec 覆盖**:hook-event-integration 6 条 — hooks 配置字段(T2 no-config/未配置 no-op 测试)、事件名固定枚举(T1 HOOK_EVENTS 14 + 枚举外 warning)、事件载荷(T1 buildHookPayload 分工 + envelope 权威优先 + T2 envelope 端到端 + stdin 空容忍/非法 JSON warning)、hook shell 执行语义(F2:spawnCwd=主仓根,T2 子目录调用 pwd 端到端断言)、失败不阻断(T1 非零/超时/抛错 + T2 exit 0 四形态)、run-hook verb 与调用节点(T3 映射表 15 文件 14 事件)。
 - **Placeholder 扫描**:引擎代码与测试完整;接线形态为统一模板 + 逐文件位置表。
 - **一致性**:payload 字段名与 spec「事件载荷」逐字一致;run-hook exit 0 语义在 T1 lib(不抛)、T2 verb(整体 try/catch + 永远 ok:true)、T3 命令(不阻断)三层一致。
 - **既有兼容**:95 个既有测试不动;新增 hooks 7 + cli 4。

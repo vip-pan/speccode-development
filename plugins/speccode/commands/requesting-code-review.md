@@ -44,6 +44,14 @@ HEAD_SHA=$(git rev-parse HEAD)
 - `{BASE_SHA}` - 起始 commit(调用方记录的 BASE)
 - `{HEAD_SHA}` - 结束 commit
 
+派发时触发 onCodeReviewRequested 钩子:
+
+```bash
+echo '{"command":"requesting-code-review","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onCodeReviewRequested
+```
+
+输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+
 **3. 按反馈行动:**
 - Critical 问题立即修
 - Important 问题修复后再继续

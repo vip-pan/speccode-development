@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
+import { isatty } from 'node:tty';
 import { git } from '../lib/git.mjs';
 import { detectPrToolFromUrl, isInstalled, queryPrState } from '../lib/prtool.mjs';
 import { reconcile } from '../lib/reconcile.mjs';
@@ -8,6 +9,7 @@ import { loadConfig, saveConfig, backupConfig } from '../lib/config.mjs';
 import { readState, writeState, deleteState, WORKTREE_STATUS } from '../lib/state.mjs';
 import { detectKnowledgeTools, resolveWorktreeDir } from '../lib/detect.mjs';
 import { sddWorkspace, taskBrief, reviewPackage } from '../lib/sdd.mjs';
+import { buildHookPayload, runHook } from '../lib/hooks.mjs';
 
 function readStdin() {
   return readFileSync(0, 'utf8');
@@ -147,6 +149,41 @@ const VERBS = {
     const tool = cfg.pr_tool;
     if (!tool || tool === 'none') return { ok: false, error: 'pr_tool is none; cannot query PR state' };
     return { ok: true, state: queryPrState(tool, String(number), { cwd }) };
+  },
+
+  // The only verb that always exits 0: hook failures are warn-only and must
+  // never break the invoking command. All errors collapse into the hook field.
+  'run-hook': ({ cwd, event }) => {
+    try {
+      if (!event || event === true) {
+        return { ok: true, hook: { ran: false, ok: true, warning: 'run-hook called without --event' } };
+      }
+      const cfg = loadConfig(speccodeDirOf(cwd));
+      // isatty(0) is a side-effect-free syscall. Probing process.stdin.isTTY
+      // instead would put fd 0 into non-blocking mode, and readFileSync(0)
+      // could then throw EAGAIN before a slow producer fills the pipe,
+      // silently dropping the fragment.
+      let fragment = {};
+      let stdinWarning;
+      if (!isatty(0)) {
+        try {
+          const raw = readStdin();
+          if (raw.trim()) fragment = JSON.parse(raw);
+        } catch (err) {
+          fragment = {};
+          stdinWarning = `stdin fragment ignored: ${err?.message || err}`;
+        }
+      }
+      const root = repoRoot(cwd);
+      const payload = buildHookPayload(event, fragment, { repoRoot: root, cwd: resolve(cwd) });
+      const hook = runHook(cfg, event, payload, { spawnCwd: root });
+      if (stdinWarning) {
+        hook.warning = hook.warning ? `${hook.warning}; ${stdinWarning}` : stdinWarning;
+      }
+      return { ok: true, hook };
+    } catch (err) {
+      return { ok: true, hook: { ran: false, ok: false, error: String(err?.message || err) } };
+    }
   },
 };
 

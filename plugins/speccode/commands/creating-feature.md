@@ -30,4 +30,9 @@ tags: [speccode, workflow, feature]
 1. `git checkout -b <branch>`(从 trunk)。
 2. `git push -u origin <branch>`。
 3. 写 state:通过 `echo '<json>' | speccode.mjs write-state --cwd . --branch <branch> --json-stdin`,内容含 `feature_branch`、`created_at`(ISO UTC)、`initial_branch`(= config.trunk)、`status:"in_progress"`、`worktrees:{}`。
-4. 打印:已创建 <branch>,下一步 `/speccode:creating-worktree`。
+4. 触发 onFeatureCreated 钩子:
+   ```bash
+   echo '{"command":"creating-feature","feature_branch":"<branch>"}' | speccode.mjs run-hook --cwd . --event onFeatureCreated
+   ```
+   输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+5. 打印:已创建 <branch>,下一步 `/speccode:creating-worktree`。

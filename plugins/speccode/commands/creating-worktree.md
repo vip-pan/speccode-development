@@ -39,7 +39,12 @@ tags: [speccode, workflow, worktree]
 5. **基线测试**:在新 worktree 内运行项目测试命令(同 finishing-worktree 的探测:`package.json`→`npm test`、`Cargo.toml`→`cargo test`、`requirements.txt`/`pyproject.toml`→`pytest`、`go.mod`→`go test ./...`;均无 → 询问用户测试命令或明确跳过)。
    - 失败 → 展示失败摘要,询问「继续开发还是先行调查」,不擅自继续。
 6. 更新 state:读当前 state(由 reconcile 返回或 read),把 `worktrees[<branch>] = { status: "in_progress" }` 后用 `write-state --branch <feature> --json-stdin` 原子写回。
-7. 打印:worktree 已创建于 `<dir>/<branch>`,请 `cd` 过去开发。
+7. 触发 onWorktreeCreated 钩子:
+   ```bash
+   echo '{"command":"creating-worktree","feature_branch":"<feature>","worktree_branch":"<branch>"}' | speccode.mjs run-hook --cwd . --event onWorktreeCreated
+   ```
+   输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+8. 打印:worktree 已创建于 `<dir>/<branch>`,请 `cd` 过去开发。
 
 ## 完成后引导
 

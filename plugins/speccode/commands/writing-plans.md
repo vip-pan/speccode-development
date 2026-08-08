@@ -126,6 +126,11 @@ TDD 烙进步骤模板本身——每个任务都是「红-绿-提交」循环;�
 
 - 计划写到 `speccode/changes/<slug>/plan/YYYY-MM-DD-<feature>-plan.md`。
 - 落盘即提交:`git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): plan <slug>"`。
+- commit 成功后触发 onPlanned 钩子:
+  ```bash
+  echo '{"command":"writing-plans","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onPlanned
+  ```
+  输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
 
 ## 执行交接
 

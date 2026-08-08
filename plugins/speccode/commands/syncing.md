@@ -47,6 +47,14 @@ git commit -m "docs(speccode): sync <slug> into main specs"
 
 (add 后亦可用 `git diff --cached --quiet` 复验:为空同样跳过提交。`git add` 同时写两个路径,护栏末句的「回写 propose/ 一并提交」由此可达。)
 
+真实产生 commit 后触发 onSynced 钩子(「无变更(幂等)」短路路径 MUST NOT 触发):
+
+```bash
+echo '{"command":"syncing","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onSynced
+```
+
+输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+
 ## 输出摘要
 
 合并完成后展示:更新了哪些 capability、各做了什么(新增/修改/删除/改名)、哪些新建主规格的 Purpose 是占位待补。
