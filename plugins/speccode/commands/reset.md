@@ -23,7 +23,7 @@ tags: [speccode, workflow, reset]
 
 1. 备份:运行 `speccode.mjs backup-config --cwd .`(config.json.bak.<timestamp>)。
 2. 清理 worktree:`git worktree list --porcelain` 中,仅处理满足「分支名带 `worktree_prefix` 且(路径位于 `resolve-worktree-dir` 解析目录之下或曾在 state 中登记)」的 worktree → 逐个 `git worktree remove <path> --force` + `git branch -D <branch>`;其余(宿主环境自建)原样保留并说明。
-3. 询问是否整体清理 `.speccode/memory/` 与 `.speccode/sdd/` 两个目录(按目录整体粒度,不提供按 feature 挑选;用户确认才 `rm -rf`)。
+3. 询问是否整体清理 `.speccode/memory/`、`.speccode/sdd/` 与 `.speccode/brainstorm/`(visual companion 产物)三个目录(按目录整体粒度,不提供按 feature 挑选;用户确认才 `rm -rf`)。
 4. `rm -rf .speccode/state/`。
 5. 用 `write-config --json-stdin` 写回 config(仅保留用户确认保留的字段)。
 6. 打印:reset 完成,保留字段列表;可 `/speccode:init` 重建或直接 `/speccode:exploring`。
