@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { rmSync, mkdirSync, realpathSync } from 'node:fs';
+import { rmSync, mkdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -241,5 +241,59 @@ test('reconcile treats empty-string worktree_prefix as the default prefix', () =
   assert.deepEqual(json.conflicts, []);
   const after = runCli(repo, 'feature-progress', '--cwd', repo, '--branch', 'feature/p');
   assert.deepEqual(after.json.worktrees, {});
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('detect-knowledge-tools returns a tools array', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'detect-knowledge-tools', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.ok(json.ok);
+  assert.ok(Array.isArray(json.tools));
+  for (const t of json.tools) {
+    assert.ok(t.id && t.kind && t.evidence);
+    assert.ok(['plugin', 'mcp', 'cli', 'project-dir'].includes(t.kind));
+  }
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('detect-knowledge-tools from a subdirectory resolves against the main repo root', () => {
+  const repo = makeRepo();
+  const subdir = join(repo, 'sub', 'dir');
+  mkdirSync(subdir, { recursive: true });
+
+  const first = runCli(subdir, 'detect-knowledge-tools', '--cwd', subdir);
+  assert.equal(first.code, 0);
+  assert.ok(first.json.ok);
+  assert.ok(Array.isArray(first.json.tools));
+
+  // .mcp.json lives at the repo ROOT; running from a subdir must still see it
+  writeFileSync(join(repo, '.mcp.json'), JSON.stringify({ mcpServers: { codegraph: {} } }));
+  const second = runCli(subdir, 'detect-knowledge-tools', '--cwd', subdir);
+  assert.equal(second.code, 0);
+  assert.ok(second.json.ok);
+  assert.ok(second.json.tools.some((t) => t.id === 'codegraph'
+    && t.kind === 'mcp' && t.evidence === '.mcp.json:codegraph'),
+  `expected codegraph mcp hit, got ${JSON.stringify(second.json.tools)}`);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('resolve-worktree-dir returns default when config lacks the key', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'resolve-worktree-dir', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.deepEqual({ dir: json.dir, source: json.source },
+    { dir: '.claude/worktrees', source: 'default' });
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('resolve-worktree-dir returns config value when present', () => {
+  const repo = makeRepo();
+  const w = spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ version: 2, worktree_dir: '.wt' }), encoding: 'utf8' });
+  assert.equal(w.status, 0);
+  const { code, json } = runCli(repo, 'resolve-worktree-dir', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.deepEqual({ dir: json.dir, source: json.source }, { dir: '.wt', source: 'config' });
   rmSync(repo, { recursive: true, force: true });
 });

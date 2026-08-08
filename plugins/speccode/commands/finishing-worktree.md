@@ -65,12 +65,11 @@ tags: [speccode, workflow, worktree, merge]
 
 ## 清理(来源限定)
 
-仅当该 worktree 满足「分支名带 `config.worktree_prefix` 且(路径位于 worktree 目录之下或在 state 中有登记)」时执行。操作顺序:**先离开被清理的 worktree**(`cd <主仓根>`,或全程用 `git -C <主仓根>` 不切换 cwd;主仓根 = `speccode.mjs resolve-speccode-dir --cwd .` 返回的 speccodeDir 的父目录),再执行删除——绝不在被删的 worktree 内删它自己:
+仅当该 worktree 满足「分支名带 `config.worktree_prefix` 且(路径位于 `resolve-worktree-dir` 解析目录之下或在 state 中有登记)」时执行。操作顺序:**先离开被清理的 worktree**(`cd <主仓根>`,或全程用 `git -C <主仓根>` 不切换 cwd;主仓根 = `speccode.mjs resolve-speccode-dir --cwd .` 返回的 speccodeDir 的父目录),再执行删除——绝不在被删的 worktree 内删它自己:
 - `git -C <主仓根> worktree remove <path> --force` + `git -C <主仓根> branch -D <worktree>`;
-- 询问是否删远端(`git push origin :<worktree>`);
+- 询问是否删远端(`git -C <主仓根> push origin :<worktree>`);
 - `git -C <主仓根> worktree prune`。
 不满足 → 原样保留并打印原因(宿主环境创建的 worktree 不由 speccode 清理)。
-注:本阶段 worktree 目录固定 `.claude/worktrees`;配置化(resolve-worktree-dir)随后续版本接入。
 
 ## 收尾
 

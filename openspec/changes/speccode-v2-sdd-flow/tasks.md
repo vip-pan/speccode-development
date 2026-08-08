@@ -19,14 +19,14 @@
 
 ## P2 init 增强与 config v2
 
-- [ ] 2.1 `lib/detect.mjs`:`KNOWLEDGE_TOOL_DETECTORS` 探测表(understand-anything/codegraph/graphify/codemap/lightrag;plugin-dir/mcp/cli/project-dir 四类 probe);`detectKnowledgeTools(cwd, opts)` 全依赖注入;`resolveWorktreeDir(config)`
-- [ ] 2.2 bin 新增 verb:`detect-knowledge-tools`、`resolve-worktree-dir`(输出 `{dir, source:'config'|'default'|'missing'}`)
-- [ ] 2.3 `config.mjs`:删除 `DEFAULT_UNTRACKED`(grep 确认无其他引用)
-- [ ] 2.4 `init.md` 重写:删 display/spec_tools/untracked_permanent 询问;增 worktree_dir 询问(默认 `.claude/worktrees`)、知识工具探测 + 逐项确认登记、hooks 可选询问;组装 config v2(`version: 2`);幂等 diff 支持三个新字段
-- [ ] 2.5 `reset.md`:字段清理增 hooks/knowledge_tools/worktree_dir;增询问清理 `.speccode/memory/` 与 `.speccode/sdd/`(**按目录整体粒度**,不提供按 feature 挑选,前提仍是无 active feature);worktree 清理走来源限定(前缀 + (worktree_dir 下 或 state 登记))
-- [ ] 2.6 `creating-worktree.md` 增强:worktree 目录经 resolve-worktree-dir 解析(source=default 时重问并 write-config 写回);创建前 `git check-ignore` warn-only 校验;创建后项目 setup(标记探测:package.json→npm install / Cargo.toml→cargo build / requirements.txt→pip install / pyproject.toml→poetry install / go.mod→go mod download);**setup 后跑基线测试,失败时报告并询问「继续还是调查」**;完成后引导 `/speccode:proposing`(auto 模式自动衔接,判断不充分默认询问)
-- [ ] 2.7 `tests/detect.test.mjs`:每类 probe 正反例(全注入);resolveWorktreeDir 三态
-- [ ] 2.8 P2 验收:全量测试绿
+- [x] 2.1 `lib/detect.mjs`:`KNOWLEDGE_TOOL_DETECTORS` 探测表(understand-anything/codegraph/graphify/codemap/lightrag;plugin-dir/mcp/cli/project-dir 四类 probe);`detectKnowledgeTools(cwd, opts)` 全依赖注入;`resolveWorktreeDir(config)`
+- [x] 2.2 bin 新增 verb:`detect-knowledge-tools`、`resolve-worktree-dir`(输出 `{dir, source:'config'|'default'}`)
+- [x] 2.3 `config.mjs`:删除 `DEFAULT_UNTRACKED`(grep 确认无其他引用)(P1 Task 4 已完成)
+- [x] 2.4 `init.md` 重写:删 display/spec_tools/untracked_permanent 询问;增 worktree_dir 询问(默认 `.claude/worktrees`)、知识工具探测 + 逐项确认登记、hooks 可选询问;组装 config v2(`version: 2`);幂等 diff 支持三个新字段
+- [x] 2.5 `reset.md`:字段清理增 hooks/knowledge_tools/worktree_dir;增询问清理 `.speccode/memory/` 与 `.speccode/sdd/`(**按目录整体粒度**,不提供按 feature 挑选,前提仍是无 active feature);worktree 清理走来源限定(前缀 + (worktree_dir 下 或 state 登记))
+- [x] 2.6 `creating-worktree.md` 增强:worktree 目录经 resolve-worktree-dir 解析(source=default 时重问并 write-config 写回);创建前 `git check-ignore` warn-only 校验;创建后项目 setup(标记探测:package.json→npm install / Cargo.toml→cargo build / requirements.txt→pip install / pyproject.toml→poetry install / go.mod→go mod download);**setup 后跑基线测试,失败时报告并询问「继续还是调查」**;完成后引导 `/speccode:proposing`(auto 模式自动衔接,判断不充分默认询问)
+- [x] 2.7 `tests/detect.test.mjs`:每类 probe 正反例(全注入);resolveWorktreeDir 三态
+- [x] 2.8 P2 验收:全量测试绿
 
 ## P3 文档生命周期命令(exploring / proposing / syncing / archiving)
 

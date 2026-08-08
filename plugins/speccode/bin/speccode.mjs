@@ -6,6 +6,7 @@ import { detectPrToolFromUrl, isInstalled, queryPrState } from '../lib/prtool.mj
 import { reconcile } from '../lib/reconcile.mjs';
 import { loadConfig, saveConfig, backupConfig } from '../lib/config.mjs';
 import { readState, writeState, deleteState, WORKTREE_STATUS } from '../lib/state.mjs';
+import { detectKnowledgeTools, resolveWorktreeDir } from '../lib/detect.mjs';
 
 function readStdin() {
   return readFileSync(0, 'utf8');
@@ -103,6 +104,16 @@ const VERBS = {
     const completed = Object.values(wts)
       .filter((w) => w.status === WORKTREE_STATUS.COMPLETED).length;
     return { ok: true, total, completed, worktrees: wts };
+  },
+
+  // Resolve against the main repo root (same --git-common-dir invariant as the
+  // other verbs) so .mcp.json / project dirs are found from subdirs and
+  // linked worktrees too.
+  'detect-knowledge-tools': ({ cwd }) => ({ ok: true, tools: detectKnowledgeTools(repoRoot(cwd)) }),
+
+  'resolve-worktree-dir': ({ cwd }) => {
+    const cfg = loadConfig(speccodeDirOf(cwd));
+    return { ok: true, ...resolveWorktreeDir(cfg) };
   },
 
   'query-pr': ({ cwd, number }) => {

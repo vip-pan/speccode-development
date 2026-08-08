@@ -15,13 +15,15 @@ tags: [speccode, workflow, reset]
 ## 逐字段询问清理
 
 用 AskUserQuestion 逐个询问是否清理(是则清空该字段,否则保留):
-- `trunk` / `remote` / `display` / `pr_tool` / `spec_tools.*`(逐工具)/ `untracked_permanent`。
+- `trunk` / `remote` / `pr_tool` / `worktree_prefix` / `worktree_dir` / `knowledge_tools` / `hooks`(若存在)。
 - 提示:清空 `trunk` 后 `/speccode:creating-feature` 将无法执行,需重编辑 config 或重新 init。
+- 若 config 仍含 v1 遗留字段(`display` / `spec_tools` / `untracked_permanent`)→ 一并询问是否移除(建议移除,config v2 已不再使用)。
 
 ## 执行
 
 1. 备份:运行 `speccode.mjs backup-config --cwd .`(config.json.bak.<timestamp>)。
-2. 清理 worktree:`git worktree list --porcelain` 过滤 `worktree-` 前缀 → 逐个 `git worktree remove <path> --force` + `git branch -D <branch>`。
-3. `rm -rf .speccode/state/`。
-4. 用 `write-config --json-stdin` 写回 config(仅保留用户确认保留的字段)。
-5. 打印:reset 完成,保留字段列表;可 `/speccode:init` 重建或直接 `/speccode:creating-feature`。
+2. 清理 worktree:`git worktree list --porcelain` 中,仅处理满足「分支名带 `worktree_prefix` 且(路径位于 `resolve-worktree-dir` 解析目录之下或曾在 state 中登记)」的 worktree → 逐个 `git worktree remove <path> --force` + `git branch -D <branch>`;其余(宿主环境自建)原样保留并说明。
+3. 询问是否整体清理 `.speccode/memory/` 与 `.speccode/sdd/` 两个目录(按目录整体粒度,不提供按 feature 挑选;用户确认才 `rm -rf`)。
+4. `rm -rf .speccode/state/`。
+5. 用 `write-config --json-stdin` 写回 config(仅保留用户确认保留的字段)。
+6. 打印:reset 完成,保留字段列表;可 `/speccode:init` 重建或直接 `/speccode:exploring`。

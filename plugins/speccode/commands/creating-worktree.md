@@ -23,7 +23,26 @@ tags: [speccode, workflow, worktree]
 
 ## 创建
 
-1. worktree 目录:`.claude/worktrees/<branch>`。
-2. `git worktree add .claude/worktrees/<branch> -b <branch> <feature>`。
-3. 更新 state:读当前 state(`read-config` 同级可加读 state,或直接由 reconcile 返回),把 `worktrees[<branch>] = { status: "in_progress" }` 后用 `write-state --branch <feature> --json-stdin` 原子写回。
-4. 打印:worktree 已创建于 `.claude/worktrees/<branch>`,请 `cd` 过去开发,完成后 `/speccode:finishing-worktree`。
+1. **解析 worktree 目录**:运行 `speccode.mjs resolve-worktree-dir --cwd .`。
+   - `source="config"` → 用返回的 `dir`。
+   - `source="default"`(config 缺少 worktree_dir 键,含被用户手动删除)→ 用 AskUserQuestion 询问 worktree 存放目录(默认 `.claude/worktrees`),然后经 `write-config --json-stdin` 把 `worktree_dir` 写回 config(读当前 config → 加字段 → 整体写回),再继续。
+2. **gitignore 校验(warn-only)**:`git check-ignore -q <dir>`。
+   - 未被忽略(退出码非 0,即该目录会被 git 跟踪)→ 警告"worktree 目录 <dir> 未被 .gitignore 忽略,worktree 元数据可能进入 git;建议先加入 .gitignore",询问用户是否继续。
+   - 已被忽略 → 静默继续。
+3. `git worktree add <dir>/<branch> -b <branch> <feature>`。
+4. **项目 setup**:在 `<dir>/<branch>` 下按标记文件执行(存在多个时按序执行,均不存在则跳过并说明):
+   - `package.json` → `npm install`
+   - `Cargo.toml` → `cargo build`
+   - `requirements.txt` → `pip install -r requirements.txt`
+   - `pyproject.toml` → `poetry install`
+   - `go.mod` → `go mod download`
+5. **基线测试**:在新 worktree 内运行项目测试命令(同 finishing-worktree 的探测:`package.json`→`npm test`、`Cargo.toml`→`cargo test`、`requirements.txt`/`pyproject.toml`→`pytest`、`go.mod`→`go test ./...`;均无 → 询问用户测试命令或明确跳过)。
+   - 失败 → 展示失败摘要,询问「继续开发还是先行调查」,不擅自继续。
+6. 更新 state:读当前 state(由 reconcile 返回或 read),把 `worktrees[<branch>] = { status: "in_progress" }` 后用 `write-state --branch <feature> --json-stdin` 原子写回。
+7. 打印:worktree 已创建于 `<dir>/<branch>`,请 `cd` 过去开发。
+
+## 完成后引导
+
+- 手动模式:用 AskUserQuestion 询问是否执行 `/speccode:proposing` 把 exploring 结论落地为文档。
+- **auto 模式**(当前会话处于 Claude Code 自动接受/bypass、Codex auto 等自主执行模式):自动衔接执行 `/speccode:proposing`。判断依据不充分时 MUST 默认询问而非自动衔接。
+- 用户暂不落地文档 → 提示:开发完成后执行 `/speccode:finishing-worktree`。

@@ -10,7 +10,7 @@
 
 #### Scenario: 插件目录命中
 - **WHEN** `~/.claude/plugins/` 下存在 understand-anything 插件
-- **THEN** 探测结果 MUST 含 `{id: "understand-anything", kind: "plugin", evidence: <路径>}`
+- **THEN** 探测结果 MUST 含 `{id: "understand-anything", kind: "plugin", evidence: <插件注册表键, 如 understand-anything@understand-anything>}`
 
 #### Scenario: CLI 命中
 - **WHEN** `command -v codegraph` 退出码为 0
