@@ -30,11 +30,11 @@
 
 ## P3 文档生命周期命令(exploring / proposing / syncing / archiving)
 
-- [ ] 3.1 `commands/exploring.md`:移植 opsx:explore 的 stance prose(好奇/开放线程/可视化/grounded/不实现);删 openspec CLI 段;加知识库咨询段(读 config.knowledge_tools,可用优先、缺失回退 Grep/Read、不报错);不产任何文档(memory 不算文档产物);结束引导 creating-feature + creating-worktree(auto 自动、不确定默认询问);出口按归属写 memory(归属既有 feature→append 该 feature memory;无归属→写 `_exploring.md`);触发 onExplored
-- [ ] 3.2 `commands/proposing.md`:改造 opsx:propose;产物固定四类 → `speccode/changes/<slug>/propose/{proposal.md,design.md,specs/<cap>/spec.md,tasks.md}`;slug = feature 分支 slug 段;**检测到 `changes/<slug>/` 已存在且未归档时询问(续写补充/先 archiving 再重建/取消)**;复杂度评估 → 复杂度高建议 brainstorming;知识库咨询段(同 exploring);落盘即 git add + commit;入口 read-memory、出口 write-memory;触发 onProposed
-- [ ] 3.3 `commands/syncing.md`:改造 opsx:sync;delta 源 = propose/ 四类文档(刻意不采用 artifactPaths 单源语义,见 design D11);brainstorm/ 存在先吸收未回写残余;合并进 `speccode/spec/<capability>/spec.md`(ADDED/MODIFIED/REMOVED/RENAMED 语义);幂等;落盘即 commit;触发 onSynced
-- [ ] 3.4 `commands/archiving.md`:改造 opsx:archive;任务完成检查、sync 评估提示(先建议 syncing);`mv` 到 `speccode/archive/YYYY-MM-DD-<slug>`(日期不叠加、已存在报错);落盘即 commit;触发 onArchived
-- [ ] 3.5 P3 验收:scratch 仓手动走查 proposing → syncing(两遍验幂等)→ archiving(日期前缀、commit)
+- [x] 3.1 `commands/exploring.md`:移植 opsx:explore 的 stance prose(好奇/开放线程/可视化/grounded/不实现);删 openspec CLI 段;加知识库咨询段(读 config.knowledge_tools,可用优先、缺失回退 Grep/Read、不报错);不产任何文档(memory 不算文档产物);结束引导 creating-feature + creating-worktree(auto 自动、不确定默认询问);出口按归属写 memory(归属既有 feature→append 该 feature memory;无归属→写 `_exploring.md`);触发 onExplored
+- [x] 3.2 `commands/proposing.md`:改造 opsx:propose;产物固定四类 → `speccode/changes/<slug>/propose/{proposal.md,design.md,specs/<cap>/spec.md,tasks.md}`;slug = feature 分支 slug 段;**检测到 `changes/<slug>/` 已存在且未归档时询问(续写补充/先 archiving 再重建/取消)**;复杂度评估 → 复杂度高建议 brainstorming;知识库咨询段(同 exploring);落盘即 git add + commit;入口 read-memory、出口 write-memory;触发 onProposed
+- [x] 3.3 `commands/syncing.md`:改造 opsx:sync;delta 源 = propose/ 四类文档(刻意不采用 artifactPaths 单源语义,见 design D11);brainstorm/ 存在先吸收未回写残余;合并进 `speccode/spec/<capability>/spec.md`(ADDED/MODIFIED/REMOVED/RENAMED 语义);幂等;落盘即 commit;触发 onSynced
+- [x] 3.4 `commands/archiving.md`:改造 opsx:archive;任务完成检查、sync 评估提示(先建议 syncing);`mv` 到 `speccode/archive/YYYY-MM-DD-<slug>`(日期不叠加、已存在报错);落盘即 commit;触发 onArchived
+- [x] 3.5 P3 验收:scratch 仓手动走查 proposing → syncing(两遍验幂等)→ archiving(日期前缀、commit)(hooks/memory 接线在 P6/P7 统一完成)
 
 ## P4 brainstorming + writing-plans
 

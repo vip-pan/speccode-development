@@ -163,6 +163,7 @@ tags: [speccode, workflow, propose, specs]
    - `## ADDED Requirements` / `## MODIFIED Requirements` / `## REMOVED Requirements` / `## RENAMED Requirements`(FROM:/TO: 格式)
    - 每条 requirement:`### Requirement: <名称>` + 含 SHALL/MUST 的正文 + 至少一个 `#### Scenario:`(WHEN/THEN 可验证)
    - MODIFIED/REMOVED 的名称必须与既有主规格(`speccode/spec/<capability>/spec.md`,若存在)逐字一致
+   - 新增 capability(主规格尚不存在)的 delta SHOULD 带 `## Purpose` 段,供 syncing 播种新建主规格;修改既有 capability 的 delta 不带。
 4. **tasks.md** — 实现步骤清单,`- [ ]` 复选框,按依赖排序分组。
 
 每写完一个文件展示一行进度("已创建 proposal.md")。全部写完后展示摘要:需求目录路径、四类文档清单、复杂度评估结论。
@@ -193,6 +194,8 @@ Run: `git grep -n "openspec\|run-hook\|read-memory\|write-memory" plugins/specco
 Expected: 零命中
 Run: `git grep -c "speccode/changes/\|git commit" plugins/speccode/commands/proposing.md`
 Expected: ≥4(目录布局与落盘提交存在)
+Run: `git grep -c "## Purpose" plugins/speccode/commands/proposing.md`
+Expected: ≥1(delta Purpose 说明存在)
 
 - [ ] **Step 3: Commit**
 
@@ -224,7 +227,8 @@ tags: [speccode, workflow, sync, specs]
 ## 前置
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
-2. 确定 slug:从当前 worktree 所属 feature 分支取 slug 段(可用 `speccode.mjs reconcile --cwd .` 的 features 判定归属);`speccode/changes/<slug>/` 不存在 → 报错"未找到需求目录,请先 /speccode:proposing",退出。
+2. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix`(默认 `worktree-`)开头;否则退出并提示"请在 worktree 分支上运行本命令"(防止直提 trunk)。
+3. 确定 slug:从当前 worktree 所属 feature 分支取 slug 段(可用 `speccode.mjs reconcile --cwd .` 的 features 判定归属);`speccode/changes/<slug>/` 不存在 → 报错"未找到需求目录,请先 /speccode:proposing",退出。
 
 ## delta 源契约
 
@@ -251,14 +255,22 @@ tags: [speccode, workflow, sync, specs]
 
 ## 落盘即提交(必须)
 
+先做空变更短路(幂等保证):若 `git status --porcelain speccode/` 无输出,说明本次合并没有产生任何落盘变更 → 跳过提交并报告「无变更(幂等)」,不创建空 commit。有变更时再执行:
+
 ```bash
-git add speccode/spec/
+git add speccode/spec/ speccode/changes/<slug>/
 git commit -m "docs(speccode): sync <slug> into main specs"
 ```
+
+(add 后亦可用 `git diff --cached --quiet` 复验:为空同样跳过提交。`git add` 同时写两个路径,护栏末句的「回写 propose/ 一并提交」由此可达。)
 
 ## 输出摘要
 
 合并完成后展示:更新了哪些 capability、各做了什么(新增/修改/删除/改名)、哪些新建主规格的 Purpose 是占位待补。
+
+## 下一步引导
+
+- 合并完成并提交后,引导用户执行 `/speccode:archiving` 归档本次变更。
 
 ## 护栏
 
@@ -274,6 +286,8 @@ Run: `git grep -n "openspec\|artifactPaths\|run-hook\|read-memory\|write-memory"
 Expected: 零命中(单源语义已刻意不采用 artifactPaths)
 Run: `git grep -c "幂等\|speccode/spec/\|brainstorm" plugins/speccode/commands/syncing.md`
 Expected: ≥4(幂等、主规格路径、brainstorm 吸收都在)
+Run: `git grep -c "worktree_prefix\|无变更(幂等)\|speccode:archiving" plugins/speccode/commands/syncing.md`
+Expected: ≥3(trunk 防护、幂等短路、衔接引导都在)
 
 - [ ] **Step 3: Commit**
 
@@ -305,7 +319,8 @@ tags: [speccode, workflow, archive]
 ## 前置
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
-2. 确定 slug:默认取当前 worktree 所属 feature 的 slug 段;用户也可在命令参数中显式指定。`speccode/changes/<slug>/` 不存在 → 报错退出。
+2. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix`(默认 `worktree-`)开头;否则退出并提示"请在 worktree 分支上运行本命令"(防止直提 trunk)。
+3. 确定 slug:默认取当前 worktree 所属 feature 的 slug 段;用户也可在命令参数中显式指定。`speccode/changes/<slug>/` 不存在 → 报错退出。
 
 ## 归档前检查(警告不硬阻断)
 
@@ -339,6 +354,10 @@ git commit -m "docs(speccode): archive <slug>"
 
 展示:归档的需求、归档目标路径、sync 状态(已同步 / 用户选择跳过 / 无 delta)、警告(未完成任务数等)。
 
+## 下一步引导
+
+- 归档完成并提交后,引导用户执行 `/speccode:finishing-worktree` 合并本 worktree 成果回功能分支。
+
 ## 护栏
 
 - 警告(未完成任务、未 sync)只提示与确认,不硬阻断;目标已存在是唯一的硬错误。
@@ -352,6 +371,8 @@ Run: `git grep -n "openspec\|run-hook\|read-memory\|write-memory" plugins/specco
 Expected: 零命中
 Run: `git grep -c "YYYY-MM-DD\|git commit\|syncing" plugins/speccode/commands/archiving.md`
 Expected: ≥4
+Run: `git grep -c "worktree_prefix\|finishing-worktree" plugins/speccode/commands/archiving.md`
+Expected: ≥3(trunk 防护与衔接引导都在)
 
 - [ ] **Step 3: Commit**
 
@@ -397,3 +418,4 @@ git commit -m "docs(openspec): check off P3 tasks of speccode-v2-sdd-flow"
 - **Placeholder 扫描**:无 TBD/TODO;四个命令为完整成稿。
 - **一致性**:slug 推导(feature slug 段)在 T2/T3/T4 一致;「落盘即提交」段三文件同构;auto 模式措辞与 P2 creating-worktree 一致;均不含 P6/P7 才存在的 verb(验证 grep 保证)。
 - **opsx 保真**:explore 的 stance/护栏近逐字;propose 的提问与"不确定先问"保留(CLI 驱动工件循环替换为内嵌四类文档规范);sync 的四段式合并语义/Purpose 权威/幂等/Main Spec 格式全保留(artifactPaths 单源改为 speccode/changes 契约,D11 已声明);archive 的警告不阻断/日期不叠加/已存在报错/inline sync 复验全保留。
+- **P3 终审修复波次**:F1 幂等短路 / F2 trunk 防护校验 / F3 衔接引导 / F4 delta Purpose / F5 git add 覆盖,已同步进对应 Task 成稿。
