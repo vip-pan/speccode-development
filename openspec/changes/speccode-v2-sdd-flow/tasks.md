@@ -38,11 +38,11 @@
 
 ## P4 brainstorming + writing-plans
 
-- [ ] 4.1 `commands/brainstorming.md`:superpowers brainstorming 近逐字移植(HARD-GATE、一次一问、2-3 方案带推荐、分段呈现逐段确认、inline self-review 四查、用户 review gate);设计文档写 `speccode/changes/<slug>/brainstorm/YYYY-MM-DD-<topic>-design.md`;**回写 propose/ 受影响文档**;知识库咨询段(同 exploring);落盘即 commit;终态引导 `/speccode:writing-plans`;触发 onBrainstormed
-- [ ] 4.2 visual companion 完整移植:`references/visual-companion.md` + `references/visual-companion-scripts/`(server.cjs、start-server.sh、stop-server.sh、helper.js、frame-template.html 拷贝);**脚本与文档内 `.superpowers/brainstorm/` 路径硬编码重映射为 `.speccode/brainstorm/`(untracked,与运行时数据哲学一致),visual-companion.md 内 `.superpowers` 引用与 gitignore 提醒同步改写**;brainstorming.md 保留 just-in-time offer 流程,启动命令路径改为 `${CLAUDE_PLUGIN_ROOT}/references/visual-companion-scripts/`
-- [ ] 4.3 `commands/writing-plans.md`:superpowers writing-plans 近逐字移植(plan header 模板含 Global Constraints、Task 结构、No Placeholders、inline Self-Review、Execution Handoff 二选一);输入优先 `brainstorm/`、回退 `propose/`;计划写 `speccode/changes/<slug>/plan/YYYY-MM-DD-<feature>-plan.md`;落盘即 commit;REQUIRED 下一步 = `/speccode:subagent-driven-development` 或 `/speccode:executing-plans`;触发 onPlanned
-- [ ] 4.4 删除 legacy:不移植 spec-document-reviewer-prompt.md 与 plan-document-reviewer-prompt.md(现行 superpowers 已改 inline self-review)
-- [ ] 4.5 P4 验收:scratch 仓走查 brainstorming(回写 propose)+ writing-plans(brainstorm 优先)
+- [x] 4.1 `commands/brainstorming.md`:superpowers brainstorming 近逐字移植(HARD-GATE、一次一问、2-3 方案带推荐、分段呈现逐段确认、inline self-review 四查、用户 review gate);设计文档写 `speccode/changes/<slug>/brainstorm/YYYY-MM-DD-<topic>-design.md`;**回写 propose/ 受影响文档**;知识库咨询段(同 exploring);落盘即 commit;终态引导 `/speccode:writing-plans`;触发 onBrainstormed
+- [x] 4.2 visual companion 完整移植:`references/visual-companion.md` + `references/visual-companion-scripts/`(server.cjs、start-server.sh、stop-server.sh、helper.js、frame-template.html 拷贝);**脚本与文档内 `.superpowers/brainstorm/` 路径硬编码重映射为 `.speccode/brainstorm/`(untracked,与运行时数据哲学一致),visual-companion.md 内 `.superpowers` 引用与 gitignore 提醒同步改写**;brainstorming.md 保留 just-in-time offer 流程,启动命令路径改为 `${CLAUDE_PLUGIN_ROOT}/references/visual-companion-scripts/`(路径已重映射 .speccode/brainstorm/)
+- [x] 4.3 `commands/writing-plans.md`:superpowers writing-plans 近逐字移植(plan header 模板含 Global Constraints、Task 结构、No Placeholders、inline Self-Review、Execution Handoff 二选一);输入优先 `brainstorm/`、回退 `propose/`;计划写 `speccode/changes/<slug>/plan/YYYY-MM-DD-<feature>-plan.md`;落盘即 commit;REQUIRED 下一步 = `/speccode:subagent-driven-development` 或 `/speccode:executing-plans`;触发 onPlanned
+- [x] 4.4 删除 legacy:不移植 spec-document-reviewer-prompt.md 与 plan-document-reviewer-prompt.md(现行 superpowers 已改 inline self-review)
+- [x] 4.5 P4 验收:scratch 仓走查 brainstorming(回写 propose)+ writing-plans(brainstorm 优先)(hooks/memory 接线在 P6/P7 统一完成)
 
 ## P5 执行方法论命令(8 个)+ SDD 引擎
 
