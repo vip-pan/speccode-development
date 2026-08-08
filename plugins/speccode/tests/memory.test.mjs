@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, existsSync, readdirSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { memoryDir, memoryPath, readMemory, writeMemory } from '../lib/memory.mjs';
@@ -47,7 +47,20 @@ test('writeMemory is atomic (no tmp residue, no partial state)', () => {
   writeMemory(dir, 'feature/x', 'v1', 'replace');
   writeMemory(dir, 'feature/x', 'v2', 'replace');
   const files = readdirSync(memoryDir(dir));
-  assert.deepEqual(files, ['feature__x.md']);
+  assert.deepEqual(files, ['.gitignore', 'feature__x.md']);
   assert.equal(readMemory(dir, 'feature/x'), 'v2');
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('writeMemory self-ignores the memory dir with a plugin-owned .gitignore', () => {
+  const dir = tmp();
+  writeMemory(dir, 'feature/x', '# memory\n', 'replace');
+  const gitignore = join(memoryDir(dir), '.gitignore');
+  assert.ok(existsSync(gitignore));
+  assert.equal(readFileSync(gitignore, 'utf8'), '*\n');
+  // second write stays idempotent: same content, no error
+  writeMemory(dir, 'feature/x', 'more\n', 'append');
+  assert.equal(readFileSync(gitignore, 'utf8'), '*\n');
+  assert.equal(readMemory(dir, 'feature/x'), '# memory\nmore\n');
   rmSync(dir, { recursive: true, force: true });
 });

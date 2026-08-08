@@ -14,6 +14,7 @@ export function writeJsonAtomic(path, obj) {
 }
 
 export function writeTextAtomic(path, text) {
+  mkdirSync(dirname(path), { recursive: true });
   const tmp = `${path}.${process.pid}.tmp`;
   writeFileSync(tmp, text);
   renameSync(tmp, path);

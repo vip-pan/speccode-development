@@ -56,3 +56,11 @@ test('writeTextAtomic writes text atomically', () => {
   assert.deepEqual(readdirSync(dir), ['m.md']);
   rmSync(dir, { recursive: true, force: true });
 });
+
+test('writeTextAtomic creates missing parent directories (symmetric with writeJsonAtomic)', () => {
+  const dir = tmp();
+  const p = join(dir, 'sub', 'deep', 'm.md');
+  writeTextAtomic(p, 'nested\n');
+  assert.equal(readFileSync(p, 'utf8'), 'nested\n');
+  rmSync(dir, { recursive: true, force: true });
+});

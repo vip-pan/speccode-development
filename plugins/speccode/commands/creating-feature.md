@@ -30,10 +30,19 @@ tags: [speccode, workflow, feature]
 1. `git checkout -b <branch>`(从 trunk)。
 2. `git push -u origin <branch>`。
 3. 写 state:通过 `echo '<json>' | speccode.mjs write-state --cwd . --branch <branch> --json-stdin`,内容含 `feature_branch`、`created_at`(ISO UTC)、`initial_branch`(= config.trunk)、`status:"in_progress"`、`worktrees:{}`。
-4. **建立 memory 骨架(承接 exploring 结论)**:先运行 `speccode.mjs read-memory --cwd . --branch _exploring` 读 trunk 级 `_exploring.md`;随后经 `echo '{"mode":"replace","content":"# <branch> 记忆\n- 创建于 <ISO UTC 时间>\n- exploring 结论:<上一步非 null 时迁入其内容;为 null 时填「无」>"}' | speccode.mjs write-memory --cwd . --branch <branch> --json-stdin` 写入骨架(mode=replace)。
-5. **清空 `_exploring.md`**:仅当上一步 read-memory 返回非 null 时执行——`echo '{"mode":"replace","content":""}' | speccode.mjs write-memory --cwd . --branch _exploring --json-stdin`(mode=replace、内容为空串),避免下一个 feature 重复承接同一份探索结论;为 null 时跳过。
-
-**长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①一个开发阶段/任务完成且距上次写入已隔多个阶段;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。
+4. **建立 memory 骨架(承接 exploring 结论)**:先运行 `speccode.mjs read-memory --cwd . --branch _exploring` 读 trunk 级 `_exploring.md`;随后经 write-memory(mode=replace)写入骨架——exploring 结论段在上一步返回非 null 且非空白时迁入其内容,否则填「无」。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,内容含单引号也会破壳):
+   ```bash
+   speccode.mjs write-memory --cwd . --branch <branch> --json-stdin <<'EOF'
+   {"mode":"replace","content":"# <branch> 记忆\n- 创建于 <ISO UTC 时间>\n- exploring 结论:<内容或「无」>"}
+   EOF
+   ```
+5. **清空 `_exploring.md`**:仅当第 4 步骨架 write-memory 返回 `ok:true` 且 read-memory(`_exploring`)返回非 null 且非空白时执行——
+   ```bash
+   speccode.mjs write-memory --cwd . --branch _exploring --json-stdin <<'EOF'
+   {"mode":"replace","content":""}
+   EOF
+   ```
+   (mode=replace、内容为空串),避免下一个 feature 重复承接同一份探索结论;否则跳过。
 
 6. 触发 onFeatureCreated 钩子:
    ```bash
@@ -41,3 +50,5 @@ tags: [speccode, workflow, feature]
    ```
    输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
 7. 打印:已创建 <branch>,下一步 `/speccode:creating-worktree`。
+
+**长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①一个开发阶段/任务完成且距上次写入已隔多个阶段;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。

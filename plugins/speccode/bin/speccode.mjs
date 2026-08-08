@@ -11,6 +11,7 @@ import { detectKnowledgeTools, resolveWorktreeDir } from '../lib/detect.mjs';
 import { sddWorkspace, taskBrief, reviewPackage } from '../lib/sdd.mjs';
 import { buildHookPayload, runHook } from '../lib/hooks.mjs';
 import { readMemory, writeMemory } from '../lib/memory.mjs';
+import { validateBranch } from '../lib/slug.mjs';
 
 function readStdin() {
   return readFileSync(0, 'utf8');
@@ -189,12 +190,19 @@ const VERBS = {
 
   'read-memory': ({ cwd, branch }) => {
     if (!branch || branch === true) return { ok: false, error: 'read-memory requires --branch <F>' };
+    // `_exploring` is the one non-feature key; everything else must be <type>/<slug>
+    if (branch !== '_exploring' && !validateBranch(branch)) {
+      return { ok: false, error: `invalid branch name: ${branch}` };
+    }
     return { ok: true, memory: readMemory(speccodeDirOf(cwd), branch) };
   },
 
   'write-memory': ({ cwd, branch, 'json-stdin': jsonStdin }) => {
     if (!jsonStdin) return { ok: false, error: 'write-memory requires --json-stdin (pipe JSON via stdin)' };
     if (!branch || branch === true) return { ok: false, error: 'write-memory requires --branch <F>' };
+    if (branch !== '_exploring' && !validateBranch(branch)) {
+      return { ok: false, error: `invalid branch name: ${branch}` };
+    }
     const { mode, content } = JSON.parse(readStdin());
     if (mode !== 'replace' && mode !== 'append') {
       return { ok: false, error: 'write-memory mode must be "replace" or "append"' };

@@ -17,14 +17,18 @@ tags: [speccode, workflow, plan, execute]
 
 ## 流程
 
-### 第 1 步:加载并审查 Plan
+### 入口绑定(第 1 步之前)
 
 1. 确认已在 speccode worktree 中(否则先 `/speccode:creating-worktree`);未经用户明确同意,MUST NOT 在 main/master 上开始
-2. 读 plan 文件(通常在 `speccode/changes/<slug>/plan/`)
-3. 批判性审查——找出 plan 中任何疑问或顾虑
-4. 有顾虑:开始前向人类伙伴提出
-5. 无顾虑:为 plan 各项建 todo,继续
-6. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
+2. **绑定功能分支**:运行 `speccode.mjs reconcile --cwd .`,用返回的 features 找到当前 worktree 所属的功能分支 F;找不到 → 报错"当前 worktree 无法关联任何 active feature",退出。
+3. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续——memory 上下文 MUST 参与第 1 步的批判性审查。
+
+### 第 1 步:加载并审查 Plan
+
+1. 读 plan 文件(通常在 `speccode/changes/<slug>/plan/`)
+2. 批判性审查——找出 plan 中任何疑问或顾虑
+3. 有顾虑:开始前向人类伙伴提出
+4. 无顾虑:为 plan 各项建 todo,继续
 
 ### 第 2 步:执行任务
 
@@ -42,7 +46,12 @@ tags: [speccode, workflow, plan, execute]
 ### 第 3 步:完成开发
 
 所有任务完成并验证后:
-- **写记忆**:把本命令产出的执行进度摘要(完成的任务、验证结果,经用户确认或按本命令内置判据)经 `echo '{"mode":"append","content":"<摘要>"}' | speccode.mjs write-memory --cwd . --branch <F> --json-stdin` 追加到本 feature 的 memory。
+- **写记忆**:把本命令产出的执行进度摘要(完成的任务、验证结果,经用户确认或按本命令内置判据)追加到本 feature 的 memory。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,摘要含单引号也会破壳):
+  ```bash
+  speccode.mjs write-memory --cwd . --branch <F> --json-stdin <<'EOF'
+  {"mode":"append","content":"<摘要>"}
+  EOF
+  ```
 
 **长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①每个 task 完成时;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。
 

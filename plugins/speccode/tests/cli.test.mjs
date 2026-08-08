@@ -556,3 +556,59 @@ test('read-memory inside a linked worktree resolves to the main repo memory', ()
   spawnSync('git', ['worktree', 'remove', wtPath, '--force'], { cwd: repo, encoding: 'utf8' });
   rmSync(repo, { recursive: true, force: true });
 });
+
+test('write-memory rejects an invalid branch name', () => {
+  const repo = makeRepo();
+  const r = spawnSync('node', [BIN, 'write-memory', '--cwd', repo, '--branch', 'worktree-typo', '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ mode: 'append', content: 'x\n' }), encoding: 'utf8' });
+  assert.equal(r.status, 1);
+  const json = JSON.parse(r.stdout.trim());
+  assert.equal(json.ok, false);
+  assert.ok(json.error.includes('invalid branch'));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('read-memory rejects an invalid branch name', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'read-memory', '--cwd', repo, '--branch', 'worktree-typo');
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-memory accepts the _exploring sentinel branch', () => {
+  const repo = makeRepo();
+  const w = spawnSync('node', [BIN, 'write-memory', '--cwd', repo, '--branch', '_exploring', '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ mode: 'replace', content: 'explored\n' }), encoding: 'utf8' });
+  assert.equal(w.status, 0);
+  assert.ok(JSON.parse(w.stdout.trim()).ok);
+  const r = runCli(repo, 'read-memory', '--cwd', repo, '--branch', '_exploring');
+  assert.equal(r.json.memory, 'explored\n');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+// Form anchor for the command prose: multi-line JSON with \n escapes arrives via
+// stdin exactly like a quoted heredoc (echo '<json>' would mangle it under zsh).
+test('write-memory round-trips multi-line content byte-for-byte via stdin (heredoc form)', () => {
+  const repo = makeRepo();
+  const content = '# 摘要\n- 决策: 用 heredoc 传 JSON\n- 进度: task 3 done\n';
+  const w = spawnSync('node', [BIN, 'write-memory', '--cwd', repo, '--branch', 'feature/x', '--json-stdin'],
+    { cwd: repo, input: `${JSON.stringify({ mode: 'replace', content })}\n`, encoding: 'utf8' });
+  assert.equal(w.status, 0);
+  assert.ok(JSON.parse(w.stdout.trim()).ok);
+  const r = runCli(repo, 'read-memory', '--cwd', repo, '--branch', 'feature/x');
+  assert.equal(r.json.memory, content);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-memory round-trips content containing single quotes', () => {
+  const repo = makeRepo();
+  const content = "user's decision: don't split the repo\n";
+  const w = spawnSync('node', [BIN, 'write-memory', '--cwd', repo, '--branch', 'feature/x', '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ mode: 'append', content }), encoding: 'utf8' });
+  assert.equal(w.status, 0);
+  assert.ok(JSON.parse(w.stdout.trim()).ok);
+  const r = runCli(repo, 'read-memory', '--cwd', repo, '--branch', 'feature/x');
+  assert.equal(r.json.memory, content);
+  rmSync(repo, { recursive: true, force: true });
+});

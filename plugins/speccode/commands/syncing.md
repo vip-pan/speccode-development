@@ -14,7 +14,7 @@ tags: [speccode, workflow, sync, specs]
 3. 确定 slug:从当前 worktree 所属 feature 分支取 slug 段(可用 `speccode.mjs reconcile --cwd .` 的 features 判定归属);`speccode/changes/<slug>/` 不存在 → 报错"未找到需求目录,请先 /speccode:proposing",退出。
 4. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
-**长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①一个开发阶段/任务完成且距上次写入已隔多个阶段;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。
+**长会话主动记忆(只读变体)**:本命令只读 memory(前置第 4 条),自身 MUST NOT 执行 write-memory。若长会话记忆的触发判据在本命令期间命中(①一个开发阶段完成且距上次记录已隔多个阶段;②会话上下文显著增长、接近 compact 风险;③compact 恢复后继续工作的首个阶段完成时),MUST 提示用户:「记忆判据已命中,将在下一个写命令(proposing/brainstorming/writing-plans/执行类)出口记录关键决策/进度/待办摘要」,而不在本命令内写入。
 
 ## delta 源契约
 

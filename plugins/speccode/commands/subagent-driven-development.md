@@ -112,6 +112,10 @@ digraph process {
 
 确保工作发生在隔离工作区中:你应当已经在 speccode worktree 里(由 `/speccode:creating-worktree` 创建)。未经人类伙伴明确同意,MUST NOT 在 main/master 分支上开始实现。
 
+**绑定功能分支**:运行 `speccode.mjs reconcile --cwd .`,用返回的 features 找到当前 worktree 所属的功能分支 F;找不到 → 报错"当前 worktree 无法关联任何 active feature",退出。
+
+**读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续——memory 上下文 MUST 参与下面的 plan 通读与 pre-flight 冲突扫描。
+
 对话记忆扛不过压缩(compaction)。真实会话中,丢了位置的控制器曾把整段已完成任务序列重新派发——这是观测到的最昂贵失败。用 ledger 文件跟踪进度,而不是只靠 todo。
 
 - 每个 plan 拥有一个工作区:命令开始时运行
@@ -131,8 +135,6 @@ digraph process {
 - plan 明确要求、但审查 rubric 视为缺陷的东西(什么都不断言的测试、逐字重复的逻辑块)
 
 把你发现的一切作为一个批量问题呈给人类伙伴——每条发现旁边附上 mandate 它的 plan 文本,问哪个为准——在执行开始之前问,而不是在 plan 执行中途每发现一条打断一次。如果扫描干净,不做评论直接继续。审查循环仍是兜住那些只有实现中才暴露的冲突的网。
-
-**读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ## 模型选择(Model Selection)
 
@@ -277,7 +279,13 @@ echo '{"command":"subagent-driven-development","feature_branch":"<F>","worktree_
 
 当整支终审干净且其修复已合并,删除本 plan 的工作区(`rm -rf <workspace>`)——git 历史从此就是记录。兄弟目录属于别的 plan;别动它们。
 
-**写记忆**:把本命令产出的决策/进度摘要(经用户确认或按本命令内置判据)经 `echo '{"mode":"append","content":"<摘要>"}' | speccode.mjs write-memory --cwd . --branch <F> --json-stdin` 追加到本 feature 的 memory。
+**写记忆**:把本命令产出的决策/进度摘要(经用户确认或按本命令内置判据)追加到本 feature 的 memory。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,摘要含单引号也会破壳):
+
+```bash
+speccode.mjs write-memory --cwd . --branch <F> --json-stdin <<'EOF'
+{"mode":"append","content":"<摘要>"}
+EOF
+```
 
 **长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①每个 task 完成时;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。
 
