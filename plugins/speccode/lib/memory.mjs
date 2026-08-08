@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { writeTextAtomic } from './atomic.mjs';
 import { branchToStateName } from './slug.mjs';
@@ -34,9 +34,14 @@ export function writeMemory(speccodeDir, branch, content, mode) {
     writeFileSync(gitignore, '*\n');
   }
   const p = memoryPath(speccodeDir, branch);
-  const next = mode === 'append' && existsSync(p)
-    ? readFileSync(p, 'utf8') + content
-    : content;
-  writeTextAtomic(p, next);
+  if (mode === 'append') {
+    // Single O_APPEND write (appendFileSync opens with O_APPEND): a concurrent
+    // cross-worktree append cannot clobber what we already wrote, unlike the
+    // old read-modify-write path. On a missing file this creates it after the
+    // mkdir above.
+    appendFileSync(p, content);
+  } else {
+    writeTextAtomic(p, content);
+  }
   return p;
 }

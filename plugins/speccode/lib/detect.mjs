@@ -7,7 +7,9 @@ import { spawnSync } from 'node:child_process';
 // (fs read, command -v, homeDir) is injectable via opts so unit tests never
 // touch the real machine.
 export const KNOWLEDGE_TOOL_DETECTORS = [
-  { id: 'understand-anything', match: 'understand-anything', bin: 'understand', dir: '.understand' },
+  // no `bin` for understand-anything: the generic name `understand` would
+  // false-positive on unrelated binaries, so it only gets plugin/mcp/dir probes.
+  { id: 'understand-anything', match: 'understand-anything', dir: '.understand' },
   { id: 'codegraph', match: 'codegraph', bin: 'codegraph', dir: '.codegraph' },
   { id: 'graphify', match: 'graphify', bin: 'graphify', dir: '.graphify' },
   { id: 'codemap', match: 'codemap', bin: 'codemap', dir: '.codemap' },
@@ -44,7 +46,7 @@ export function detectKnowledgeTools(cwd, opts = {}) {
     if (pluginHit) { found.push({ id: t.id, kind: 'plugin', evidence: pluginHit }); continue; }
     const mcpHit = mcpKeys.find((k) => k.toLowerCase().includes(needle));
     if (mcpHit) { found.push({ id: t.id, kind: 'mcp', evidence: mcpHit }); continue; }
-    if (commandV(t.bin)) { found.push({ id: t.id, kind: 'cli', evidence: t.bin }); continue; }
+    if (t.bin && commandV(t.bin)) { found.push({ id: t.id, kind: 'cli', evidence: t.bin }); continue; }
     if (exists(join(cwd, t.dir))) found.push({ id: t.id, kind: 'project-dir', evidence: t.dir });
   }
   return found;

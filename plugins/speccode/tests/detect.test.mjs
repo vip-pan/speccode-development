@@ -56,6 +56,22 @@ test('detects a CLI binary via command -v', () => {
   assert.deepEqual(tools, [{ id: 'graphify', kind: 'cli', evidence: 'graphify' }]);
 });
 
+test('understand-anything has no cli probe (generic `understand` binary must not false-positive)', () => {
+  // understand-anything's old bin name `understand` collides with unrelated
+  // binaries, so it must not carry a cli probe — only plugin/mcp/dir probes.
+  assert.equal(
+    KNOWLEDGE_TOOL_DETECTORS.find((t) => t.id === 'understand-anything').bin,
+    undefined,
+  );
+  const tools = detectKnowledgeTools('/repo', {
+    homeDir: '/home/u', readJson: () => null, commandV: () => true, exists: () => false,
+  });
+  assert.ok(!tools.some((t) => t.id === 'understand-anything'),
+    'understand-anything must not be detected via a generic `understand` binary');
+  // the other tools keep their cli probes
+  assert.ok(tools.some((t) => t.id === 'graphify' && t.kind === 'cli'));
+});
+
 test('detects a project config directory', () => {
   const tools = detectKnowledgeTools('/repo', {
     homeDir: '/home/u', readJson: () => null, commandV: () => false,
