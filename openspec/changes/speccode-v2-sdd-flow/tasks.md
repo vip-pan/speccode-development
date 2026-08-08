@@ -46,16 +46,16 @@
 
 ## P5 执行方法论命令(8 个)+ SDD 引擎
 
-- [ ] 5.1 `lib/sdd.mjs`:`sddWorkspace(planFile, cwd)`(show-toplevel 定位、slug 派生校验、mkdir -p)、`extractTaskBrief(planText, n)`(纯函数,fence 感知,Task 1≠Task 10)、`taskBrief(...)`、`reviewPackage(planFile, base, head, ...)`(verify revs、commits+stat+-U10、range 命名)
-- [ ] 5.2 bin 新增 verb:`sdd-workspace`、`task-brief`、`review-package`
-- [ ] 5.3 `tests/sdd.test.mjs`:extractTaskBrief 纯函数用例(fence 内标题、Task 1/10)、workspace 派生、review-package 用 tmprepo 真实 commit;`cli.test.mjs` 补 linked worktree 内 sdd-workspace 定位用例(**注意 macOS 上 `os.tmpdir()` 与 `git rev-parse --show-toplevel` 的 realpath 差异,断言前对路径做 realpath 归一**)
-- [ ] 5.4 `commands/subagent-driven-development.md`:superpowers SDD 503 行全量移植(ledger 首行格式、工件文件交接纪律、两阶段审查合并为一次 dispatch 双 verdict、fix loop 5 轮熔断、Model Selection 节、Common Rationalizations 表);三脚本调用改 verb;工作区 `.speccode/sdd/<plan>/`;final review 走 `/speccode:requesting-code-review`;Finish 引导 `/speccode:finishing-worktree`;每 task 完成触发 onTaskCompleted;内部交叉引用(superpowers:X 形式)一并改写
-- [ ] 5.5 `commands/executing-plans.md`:近逐字移植;isolated workspace 段改「已在 speccode worktree 中」(引用 creating-worktree);收尾引导 finishing-worktree;每 task 完成触发 onTaskCompleted
-- [ ] 5.6 `commands/dispatching-parallel-agents.md`、`test-driven-development.md`、`systematic-debugging.md`、`requesting-code-review.md`、`receiving-code-review.md`、`verification-before-completion.md`:近逐字移植(Red Flags / Rationalizations / Iron Law 表保留);交叉引用改 `/speccode:X` 形式;requesting/receiving-code-review 分别触发 onCodeReviewRequested/onCodeReviewCompleted;**requesting-code-review 原文中 HEAD~1 取 BASE 的示例必须改写为「调用方记录的 BASE」(与 spec「review-package 禁止相对引用」规则一致)**
-- [ ] 5.6a 交叉引用改写规则适用于全部移植命令(4.1 brainstorming、4.3 writing-plans、5.4 SDD、5.5 executing-plans 同样检查内文 `superpowers:` 引用,不允许残留)
-- [ ] 5.7 `plugins/speccode/references/` 伴侣文件:implementer-prompt.md、task-reviewer-prompt.md、re-review-prompt.md、code-reviewer.md、root-cause-tracing.md、defense-in-depth.md、condition-based-waiting.md、**condition-based-waiting-example.ts**(被 condition-based-waiting.md 引用)、writing-good-tests.md、**find-polluter.sh**(被 root-cause-tracing.md 引用)(原样拷贝,命令内以 `${CLAUDE_PLUGIN_ROOT}/references/<file>` 引用)
-- [ ] 5.8 不移植:test-pressure-\* / test-academic / CREATION-LOG(eval fixtures)、using-superpowers、writing-skills、spec/plan-document-reviewer-prompt.md(legacy,现行已改 inline self-review)
-- [ ] 5.9 P5 验收:全量测试绿;scratch 仓 SDD 单 task 走查(task-brief 抽取、review-package range 命名、ledger 续跑)
+- [x] 5.1 `lib/sdd.mjs`:`sddWorkspace(planFile, cwd)`(show-toplevel 定位、slug 派生校验、mkdir -p)、`extractTaskBrief(planText, n)`(纯函数,fence 感知,Task 1≠Task 10)、`taskBrief(...)`、`reviewPackage(planFile, base, head, ...)`(verify revs、commits+stat+-U10、range 命名)
+- [x] 5.2 bin 新增 verb:`sdd-workspace`、`task-brief`、`review-package`
+- [x] 5.3 `tests/sdd.test.mjs`:extractTaskBrief 纯函数用例(fence 内标题、Task 1/10)、workspace 派生、review-package 用 tmprepo 真实 commit;`cli.test.mjs` 补 linked worktree 内 sdd-workspace 定位用例(**注意 macOS 上 `os.tmpdir()` 与 `git rev-parse --show-toplevel` 的 realpath 差异,断言前对路径做 realpath 归一**)
+- [x] 5.4 `commands/subagent-driven-development.md`:superpowers SDD 503 行全量移植(ledger 首行格式、工件文件交接纪律、两阶段审查合并为一次 dispatch 双 verdict、fix loop 5 轮熔断、Model Selection 节、Common Rationalizations 表);三脚本调用改 verb;工作区 `.speccode/sdd/<plan>/`;final review 走 `/speccode:requesting-code-review`;Finish 引导 `/speccode:finishing-worktree`;每 task 完成触发 onTaskCompleted;内部交叉引用(superpowers:X 形式)一并改写
+- [x] 5.5 `commands/executing-plans.md`:近逐字移植;isolated workspace 段改「已在 speccode worktree 中」(引用 creating-worktree);收尾引导 finishing-worktree;每 task 完成触发 onTaskCompleted
+- [x] 5.6 `commands/dispatching-parallel-agents.md`、`test-driven-development.md`、`systematic-debugging.md`、`requesting-code-review.md`、`receiving-code-review.md`、`verification-before-completion.md`:近逐字移植(Red Flags / Rationalizations / Iron Law 表保留);交叉引用改 `/speccode:X` 形式;requesting/receiving-code-review 分别触发 onCodeReviewRequested/onCodeReviewCompleted;**requesting-code-review 原文中 HEAD~1 取 BASE 的示例必须改写为「调用方记录的 BASE」(与 spec「review-package 禁止相对引用」规则一致)**
+- [x] 5.6a 交叉引用改写规则适用于全部移植命令(4.1 brainstorming、4.3 writing-plans、5.4 SDD、5.5 executing-plans 同样检查内文 `superpowers:` 引用,不允许残留)
+- [x] 5.7 `plugins/speccode/references/` 伴侣文件:implementer-prompt.md、task-reviewer-prompt.md、re-review-prompt.md、code-reviewer.md、root-cause-tracing.md、defense-in-depth.md、condition-based-waiting.md、**condition-based-waiting-example.ts**(被 condition-based-waiting.md 引用)、writing-good-tests.md、**find-polluter.sh**(被 root-cause-tracing.md 引用)(原样拷贝,命令内以 `${CLAUDE_PLUGIN_ROOT}/references/<file>` 引用)
+- [x] 5.8 不移植:test-pressure-\* / test-academic / CREATION-LOG(eval fixtures)、using-superpowers、writing-skills、spec/plan-document-reviewer-prompt.md(legacy,现行已改 inline self-review)
+- [x] 5.9 P5 验收:全量测试绿;scratch 仓 SDD 单 task 走查(task-brief 抽取、review-package range 命名、ledger 续跑)「(hooks/memory 接线在 P6/P7 统一完成)」
 
 ## P6 hooks
 

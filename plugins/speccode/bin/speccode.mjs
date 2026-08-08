@@ -7,6 +7,7 @@ import { reconcile } from '../lib/reconcile.mjs';
 import { loadConfig, saveConfig, backupConfig } from '../lib/config.mjs';
 import { readState, writeState, deleteState, WORKTREE_STATUS } from '../lib/state.mjs';
 import { detectKnowledgeTools, resolveWorktreeDir } from '../lib/detect.mjs';
+import { sddWorkspace, taskBrief, reviewPackage } from '../lib/sdd.mjs';
 
 function readStdin() {
   return readFileSync(0, 'utf8');
@@ -114,6 +115,29 @@ const VERBS = {
   'resolve-worktree-dir': ({ cwd }) => {
     const cfg = loadConfig(speccodeDirOf(cwd));
     return { ok: true, ...resolveWorktreeDir(cfg) };
+  },
+
+  'sdd-workspace': ({ cwd, plan }) => {
+    if (!plan || plan === true) return { ok: false, error: 'sdd-workspace requires --plan <path>' };
+    return { ok: true, dir: sddWorkspace(plan, cwd) };
+  },
+
+  'task-brief': ({ cwd, plan, task, out }) => {
+    // Bare `--task` parses as `true` and Number(true) === 1 — without the
+    // explicit checks it would silently produce Task 1's brief.
+    if (!plan || plan === true || !task || task === true || !Number.isInteger(Number(task))) {
+      return { ok: false, error: 'task-brief requires --plan <path> --task <N>' };
+    }
+    const path = taskBrief(plan, Number(task), cwd, out === true ? undefined : out);
+    return { ok: true, path };
+  },
+
+  'review-package': ({ cwd, plan, base, head, out }) => {
+    if (!plan || plan === true || !base || base === true || !head || head === true) {
+      return { ok: false, error: 'review-package requires --plan <path> --base <sha> --head <sha>' };
+    }
+    const path = reviewPackage(plan, base, head, cwd, out === true ? undefined : out);
+    return { ok: true, path };
   },
 
   'query-pr': ({ cwd, number }) => {
