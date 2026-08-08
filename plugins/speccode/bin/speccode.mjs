@@ -8,6 +8,7 @@ import { loadConfig, saveConfig, backupConfig } from '../lib/config.mjs';
 import { readState, writeState, deleteState, WORKTREE_STATUS } from '../lib/state.mjs';
 import { detectKnowledgeTools, resolveWorktreeDir } from '../lib/detect.mjs';
 import { sddWorkspace, taskBrief, reviewPackage } from '../lib/sdd.mjs';
+import { buildHookPayload, runHook } from '../lib/hooks.mjs';
 
 function readStdin() {
   return readFileSync(0, 'utf8');
@@ -147,6 +148,28 @@ const VERBS = {
     const tool = cfg.pr_tool;
     if (!tool || tool === 'none') return { ok: false, error: 'pr_tool is none; cannot query PR state' };
     return { ok: true, state: queryPrState(tool, String(number), { cwd }) };
+  },
+
+  // The only verb that always exits 0: hook failures are warn-only and must
+  // never break the invoking command. All errors collapse into the hook field.
+  'run-hook': ({ cwd, event }) => {
+    try {
+      if (!event || event === true) {
+        return { ok: true, hook: { ran: false, ok: true, warning: 'run-hook called without --event' } };
+      }
+      const cfg = loadConfig(speccodeDirOf(cwd));
+      let fragment = {};
+      if (!process.stdin.isTTY) {
+        try {
+          const raw = readStdin();
+          if (raw.trim()) fragment = JSON.parse(raw);
+        } catch { fragment = {}; }
+      }
+      const payload = buildHookPayload(event, fragment, { repoRoot: repoRoot(cwd), cwd });
+      return { ok: true, hook: runHook(cfg, event, payload) };
+    } catch (err) {
+      return { ok: true, hook: { ran: false, ok: false, error: String(err?.message || err) } };
+    }
   },
 };
 

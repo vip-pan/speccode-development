@@ -374,3 +374,62 @@ test('sdd-workspace inside a linked worktree resolves to the worktree root', () 
   spawnSync('git', ['worktree', 'remove', wtPath, '--force'], { cwd: repo, encoding: 'utf8' });
   rmSync(repo, { recursive: true, force: true });
 });
+
+test('run-hook without config no-ops and exits 0', () => {
+  const repo = makeRepo();
+  const r = spawnSync('node', [BIN, 'run-hook', '--cwd', repo, '--event', 'onSynced'],
+    { cwd: repo, input: '{"command":"syncing"}', encoding: 'utf8' });
+  assert.equal(r.status, 0);
+  const json = JSON.parse(r.stdout.trim());
+  assert.equal(json.ok, true);
+  assert.equal(json.hook.ran, false);
+  assert.equal(json.hook.ok, true);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('run-hook warns on unknown event and exits 0', () => {
+  const repo = makeRepo();
+  const r = spawnSync('node', [BIN, 'run-hook', '--cwd', repo, '--event', 'onX'],
+    { cwd: repo, input: '', encoding: 'utf8' });
+  assert.equal(r.status, 0);
+  const json = JSON.parse(r.stdout.trim());
+  assert.equal(json.ok, true);
+  assert.ok(json.hook.warning.includes('onX'));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('run-hook executes configured hook with envelope payload', () => {
+  const repo = makeRepo();
+  const log = join(repo, 'hook.log');
+  const cfg = JSON.stringify({ version: 2, hooks: { onSynced: `cat >> ${log}` } });
+  spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: cfg, encoding: 'utf8' });
+  const r = spawnSync('node', [BIN, 'run-hook', '--cwd', repo, '--event', 'onSynced'],
+    { cwd: repo, input: '{"command":"syncing","feature_branch":"feature/x"}', encoding: 'utf8' });
+  assert.equal(r.status, 0);
+  const json = JSON.parse(r.stdout.trim());
+  assert.deepEqual(json.hook, { ran: true, ok: true });
+  const line = JSON.parse(readFileSync(log, 'utf8').trim());
+  assert.equal(line.event, 'onSynced');
+  assert.equal(line.command, 'syncing');
+  assert.equal(line.feature_branch, 'feature/x');
+  assert.equal(line.repo_root, realpathSync(repo));
+  assert.ok(!Number.isNaN(Date.parse(line.timestamp)));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('run-hook reports hook failure in JSON and still exits 0', () => {
+  const repo = makeRepo();
+  const cfg = JSON.stringify({ version: 2, hooks: { onArchived: 'exit 3' } });
+  spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: cfg, encoding: 'utf8' });
+  const r = spawnSync('node', [BIN, 'run-hook', '--cwd', repo, '--event', 'onArchived'],
+    { cwd: repo, input: '{}', encoding: 'utf8' });
+  assert.equal(r.status, 0);
+  const json = JSON.parse(r.stdout.trim());
+  assert.equal(json.ok, true);
+  assert.equal(json.hook.ran, true);
+  assert.equal(json.hook.ok, false);
+  assert.equal(json.hook.exitCode, 3);
+  rmSync(repo, { recursive: true, force: true });
+});
