@@ -86,4 +86,4 @@
 - [x] 8.7 校验:`openspec validate speccode-v2-sdd-flow --strict`;剩余 6 个主 spec 逐一 `--strict`;断言 spec-docs-tracking-control 目录不存在
 - [x] 8.8 回归断言:`git grep -n "display" plugins/speccode/lib plugins/speccode/bin` 零命中;`git grep -n "docstrip\|waitForPrMerge" plugins/speccode` 零命中;`git grep -rn "develop-complete\|develop-start" plugins/speccode/commands plugins/speccode/README.md` 零命中(迁移对照表除外)
 - [x] 8.9 全量测试绿 + dogfood 全流程走查(见计划/设计验证节:init→exploring→creating-feature→creating-worktree→proposing→brainstorming→writing-plans→SDD 单 task→**requesting-code-review**→syncing→archiving→finishing-worktree→finishing-feature→status/reset;中途 /clear 验 memory 恢复与 `_exploring.md` 承接)
-- [ ] 8.10 `/opsx:archive speccode-v2-sdd-flow`(agent 流,**不用裸 openspec archive**)
+- [x] 8.10 `/opsx:archive speccode-v2-sdd-flow`(agent 流,**不用裸 openspec archive**)（已执行 agent 流归档）
