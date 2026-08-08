@@ -15,7 +15,7 @@ tags: [speccode, workflow, sdd, subagent]
 
 **叙述(Narration)上限:** 在工具调用之间,至多叙述一行短句——ledger 与工具结果本身就是记录。
 
-**连续执行:** 不要在任务之间停下来向人类伙伴请示。把 plan 里的所有任务不间断地执行完。停下来的唯一理由是:无法解决的 BLOCKED 状态、 genuinely 阻碍推进的歧义、或所有任务已完成。"我可以继续吗?"式的询问与进度小结是在浪费对方时间——对方让你执行 plan,那就执行它。
+**连续执行:** 不要在任务之间停下来向人类伙伴请示。把 plan 里的所有任务不间断地执行完。停下来的唯一理由是:无法解决的 BLOCKED 状态、真正阻碍推进的歧义、或所有任务已完成。"我可以继续吗?"式的询问与进度小结是在浪费对方时间——对方让你执行 plan,那就执行它。
 
 ## 何时使用
 
@@ -108,7 +108,7 @@ digraph process {
 }
 ```
 
-## Setup
+## 准备(Setup)
 
 确保工作发生在隔离工作区中:你应当已经在 speccode worktree 里(由 `/speccode:creating-worktree` 创建)。未经人类伙伴明确同意,MUST NOT 在 main/master 分支上开始实现。
 
@@ -121,7 +121,7 @@ digraph process {
 - 创建 ledger 时,第一行写它的身份:
   `# SDD ledger — plan: <plan file path>`。
 - ledger 是你的恢复地图:它记录的 commit 即使在你的上下文已经遗忘之后,仍然存在于 git 里。压缩之后,相信 ledger 和 `git log`,而不是你自己的回忆。
-- `git clean -fdx` 会摧毁工作区(它是 git 忽略的草稿区);若发生,从 `git log` 恢复。
+- 工作区在目标项目里是 untracked 的草稿区;插件会在 `.speccode/sdd/` 下维护一份内容为 `*` 的 `.gitignore` 自忽略(只写插件自有目录内的文件,不碰用户的 `.gitignore`),使各 plan 工作区不进 `git status`、不被 `git clean -fd`(无 `-x`)摧毁。`git clean -fdx` 仍会摧毁工作区;若发生,从 `git log` 恢复。
 
 把 plan 通读一遍,记下它的上下文与 Global Constraints,为每个任务建一个 todo。
 

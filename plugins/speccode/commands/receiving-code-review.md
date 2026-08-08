@@ -132,7 +132,7 @@ tags: [speccode, workflow, review]
 
 ## 确认正确的反馈(Acknowledging Correct Feedback)
 
-当反馈确实(正确)时:
+当反馈确实正确时:
 ```
 ✅ "已修。[改了什么的简短描述]"
 ✅ "好发现 - [具体问题]。已在 [位置] 修复。"

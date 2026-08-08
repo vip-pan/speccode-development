@@ -16,8 +16,16 @@ export function sddWorkspace(planFile, cwd) {
   if (!slug || slug === '.' || slug === '..') {
     throw new Error(`cannot derive a workspace name from: ${planFile}`);
   }
-  const dir = join(worktreeRoot(cwd), '.speccode', 'sdd', slug);
+  const sddRoot = join(worktreeRoot(cwd), '.speccode', 'sdd');
+  const dir = join(sddRoot, slug);
   mkdirSync(dir, { recursive: true });
+  // Self-ignore the whole sdd root (plugin-owned file, the user's .gitignore is
+  // never touched): keeps workspaces out of `git status` and safe from
+  // `git clean -fd` (no -x). Idempotent — skip the write when content matches.
+  const gitignore = join(sddRoot, '.gitignore');
+  if (!existsSync(gitignore) || readFileSync(gitignore, 'utf8') !== '*\n') {
+    writeFileSync(gitignore, '*\n');
+  }
   return dir;
 }
 

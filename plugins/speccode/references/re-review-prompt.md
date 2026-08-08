@@ -10,7 +10,8 @@ that the fix itself broke nothing.
 ```
 Subagent (general-purpose):
   description: "Re-review Task N fix round R"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
+  model: [MODEL — REQUIRED: choose per the Model Selection section of
+         /speccode:subagent-driven-development; an omitted
          model silently inherits the session's most expensive one]
   prompt: |
     You are re-reviewing one task's fix round. A previous review produced
@@ -92,7 +93,8 @@ Subagent (general-purpose):
 ```
 
 **Placeholders:**
-- `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection; scoped
+- `[MODEL]` — REQUIRED: reviewer model per the Model Selection section of
+  /speccode:subagent-driven-development; scoped
   re-reviews of small fix diffs take a cheap-to-mid tier
 - `[BRIEF_FILE]` — the task brief file (same file the implementer worked from)
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
@@ -100,7 +102,8 @@ Subagent (general-purpose):
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
 - `[FIX_BASE_SHA]` — the head the previous review saw
 - `[HEAD_SHA]` — current commit
-- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
+- `[DIFF_FILE]` — the path `speccode.mjs review-package --cwd . --plan
+  PLAN_FILE --base FIX_BASE --head HEAD` printed as the JSON `path` field
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
 new breakage in the fix diff, out-of-scope observations, and a round verdict.

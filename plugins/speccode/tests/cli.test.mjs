@@ -306,6 +306,26 @@ test('sdd-workspace requires --plan', () => {
   rmSync(repo, { recursive: true, force: true });
 });
 
+test('sdd-workspace rejects a bare --plan flag', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'sdd-workspace', '--cwd', repo, '--plan');
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  assert.ok(json.error.includes('--plan'));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('task-brief rejects a bare --task flag (never silently task 1)', () => {
+  const repo = makeRepo();
+  const plan = join(repo, 'p.md');
+  writeFileSync(plan, '### Task 1: A\nbody-1\n');
+  const { code, json } = runCli(repo, 'task-brief', '--cwd', repo, '--plan', plan, '--task');
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  assert.ok(json.error.includes('--task'));
+  rmSync(repo, { recursive: true, force: true });
+});
+
 test('task-brief extracts a task into the workspace', () => {
   const repo = makeRepo();
   const plan = join(repo, 'p.md');

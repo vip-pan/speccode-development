@@ -13,7 +13,7 @@ tags: [speccode, workflow, plan, execute]
 
 **开始时宣布:**"我在用 executing-plans 执行这个 plan。"
 
-**注意:** 告诉人类伙伴,有子代理可用时执行效果好得多。如果子代理可用,改用 `/speccode:subagent-driven-development`,而不是本命令。
+**注意:** 告诉人类伙伴,有子代理可用时执行效果好得多(Claude Code、Codex CLI、Codex App、Copilot CLI、Gemini CLI 都满足子代理可用条件)。如果子代理可用,改用 `/speccode:subagent-driven-development`,而不是本命令。
 
 ## 流程
 

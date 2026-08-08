@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { makeRepo, commitFile } from './helpers/tmprepo.mjs';
@@ -44,6 +44,31 @@ test('sddWorkspace derives slug dir under worktree root and rejects bad input', 
   assert.equal(dir, join(worktreeRoot(repo), '.speccode', 'sdd', 'plan'));
   assert.ok(existsSync(dir));
   assert.throws(() => sddWorkspace(join(repo, 'nope.md'), repo));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('sddWorkspace self-ignores .speccode/sdd via a `*` .gitignore, idempotently', () => {
+  const repo = makeRepo();
+  const plan = join(repo, 'plan.md');
+  writeFileSync(plan, '# x');
+  sddWorkspace(plan, repo);
+  const gitignore = join(worktreeRoot(repo), '.speccode', 'sdd', '.gitignore');
+  assert.ok(existsSync(gitignore));
+  assert.equal(readFileSync(gitignore, 'utf8'), '*\n');
+  // second call must not throw (and content stays correct)
+  sddWorkspace(plan, repo);
+  assert.equal(readFileSync(gitignore, 'utf8'), '*\n');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('sddWorkspace rejects plan paths whose basename is a dot segment', () => {
+  const repo = makeRepo();
+  mkdirSync(join(repo, 'sub'), { recursive: true });
+  // `join()` would normalize `..`/`.` away — build the raw strings instead.
+  // basename(`${repo}/sub/..`) === '..' even though the path itself resolves
+  // to `repo` (which exists), so the slug guard is what rejects it.
+  assert.throws(() => sddWorkspace(`${repo}/sub/..`, repo), /cannot derive a workspace name/);
+  assert.throws(() => sddWorkspace(`${repo}/sub/.`, repo), /cannot derive a workspace name/);
   rmSync(repo, { recursive: true, force: true });
 });
 

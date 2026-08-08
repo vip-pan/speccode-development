@@ -29,7 +29,7 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 在声称任何状态、或表达任何满意之前(BEFORE):
 
 1. 识别(IDENTIFY): 什么命令能证明这个声明?
-2. 运行(RUN): 执行完整命令( fresh、完整)
+2. 运行(RUN): 执行完整命令(新鲜、完整)
 3. 阅读(READ): 读完整个输出,检查退出码,数失败数
 4. 核实(VERIFY): 输出确认这个声明吗?
    - 如果不: 带着证据陈述实际状态
