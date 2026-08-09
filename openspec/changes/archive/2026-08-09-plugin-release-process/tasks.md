@@ -12,9 +12,9 @@
 - [x] 2.1 `openspec validate plugin-release-process --strict` 复跑;`node --test ./plugins/speccode/tests/*.test.mjs` 冒烟(134 用例全绿;顺带修复 detect.test.mjs 中 codemap 目录的过时断言)
 - [x] 2.2 `/opsx:sync` 合入 delta 到主 spec(版本发布纪律,11 → 12 条)
 - [x] 2.3 `/opsx:archive` 归档到 `openspec/changes/archive/2026-08-09-plugin-release-process/`
-- [ ] 2.4 git commit(CHANGELOG + README + brainstorm 文档 + openspec 工件 + detect 测试修正)
+- [x] 2.4 git commit(CHANGELOG + README + brainstorm 文档 + openspec 工件 + detect 测试修正)
 
 ## P3 发版(需用户确认后执行)
 
-- [ ] 3.1 `git tag v0.2.0 && git push origin main --tags`
-- [ ] 3.2 `gh release create v0.2.0 --notes <摘自 CHANGELOG 0.2.0 节>`;`gh release view v0.2.0` 验证
+- [x] 3.1 `git tag v0.2.0 && git push origin main --tags`
+- [x] 3.2 `gh release create v0.2.0 --notes <摘自 CHANGELOG 0.2.0 节>`;`gh release view v0.2.0` 验证
