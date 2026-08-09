@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 speccode 是一个 **Claude Code 流程编排插件**,用 21 个 `/speccode:*` slash 命令固化「多需求并行开发 + spec 文档托管 + PR/MR 流程标准化 + SDD 方法论(探索/文档/计划/子代理执行/评审)+ hooks/memory」工作流。它管理 trunk / feature / worktree 三层分支拓扑;spec 文档(`speccode/`)在所有分支 tracked,随 PR 链路上 trunk。SDD 方法论命令自包含移植自 superpowers(v6.2.0),目标项目零外部依赖。
 
-完整设计文档见 `plugins/speccode/README.md`(定位、21 命令表、三层分支拓扑图、风险 R1-R13)。规格已归档在 `openspec/specs/`(8 个 capability,74 requirements)与 `openspec/changes/archive/`。
+完整设计文档见 `plugins/speccode/README.md`(定位、21 命令表、三层分支拓扑图、风险 R1-R13)。规格主档在 `speccode/spec/`(8 个 capability,74 requirements),归档在 `speccode/archive/`。
 
 ## 常用命令
 
@@ -70,10 +70,6 @@ node plugins/speccode/bin/speccode.mjs <verb> --cwd . [--flags]
 - PR/等待类逻辑(`prtool` / reconcile 的 pr_open 推进)通过**依赖注入**(注入 `run` / `queryPr` / `spawn`)做单测,不依赖真实 `gh`/`glab` 或真实等待。
 - 每个 lib 模块对应一个 `plugins/speccode/tests/<module>.test.mjs`;CLI verb 在 `plugins/speccode/tests/cli.test.mjs` 用 `spawnSync('node', [BIN, ...])` 端到端测(写 verb 用 `input` 传 stdin),`BIN` 已用 `import.meta.url` 定位,与 cwd 无关。
 
-## OpenSpec 工作流
+## speccode 工作流
 
-本仓库自身用 OpenSpec 管理变更(`openspec/`)。规格改动走 change 流程:`/opsx:propose` → 实现 → `/opsx:sync`(delta specs 同步到 `openspec/specs/`)→ `/opsx:archive`。`openspec validate <spec> --strict` 校验;`openspec list` 看 active changes。
-
-## Brainstorm 文档落地(强制)
-
-每次执行 brainstorming(脑暴/查漏补缺/设计精化)后,**无论是否已存在 openspec 文档**,MUST 把脑暴结论落地为独立文档:`docs/superpowers/specs/YYYY-MM-DD-<topic>-brainstorm.md`(含背景、方法、发现/决策、处置结果),并提交 git。openspec 工件是规格契约,brainstorm 文档是思考过程记录,二者不可互相替代。
+本仓库自身的开发由 speccode 自托管(dogfood),不依赖任何外部 spec/方法论工具。变更走 v2 原生链路:`/speccode:creating-feature` → `/speccode:creating-worktree` → `/speccode:proposing`(复杂需求先 `/speccode:brainstorming`)→ `/speccode:writing-plans` → 执行 → `/speccode:syncing`(delta 合并进 `speccode/spec/`)→ `/speccode:archiving` → `/speccode:finishing-worktree` → `/speccode:finishing-feature`(单 PR 直通 trunk)。规格主档在 `speccode/spec/`,归档在 `speccode/archive/`;脑暴文档由 brainstorming 原生落到 `speccode/changes/<slug>/brainstorm/`,落盘即提交。

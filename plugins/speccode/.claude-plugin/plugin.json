@@ -6,5 +6,5 @@
   "license": "MIT",
   "homepage": "https://github.com/vip-pan/speccode-development",
   "repository": "https://github.com/vip-pan/speccode-development",
-  "keywords": ["workflow", "git", "worktree", "pr", "openspec", "sdd", "tdd", "hooks", "memory"]
+  "keywords": ["workflow", "git", "worktree", "pr", "sdd", "tdd", "hooks", "memory"]
 }
