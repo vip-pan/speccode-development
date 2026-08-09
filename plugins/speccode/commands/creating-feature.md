@@ -14,7 +14,7 @@ tags: [speccode, workflow, feature]
 
 ## 决定分支名
 
-1. 扫描 `openspec/changes/`(存在未 archive 的 change)与 `docs/superpowers/specs/`(最近 design),尝试从内容推断 type:
+1. 扫描 `speccode/changes/`(存在未 archive 的 change),尝试从内容推断 type:
    - 新功能 → `feature`;修 bug → `bugfix`;重构 → `refactor`;杂项 → `chore`。
 2. 若扫描不到,用 AskUserQuestion 询问 type 与 slug。
 3. **校验 slug**:必须匹配 `^[a-z0-9-]+$`;非法 → 拒绝并提示合法字符集。

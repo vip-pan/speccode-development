@@ -26,4 +26,4 @@ Claude Code marketplace：托管 speccode 及未来相关插件。
 
 ## 开发
 
-见 [CLAUDE.md](./CLAUDE.md)（开发视角：引擎三层架构、测试约定、OpenSpec 工作流）与 [plugins/speccode/README.md](./plugins/speccode/README.md)（用户文档：21 命令表、三层分支拓扑、风险）。
+见 [CLAUDE.md](./CLAUDE.md)（开发视角：引擎三层架构、测试约定、speccode 工作流）与 [plugins/speccode/README.md](./plugins/speccode/README.md)（用户文档：21 命令表、三层分支拓扑、风险）。
