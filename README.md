@@ -8,6 +8,8 @@ Claude Code marketplace：托管 speccode 及未来相关插件。
 |---|---|---|
 | [speccode](./plugins/speccode/) | 多需求并行开发 + spec 文档托管 + PR/MR 流程标准化的流程编排插件 | 0.2.0 |
 
+版本变更记录见 [CHANGELOG.md](./CHANGELOG.md)(全中文,Keep a Changelog 格式)。
+
 ## 安装
 
 ```bash

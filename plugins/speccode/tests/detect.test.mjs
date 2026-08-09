@@ -75,9 +75,9 @@ test('understand-anything has no cli probe (generic `understand` binary must not
 test('detects a project config directory', () => {
   const tools = detectKnowledgeTools('/repo', {
     homeDir: '/home/u', readJson: () => null, commandV: () => false,
-    exists: (p) => p === '/repo/.codemap',
+    exists: (p) => p === '/repo/.codemaker/codemap',
   });
-  assert.deepEqual(tools, [{ id: 'codemap', kind: 'project-dir', evidence: '.codemap' }]);
+  assert.deepEqual(tools, [{ id: 'codemap', kind: 'project-dir', evidence: '.codemaker/codemap' }]);
 });
 
 test('plugin wins over cli for the same tool (precedence), and no hits returns []', () => {

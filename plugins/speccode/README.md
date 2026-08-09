@@ -189,7 +189,21 @@ speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>_
 
 ## 11. 从 0.1 迁移
 
-命令对照表:
+各版本完整变更记录见仓库根目录 [CHANGELOG.md](../../CHANGELOG.md)。
+
+### 升级动作
+
+插件升级对用户来说是一组 Claude Code 命令,不是重新克隆:
+
+```text
+/plugin marketplace update speccode-development   # 刷新 marketplace 缓存(git 拉取)
+→ 检测到 plugin.json version 变化(0.1.0 → 0.2.0)触发更新检测
+→ /plugin install speccode@speccode-development   # 按提示更新安装
+```
+
+注意:GitHub Release / tag 只是给人看的发布标记,**不触发**任何自动更新;更新检测完全由 marketplace git 拉取后的 `plugin.json` version 比对驱动。
+
+### 命令对照表
 
 | v0.1 | v0.2 |
 |---|---|
@@ -206,6 +220,8 @@ speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>_
 1. **config 重新 init 升 0.2**:直接运行 `/speccode:init`,幂等流程会逐字段 diff;旧 config(`version` 为 1 或缺失)的 `display` / `spec_tools` / `untracked_permanent` 三字段会标记为「移除」,接受升级后写入 `version: 2`,不存在混合态。改写前的旧值经 `backup-config` 显式备份为 `config.json.bak.<timestamp>`。
 2. **遗留 display 分支**:v0.2 不再使用 display 层。已无 active feature 的仓库可直接删除 display 分支;spec 文档在 v0.2 全分支 tracked,不再需要专门的「标的分支」托管。
 3. **遗留 `waiting_display_pr` 挂起态**:v0.1 finish 阶段卡在 display PR 的 feature,其 state 的 `pending_operation` 无法被 v0.2 自动续跑。按 `/speccode:finishing-feature` 命令文档中的手动指引处理:① 检查当时的 display PR 是否已合并;② 已合并则 `git checkout <trunk> && git pull`,手动创建 `<feature> → <trunk>` 的 PR;③ 用 `write-state` 清除该 feature 的 `pending_operation` 后重新执行 `/speccode:finishing-feature`。v0.1 的 `<feature>-complete` 临时分支若仍残留,确认 trunk PR 已合并后手动删除即可。
+4. **旧命令名的肌肉记忆与脚本**:改名无别名,任何引用 v0.1 命令名的脚本/文档/习惯都要按上表改。state 中遗留 `pending_operation.command` 的旧值(`develop-complete` / `finish`)由引擎在读路径自动规范化为新名,**无需手动处理**。
+5. **`.speccode/memory/` 与 `.speccode/sdd/`**:v0.1 时代没有这两个目录,升级时**无需任何操作**;它们由各命令按需自建(目录内自带 `.gitignore` 自忽略)。
 
 ## 12. 理念
 
