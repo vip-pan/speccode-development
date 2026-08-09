@@ -146,7 +146,7 @@ import { spawnSync } from 'node:child_process';
 // (fs read, command -v, homeDir) is injectable via opts so unit tests never
 // touch the real machine.
 export const KNOWLEDGE_TOOL_DETECTORS = [
-  { id: 'understand-anything', match: 'understand-anything', bin: 'understand', dir: '.understand' },
+  { id: 'understand-anything', match: 'understand-anything', bin: 'understand', dir: '.ua' },
   { id: 'codegraph', match: 'codegraph', bin: 'codegraph', dir: '.codegraph' },
   { id: 'graphify', match: 'graphify', bin: 'graphify', dir: '.graphify' },
   { id: 'codemap', match: 'codemap', bin: 'codemap', dir: '.codemap' },

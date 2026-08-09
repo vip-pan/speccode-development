@@ -9,10 +9,10 @@ import { spawnSync } from 'node:child_process';
 export const KNOWLEDGE_TOOL_DETECTORS = [
   // no `bin` for understand-anything: the generic name `understand` would
   // false-positive on unrelated binaries, so it only gets plugin/mcp/dir probes.
-  { id: 'understand-anything', match: 'understand-anything', dir: '.understand' },
+  { id: 'understand-anything', match: 'understand-anything', dir: '.ua' },
   { id: 'codegraph', match: 'codegraph', bin: 'codegraph', dir: '.codegraph' },
   { id: 'graphify', match: 'graphify', bin: 'graphify', dir: '.graphify' },
-  { id: 'codemap', match: 'codemap', bin: 'codemap', dir: '.codemap' },
+  { id: 'codemap', match: 'codemap', bin: 'codemap', dir: '.codemaker/codemap' },
   { id: 'lightrag', match: 'lightrag', bin: 'lightrag', dir: '.lightrag' },
 ];
 

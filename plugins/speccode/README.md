@@ -166,7 +166,7 @@ speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>_
 1. **插件**:`~/.claude/plugins/installed_plugins.json`
 2. **MCP**:项目 `.mcp.json`、`~/.claude.json`(含项目 local scope)
 3. **CLI**:`command -v <bin>`
-4. **项目目录**:如 `.understand/`、`.codegraph/` 等
+4. **项目目录**:如 `.ua/`、`.codegraph/` 等
 
 探测结果逐项用 AskUserQuestion 展示(`<id>(<kind>: <evidence>)`),**仅用户确认的项**登记进 config 的 `knowledge_tools`;一个都未确认则写空数组。
 
