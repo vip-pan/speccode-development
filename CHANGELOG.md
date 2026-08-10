@@ -4,6 +4,21 @@
 
 纪律:bump `plugin.json` version 的提交必须同步更新本文件对应版本小节(见 `speccode/spec/plugin-packaging/spec.md`「版本发布纪律」)。
 
+## [0.2.1] - 2026-08-10
+
+自托管转换与 visual companion 品牌修正:本仓开发流程整体切换为 speccode 自托管(dogfood),规格主档迁入 `speccode/`;修复 visual-companion 的品牌残留与版本探路错误。
+
+### Fixed
+
+- `visual-companion` 页脚恒渲染 "Superpowers vunknown":版本探路上溯深度错误(探测 `plugins/` 下不存在的 manifest),改为读 `plugins/speccode/.claude-plugin/plugin.json`(版本与 homepage 单一数据源)。
+- `creating-feature` 的 type 推断扫描 v0.1 遗留路径 `openspec/changes/`,改为 `speccode/changes/`。
+
+### Changed
+
+- `visual-companion` 品牌条 speccode 化:纯文本 `speccode v<version>` + 链接读 plugin.json `homepage`;移除第三方远程 logo 与遥测关停死开关(远程资源消失后开关失去作用对象),页面不再发起任何第三方远程请求;frame 标题改 `speccode Brainstorming`。
+- `plugin.json` keywords 移除 `openspec`。
+- 仓库自托管转换:规格主档与归档迁入 `speccode/spec/`、`speccode/archive/`(openspec/ 移除);CLAUDE.md/README 工作流节更新为 v2 原生链路;plugin-packaging 规格新增「references 自包含与品牌中立」requirement(12 → 13 条)。
+
 ## [0.2.0] - 2026-08-09
 
 v2 全量迭代:四层拓扑收敛为三层、SDD 方法论与文档生命周期命令自包含内置、新增 hooks 与 memory 机制。含多项 BREAKING 变更,0.1 用户请按 `plugins/speccode/README.md`「从 0.1 迁移」节升级。
@@ -52,5 +67,6 @@ v2 全量迭代:四层拓扑收敛为三层、SDD 方法论与文档生命周期
 - 「文档剥离四步走」与 finish 阶段 `commit --amend` 折叠:保证 trunk 上功能提交为单一语义 commit,display reset 不误删文档。
 - GitHub / GitLab remote 探测,自动选择 `gh` / `glab` CLI,无 CLI 时降级为打印等效命令。
 
+[0.2.1]: https://github.com/vip-pan/speccode-development/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/vip-pan/speccode-development/compare/99797ad...v0.2.0
 [0.1.0]: https://github.com/vip-pan/speccode-development/commit/99797ad
