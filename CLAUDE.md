@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 speccode 是一个 **Claude Code 流程编排插件**,用 21 个 `/speccode:*` slash 命令固化「多需求并行开发 + spec 文档托管 + PR/MR 流程标准化 + SDD 方法论(探索/文档/计划/子代理执行/评审)+ hooks/memory」工作流。它管理 trunk / feature / worktree 三层分支拓扑;spec 文档(`speccode/`)在所有分支 tracked,随 PR 链路上 trunk。SDD 方法论命令自包含移植自 superpowers(v6.2.0),目标项目零外部依赖。
 
-完整设计文档见 `plugins/speccode/README.md`(定位、21 命令表、三层分支拓扑图、风险 R1-R13)。规格主档在 `speccode/spec/`(8 个 capability,74 requirements),归档在 `speccode/archive/`。
+完整设计文档见 `plugins/speccode/README.md`(定位、21 命令表、三层分支拓扑图、风险 R1-R13)。规格主档在 `speccode/spec/`(8 个 capability),归档在 `speccode/archive/`。
 
 ## 常用命令
 

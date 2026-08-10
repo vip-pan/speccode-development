@@ -2,7 +2,7 @@
 
 本文件记录 speccode 插件的所有重要变更。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
-纪律:bump `plugin.json` version 的提交必须同步更新本文件对应版本小节(见 `openspec/specs/plugin-packaging/spec.md`「版本发布纪律」)。
+纪律:bump `plugin.json` version 的提交必须同步更新本文件对应版本小节(见 `speccode/spec/plugin-packaging/spec.md`「版本发布纪律」)。
 
 ## [0.2.0] - 2026-08-09
 
