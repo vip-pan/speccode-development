@@ -48,6 +48,19 @@ test('marks orphan when state worktree absent in git', () => {
   rmSync(sc, { recursive: true, force: true });
 });
 
+test('does not mark orphan for completed worktree absent in git', () => {
+  const repo = makeRepo();
+  const sc = mkdtempSync(join(tmpdir(), 'sc-'));
+  writeState(sc, 'feature/x', {
+    feature_branch: 'feature/x', initial_branch: 'master', status: 'in_progress',
+    worktrees: { 'worktree-x': { status: 'completed', completed_at: '2026-08-11T00:00:00.000Z' } },
+  });
+  const res = reconcile(sc, { prefix: 'worktree-', cwd: repo });
+  assert.equal(res.orphans.length, 0);
+  rmSync(repo, { recursive: true, force: true });
+  rmSync(sc, { recursive: true, force: true });
+});
+
 test('worktree_overrides wins over ancestry', () => {
   const repo = makeRepo();
   const sc = mkdtempSync(join(tmpdir(), 'sc-'));
