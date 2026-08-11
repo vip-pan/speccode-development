@@ -161,8 +161,8 @@ function waitingPage() {
 body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
 h1 { color: #333; } p { color: #666; }
 .brand { display: flex; align-items: center; min-width: 0; overflow: hidden; margin-bottom: 1.5rem; color: #666; font-size: 0.9rem; line-height: 1; }
-.brand a { color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; min-width: 0; max-width: 100%; line-height: 1; }
-.brand-copy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1; transform: translateY(-1px); }
+.brand a { color: inherit; text-decoration: none; display: flex; align-items: center; min-width: 0; max-width: 100%; line-height: 1; }
+.brand-copy { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1; }
 </style>
 </head>
 <body><!-- BRANDING --><h1>Brainstorm Companion</h1>
@@ -204,9 +204,13 @@ function readSpeccodeManifest() {
   try {
     const manifest = path.join(__dirname, '..', '..', '.claude-plugin', 'plugin.json');
     const data = JSON.parse(fs.readFileSync(manifest, 'utf-8'));
+    // scheme 白名单:渲染层不盲信元数据,非 http/https 一律回退兜底
+    const homepage = typeof data.homepage === 'string' && /^https?:\/\//.test(data.homepage)
+      ? data.homepage
+      : fallback.homepage;
     return {
       version: data.version ? String(data.version) : fallback.version,
-      homepage: typeof data.homepage === 'string' && data.homepage ? data.homepage : fallback.homepage
+      homepage
     };
   } catch (e) {
     return fallback;
