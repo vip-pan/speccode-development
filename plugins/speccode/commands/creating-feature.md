@@ -14,10 +14,10 @@ tags: [speccode, workflow, feature]
 
 ## 决定分支名
 
-1. 扫描 `speccode/changes/`(存在未 archive 的 change),尝试从内容推断 type:
-   - 新功能 → `feature`;修 bug → `bugfix`;重构 → `refactor`;杂项 → `chore`。
-2. 若扫描不到,用 AskUserQuestion 询问 type 与 slug。
-3. **校验 slug**:必须匹配 `^[a-z0-9-]+$`;非法 → 拒绝并提示合法字符集。
+1. **参数直给**:若命令参数中已含 `<type>/<slug>` 形式的完整分支名,直接进入第 4 步校验;通过则采用,不询问、不推断。
+2. **_exploring 推断**:参数未直给时,运行 `speccode.mjs read-memory --cwd . --branch _exploring`;返回非 null 且非空白 → 从探索结论推断 type(新功能 → `feature`;修 bug → `bugfix`;重构 → `refactor`;杂项 → `chore`)。
+3. 用 AskUserQuestion 询问 type 与 slug;有推断结果时将其预置为推荐项——**推断 MUST NOT 静默生效,MUST 经用户确认才落分支名**。
+4. **校验 slug**:必须匹配 `^[a-z0-9-]+$`;非法 → 拒绝并提示合法字符集。
    - 组合分支名 `<type>/<slug>`,再次确认恰好一个 `/`。
 
 ## 处理已存在
@@ -30,7 +30,7 @@ tags: [speccode, workflow, feature]
 1. `git checkout -b <branch>`(从 trunk)。
 2. `git push -u origin <branch>`。
 3. 写 state:通过 `echo '<json>' | speccode.mjs write-state --cwd . --branch <branch> --json-stdin`,内容含 `feature_branch`、`created_at`(ISO UTC)、`initial_branch`(= config.trunk)、`status:"in_progress"`、`worktrees:{}`。
-4. **建立 memory 骨架(承接 exploring 结论)**:先运行 `speccode.mjs read-memory --cwd . --branch _exploring` 读 trunk 级 `_exploring.md`;随后经 write-memory(mode=replace)写入骨架——exploring 结论段在上一步返回非 null 且非空白时迁入其内容,否则填「无」。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,内容含单引号也会破壳):
+4. **建立 memory 骨架(承接 exploring 结论)**:先运行 `speccode.mjs read-memory --cwd . --branch _exploring` 读 trunk 级 `_exploring.md`(「决定分支名」第 2 步已读过的,直接复用其结果);随后经 write-memory(mode=replace)写入骨架——exploring 结论段在上一步返回非 null 且非空白时迁入其内容,否则填「无」。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,内容含单引号也会破壳):
    ```bash
    speccode.mjs write-memory --cwd . --branch <branch> --json-stdin <<'EOF'
    {"mode":"replace","content":"# <branch> 记忆\n- 创建于 <ISO UTC 时间>\n- exploring 结论:<内容或「无」>"}
