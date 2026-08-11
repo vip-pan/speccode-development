@@ -42,6 +42,22 @@ test('writeMemory append on missing file behaves as replace', () => {
   rmSync(dir, { recursive: true, force: true });
 });
 
+test('writeMemory append inserts one boundary newline when missing', () => {
+  const dir = tmp();
+  writeMemory(dir, 'feature/x', 'first', 'replace');
+  writeMemory(dir, 'feature/x', '- second', 'append');
+  assert.equal(readMemory(dir, 'feature/x'), 'first\n- second');
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('writeMemory append leaves boundary alone when newline already present', () => {
+  const dir = tmp();
+  writeMemory(dir, 'feature/x', 'first\n', 'replace');
+  writeMemory(dir, 'feature/x', '\n- second', 'append');
+  assert.equal(readMemory(dir, 'feature/x'), 'first\n\n- second');
+  rmSync(dir, { recursive: true, force: true });
+});
+
 test('append is a single O_APPEND write: two appends with no read between keep both', () => {
   // Lock the O_APPEND semantics: each append is one appendFileSync write, so
   // concurrent cross-worktree appends never lose data via read-modify-write.

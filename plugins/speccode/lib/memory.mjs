@@ -39,7 +39,12 @@ export function writeMemory(speccodeDir, branch, content, mode) {
     // cross-worktree append cannot clobber what we already wrote, unlike the
     // old read-modify-write path. On a missing file this creates it after the
     // mkdir above.
-    appendFileSync(p, content);
+    // 条目边界兜底:既有内容非空且无尾换行、新内容无头换行时,补恰好一个 \n,
+    // 与内容合并为同一次 O_APPEND 写。判定读与追加写之间理论上可被并发追加
+    // 穿插,代价至多是一条粘连行(装饰性),绝不丢数据。
+    const existing = existsSync(p) ? readFileSync(p, 'utf8') : '';
+    const sep = existing && !existing.endsWith('\n') && !content.startsWith('\n') ? '\n' : '';
+    appendFileSync(p, sep + content);
   } else {
     writeTextAtomic(p, content);
   }
