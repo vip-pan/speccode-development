@@ -4,6 +4,22 @@
 
 纪律:bump `plugin.json` version 的提交必须同步更新本文件对应版本小节(见 `speccode/spec/plugin-packaging/spec.md`「版本发布纪律」)。
 
+## [0.2.2] - 2026-08-11
+
+四轮 dogfood 修复:creating-feature 推断来源、reconcile orphan 虚警、memory append 边界、visual-companion scheme 门禁与死 CSS;规格层版本断言改为不随发版漂移的不变量。
+
+### Fixed
+
+- `creating-feature`:type 推断原扫描在 trunk 永不命中的 `speccode/changes/`(v0.1 遗留漂移);推断顺序改为「命令参数直给 > `_exploring` 记忆推断 > 询问」,推断结果预置推荐项经用户确认,不静默生效。
+- `reconcile`:已完成(completed)且 git 侧已清理的 worktree 登记项不再计为 orphan——消除 squash/PR 合并后 finishing-feature 门禁对已完成 worktree 的虚警。
+- `memory`:append 模式在条目边界缺失时(前条无尾换行且新条无头换行)自动补恰好一个换行符,随同一次 O_APPEND 写落盘;不再产生粘连行。
+- `visual-companion`:plugin.json `homepage` 渲染前校验 http/https scheme,非法值(如 `javascript:...`)回退默认仓库 URL。
+
+### Changed
+
+- `visual-companion`:删除 logo 移除后失效的 4 处 CSS 属性(`.brand a` 的 `gap`、`.brand-copy` 的 `translateY`)。
+- 规格演进:「memory 原子写」按模式精确化(replace=临时文件+rename;append=单次 O_APPEND,归位既有实现漂移);git-workflow-lifecycle 新增「对账 orphan 判定」、钉入 type 推断来源顺序;「plugin.json 元数据」版本断言改为「与 CHANGELOG 最新小节一致」不变量,不再钉字面量。
+
 ## [0.2.1] - 2026-08-10
 
 自托管转换与 visual companion 品牌修正:本仓开发流程整体切换为 speccode 自托管(dogfood),规格主档迁入 `speccode/`;修复 visual-companion 的品牌残留与版本探路错误。
@@ -67,6 +83,7 @@ v2 全量迭代:四层拓扑收敛为三层、SDD 方法论与文档生命周期
 - 「文档剥离四步走」与 finish 阶段 `commit --amend` 折叠:保证 trunk 上功能提交为单一语义 commit,display reset 不误删文档。
 - GitHub / GitLab remote 探测,自动选择 `gh` / `glab` CLI,无 CLI 时降级为打印等效命令。
 
+[0.2.2]: https://github.com/vip-pan/speccode-development/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/vip-pan/speccode-development/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/vip-pan/speccode-development/compare/99797ad...v0.2.0
 [0.1.0]: https://github.com/vip-pan/speccode-development/commit/99797ad
