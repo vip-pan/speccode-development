@@ -17,10 +17,10 @@ export function reconcile(speccodeDir, opts = {}) {
   const conflicts = [];
   const advanced = [];
 
-  // 3. state 登记但 git 缺失 → orphan
+  // 3. state 登记但 git 缺失 → orphan(completed 为设计的正常终态:finishing-worktree 成功后清理 git 侧,不计)
   for (const st of features) {
-    for (const wt of Object.keys(st.worktrees || {})) {
-      if (!gitSet.has(wt)) orphans.push(wt);
+    for (const [wt, info] of Object.entries(st.worktrees || {})) {
+      if (!gitSet.has(wt) && info && info.status !== WORKTREE_STATUS.COMPLETED) orphans.push(wt);
     }
   }
 
