@@ -16,7 +16,7 @@
 
 ## Capabilities
 
-- `git-workflow-lifecycle`(ADDED requirement)
+- `knowledge-tool-integration`(MODIFIED requirement: worktree 基础目录配置,gitignore 校验两态改三态)
 
 ## Impact
 
