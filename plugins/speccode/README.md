@@ -1,5 +1,7 @@
 # speccode
 
+> 用户门面(安装 / Quickstart / 对比定位)见根 README;本文档是插件设计文档。
+
 ## 1. speccode 是什么
 
 speccode 是一个 Claude Code 流程编排插件,用 21 个 `/speccode:*` slash 命令把「多需求并行开发 + spec 文档托管 + PR/MR 流程标准化」这些原本靠人工约定的环节固化为可执行原语。
@@ -7,6 +9,12 @@ speccode 是一个 Claude Code 流程编排插件,用 21 个 `/speccode:*` slash
 **适用场景**:在同一仓库内**并行开发多个需求**的小团队或个人开发者——当你需要同时跑几个 feature、每个 feature 下再拆多个 worktree 并行施工,又不想在「文档放哪」「该从哪个分支切」「PR 谁来开」这些问题上反复纠结时,speccode 提供了一条端到端的默认路径。
 
 **0.2 起**,speccode 内置了完整的 SDD 方法论(探索 → 文档 → 计划 → 子代理执行 → 评审 → 收尾)与 hooks / memory 能力;分支拓扑从四层精简为**三层**(trunk / feature / worktree)。方法论部分移植自 superpowers(v6.2.0)并自包含在插件内,目标项目**零外部依赖**。
+
+## 依赖与前置要求(适用于全文档)
+
+- `git`(核心:worktree / merge / rebase 等全部操作基于 git)
+- `gh` CLI(GitHub remote)或 `glab` CLI(GitLab remote)——用于创建/查询 PR/MR;未安装时 `pr_tool` 自动降级为 `none`,命令会打印等效命令供用户手动执行,不会因缺少 CLI 而失败
+- Node.js **≥ 24**(引擎运行在 Node 之上;纯 ESM、零第三方依赖)
 
 ## 2. 21 个命令快速参考表
 
@@ -110,6 +118,8 @@ speccode/
 - **落盘即 commit**:proposing / brainstorming / writing-plans / syncing / archiving 每一步产出文档后立即提交,文档历史与代码历史同分支同行。
 - **同 feature 多轮重建不冲突**:changes/<slug>/ 归档后目录释放,同一 slug 可再次 proposing 开新一轮;未归档重建时 proposing 会询问「续写 / 先归档 / 取消」。
 
+> 插件侧辅助资源:`plugins/speccode/references/` 内含 visual-companion(brainstorming 的可视化伴侣,见 `references/visual-companion.md`)、评审提示与调试方法论等,随插件源码跟踪。
+
 ## 6. `.speccode/` 目录结构
 
 ```
@@ -178,7 +188,7 @@ speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>_
 
 - **R2 — ancestor 判定在 cherry-pick 跨 feature 场景下会误判** → 缓解:`worktree_overrides` 字段显式指定 worktree 归属,作为「高级用户兜底」;同一 worktree 匹配 ≥2 feature 时对账记 `conflicts` 报错退出,绝不随意归属。
 - **R3 — init 逐字段幂等时用户可能误改 trunk 等字段** → 缓解:每个变化字段确认时 MUST 显示 `[旧值] → [新值]` diff,只有用户选择「改用新值」后才写入。
-- **R4 — `.speccode/` 不在 `.gitignore`,`git clean -fdx` 会丢配置** → 缓解:在 init 提示与本 README 中明确警告;不在命令层面强制保护(与「插件不改 `.gitignore`、不越权改写用户 git 机制」的原则一致)。见第 15 节的重要警告。
+- **R4 — `.speccode/` 不在 `.gitignore`,`git clean -fdx` 会丢配置** → 缓解:在 init 提示与本 README 中明确警告;不在命令层面强制保护(与「插件不改 `.gitignore`、不越权改写用户 git 机制」的原则一致)。见第 14 节的重要警告。
 - **R5 — 阻塞等 PR 合并默认 30 分钟超时,长 PR review 可能不够** → 缓解:超时是软限制,挂起态写入 `pending_operation`,`--resume` 允许后续续跑,不会永久卡死命令。
 - **R6 — worktree 目录可配置,默认 `.claude/worktrees`** → 缓解:`.claude/` 本身已是 untracked,git 不会误扫为待提交内容;init 时可通过 config `worktree_dir` 覆盖默认值,`creating-worktree` 建目录前做 check-ignore 校验。
 - **R8 — 跨平台(Windows / macOS / Linux)路径与命令差异** → 缓解:实现以 macOS / Linux 为主,Windows 支持不在目标范围内;命令实现尽量依赖 `git` / `gh` / `glab` 自身的跨平台行为,不在 shell 层做平台判断。
@@ -235,17 +245,9 @@ speccode 的方法论命令继承五条工作理念:
 
 ## 13. 未解决问题
 
-- **Windows 未支持**:当前实现只覆盖 macOS / Linux,不处理 Windows 路径分隔符、shell 差异等问题(见 R8)。是否需要在每个命令文件里重复标注「仅 macOS / Linux」,还是只在本 README 统一说明——目前倾向于只在 README(本节 + 第 14 节)集中说明,不在每个命令 markdown 文件里重复。
+- **Windows 未支持**:当前实现只覆盖 macOS / Linux,不处理 Windows 路径分隔符、shell 差异等问题(见 R8)。是否需要在每个命令文件里重复标注「仅 macOS / Linux」,还是只在本 README 统一说明——目前倾向于只在 README(本节 + 文首依赖块)集中说明,不在每个命令 markdown 文件里重复。
 
-## 14. 跨平台说明
-
-- speccode 目前**仅支持 macOS / Linux**,不支持 Windows(见 R8 与第 13 节)。
-- 依赖:
-  - `git`(核心:worktree / merge / rebase 等全部操作基于 git)
-  - `gh` CLI(GitHub remote)或 `glab` CLI(GitLab remote)——用于创建/查询 PR/MR;未安装时 `pr_tool` 自动降级为 `none`,命令会打印等效命令供用户手动执行,不会因缺少 CLI 而失败。
-  - Node.js **≥ 24**(`plugins/speccode/bin/speccode.mjs` 与 `lib/` 下的引擎代码运行在 Node 之上;纯 ESM、零第三方依赖)
-
-## 15. ⚠ 重要警告
+## 14. ⚠ 重要警告
 
 `.speccode/` 目录在用户项目中**不会被 git 跟踪,也不会被加入 `.gitignore`**——这是插件的显式设计决策(speccode 与 git 原生机制解耦,所有跟踪管理都走显式命令,不代用户修改 `.gitignore`)。
 
