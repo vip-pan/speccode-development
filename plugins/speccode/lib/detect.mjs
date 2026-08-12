@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { git } from './git.mjs';
 
 // Knowledge-base tool detection for /speccode:init. Every environment access
 // (fs read, command -v, homeDir) is injectable via opts so unit tests never
@@ -56,4 +57,22 @@ export function resolveWorktreeDir(config) {
   const dir = config && typeof config.worktree_dir === 'string' ? config.worktree_dir.trim() : '';
   if (dir) return { dir, source: 'config' };
   return { dir: '.claude/worktrees', source: 'default' };
+}
+
+// 判定 target 是否位于 root 之内(含 root 自身)。target 相对/绝对均可,
+// 一律 resolve(root, target) 归一;前缀补分隔符防 /repo vs /repo-evil 兄弟前缀误判。
+export function isPathInside(root, target) {
+  const base = resolve(root);
+  const resolved = resolve(root, target);
+  return resolved === base || resolved.startsWith(base + sep);
+}
+
+// creating-worktree 的 gitignore 校验:仓库外目录永不被 git 跟踪 → outside,
+// 且不调用 git(其对外部路径 fatal+exit 128);仅仓库内分支跑 check-ignore。
+// 查询带尾斜杠:check-ignore 对不存在的路径无法判断「目录」语义,裸路径
+// 即使被 dir 模式(.wt/)忽略也会返回 exit 1;`<dir>/` 明确按目录判定。
+export function worktreeDirIgnoreState(repoRootDir, dir) {
+  if (!isPathInside(repoRootDir, dir)) return { scope: 'outside' };
+  const r = git(['check-ignore', '-q', `${dir.replace(/[\\/]+$/, '')}/`], { cwd: repoRootDir, allowFail: true });
+  return { scope: 'inside', ignored: r.code === 0 };
 }

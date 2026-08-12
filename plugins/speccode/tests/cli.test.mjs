@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { rmSync, mkdirSync, realpathSync, writeFileSync, readFileSync } from 'node:fs';
+import { rmSync, mkdirSync, realpathSync, writeFileSync, readFileSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
@@ -610,5 +611,43 @@ test('write-memory round-trips content containing single quotes', () => {
   assert.ok(JSON.parse(w.stdout.trim()).ok);
   const r = runCli(repo, 'read-memory', '--cwd', repo, '--branch', 'feature/x');
   assert.equal(r.json.memory, content);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('resolve-worktree-dir: 仓库外 worktree_dir → ignore.scope outside(无 fatal)', () => {
+  const repo = makeRepo();
+  const outside = mkdtempSync(join(tmpdir(), 'speccode-outside-'));
+  const w = spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ version: 2, worktree_dir: outside }), encoding: 'utf8' });
+  assert.equal(w.status, 0);
+  const { code, json } = runCli(repo, 'resolve-worktree-dir', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.equal(json.ok, true);
+  assert.equal(json.dir, outside);
+  assert.deepEqual(json.ignore, { scope: 'outside' });
+  rmSync(outside, { recursive: true, force: true });
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('resolve-worktree-dir: 仓库内未忽略 → ignore inside+ignored:false', () => {
+  const repo = makeRepo();
+  const w = spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ version: 2, worktree_dir: '.wt' }), encoding: 'utf8' });
+  assert.equal(w.status, 0);
+  const { code, json } = runCli(repo, 'resolve-worktree-dir', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.deepEqual(json.ignore, { scope: 'inside', ignored: false });
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('resolve-worktree-dir: 仓库内已忽略 → ignore inside+ignored:true', () => {
+  const repo = makeRepo();
+  commitFile(repo, '.gitignore', '.wt/\n', 'ignore .wt');
+  const w = spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ version: 2, worktree_dir: '.wt' }), encoding: 'utf8' });
+  assert.equal(w.status, 0);
+  const { code, json } = runCli(repo, 'resolve-worktree-dir', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.deepEqual(json.ignore, { scope: 'inside', ignored: true });
   rmSync(repo, { recursive: true, force: true });
 });
