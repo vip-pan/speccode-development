@@ -2,7 +2,7 @@
 
 ## Context
 
-设计脑暴已固化于 `docs/superpowers/specs/2026-08-10-openspec-superpowers-to-speccode-design.md`(superpowers 时代最后一份强制节文档),四项关键决策(D1 迁移后删除 / D2 docs/superpowers 保留为历史 / D3 迁移即首个 dogfood feature / D4 原样播种 + delta 流程改内容)经用户逐项确认。本文件为其执行视图。
+设计脑暴已固化于 `../brainstorm/2026-08-10-openspec-superpowers-to-speccode-design.md`(superpowers 时代最后一份强制节文档),四项关键决策(D1 迁移后删除 / D2 docs/superpowers 保留为历史 / D3 迁移即首个 dogfood feature / D4 原样播种 + delta 流程改内容)经用户逐项确认。本文件为其执行视图。
 
 ## Goals
 

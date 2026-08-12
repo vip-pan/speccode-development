@@ -5,7 +5,7 @@
 - [x] 1.1 创建 change 脚手架(proposal / tasks / plugin-packaging delta);`openspec validate plugin-release-process --strict` 通过
 - [x] 1.2 写根 `CHANGELOG.md`:全中文 + Keep a Changelog 骨架;`[0.2.0] - 2026-08-09`(BREAKING 分组置顶:三层拓扑收敛/命令改名无别名/config v2/docstrip 退休;Added/Changed/Removed 分组)+ `[0.1.0] - 2026-07-14`(首个可用版,10 命令、四层拓扑、对账算法、文档剥离四步走)
 - [x] 1.3 根 `README.md` 加 CHANGELOG 链接;`plugins/speccode/README.md`「从 0.1 迁移」扩充为升级指引(动作链:`/plugin marketplace update` → version 检测 → install/update;注意事项:命令改名无别名/重跑 init 升 config v2/遗留 display 分支与 `waiting_display_pr` 手动收尾/legacy command 名自动规范化/`.speccode/memory`、`sdd/` 按需自建)并加 CHANGELOG 链接
-- [x] 1.4 写 `docs/superpowers/specs/2026-08-09-plugin-release-process-brainstorm.md`(背景/方法/决策 4 条/处置结果)
+- [x] 1.4 写 `../brainstorm/2026-08-09-plugin-release-process-brainstorm.md`(背景/方法/决策 4 条/处置结果)
 
 ## P2 校验与归档
 

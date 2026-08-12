@@ -82,8 +82,6 @@ spec 文档在所有分支 tracked,随 PR 链路上 trunk
 | [CHANGELOG](./CHANGELOG.md) | 版本发布记录(Keep a Changelog,全中文) |
 | [CLAUDE.md](./CLAUDE.md) | 开发文档:引擎三层架构、测试约定、speccode 工作流 |
 
-`docs/` 为早期(superpowers 时代)历史计划归档。
-
 ## 贡献
 
 本仓库由 speccode 自托管开发——spec 变更走 `speccode/changes/` 工作流,贡献即走同一条 workflow(exploring → creating-feature → … → finishing-feature)。欢迎用 speccode 给 speccode 提 PR。

@@ -82,8 +82,6 @@ Test-driven · systematic over improvisation · reduce complexity · evidence ov
 | [CHANGELOG](./CHANGELOG.md) | Release history (Keep a Changelog, all in Chinese) |
 | [CLAUDE.md](./CLAUDE.md) | Development documentation: three-layer engine architecture, testing conventions, speccode workflow |
 
-`docs/` is an archive of historical plans from the early (superpowers-era) days.
-
 ## Contributing
 
 This repo is dogfooded by speccode itself — spec changes go through the `speccode/changes/` workflow, so contributing means walking the same workflow (exploring → creating-feature → … → finishing-feature). PRs to speccode, written with speccode, are welcome.

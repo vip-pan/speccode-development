@@ -23,7 +23,7 @@ speccode 已到 0.2.0(`plugin.json` version 已 bump、main 已推送 GitHub),�
 
 ## Impact
 
-- **文档**:新建根 `CHANGELOG.md`;编辑根 `README.md`、`plugins/speccode/README.md`;新建 `docs/superpowers/specs/2026-08-09-plugin-release-process-brainstorm.md`(脑暴落地,CLAUDE.md 强制)。
+- **文档**:新建根 `CHANGELOG.md`;编辑根 `README.md`、`plugins/speccode/README.md`;新建 `../brainstorm/2026-08-09-plugin-release-process-brainstorm.md`(脑暴落地,CLAUDE.md 强制)。
 - **specs**:`openspec/specs/plugin-packaging/spec.md` sync 后多一条 requirement(11 → 12)。
 - **代码**:零改动(纯文档 + spec 变更);134 测试用例不受影响。
 - **发布物**:`v0.2.0` tag + GitHub Release(执行前需用户确认)。

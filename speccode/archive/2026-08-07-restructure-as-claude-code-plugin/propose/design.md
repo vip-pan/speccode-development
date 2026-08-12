@@ -96,7 +96,7 @@ Claude Code 插件机制（v2.1.x，2026 中）的官方结构要求：插件根
 - **[R5] 测试搬到 `plugins/speccode/tests/` 后 `node --test ./tests/*.test.mjs` 旧命令失效** → 缓解：CLAUDE.md 测试命令同步更新为 `node --test ./plugins/speccode/tests/*.test.mjs`。
 - **[R6] settings.local.json 重写可能误删有用 permission** → 缓解：重写只删指向旧 speccode.mjs 绝对路径的条目，保留 `Bash(node *)`、`Bash(git *)`、`Bash(gh *)` 等通配条目；重写前审查现有清单。
 - **[R7] marketplace.json 的 source 相对路径在 git 远端安装时解析差异** → 缓解：Claude Code 官方支持 `./plugins/speccode` 相对路径 source，本地与 git 两种来源解析一致；落地后用 `/plugin marketplace add` 实测验证。
-- **[R8] 双份设计文档（superpowers spec + OpenSpec artifact）漂移** → 缓解：修订时双向同步。superpowers spec 位于 `docs/superpowers/specs/2026-07-14-restructure-as-claude-code-plugin-design.md`，头部声明与本 OpenSpec change 的对应关系；任一处修订必须同步另一处。
+- **[R8] 双份设计文档（superpowers spec + OpenSpec artifact）漂移** → 缓解：修订时双向同步。superpowers spec 位于 `../brainstorm/2026-07-14-restructure-as-claude-code-plugin-design.md`，头部声明与本 OpenSpec change 的对应关系；任一处修订必须同步另一处。
 
 ## Migration Plan
 
