@@ -50,4 +50,4 @@ tags: [speccode, workflow, worktree]
 
 - 手动模式:用 AskUserQuestion 询问是否执行 `/speccode:proposing` 把 exploring 结论落地为文档。
 - **auto 模式**(当前会话处于 Claude Code 自动接受/bypass、Codex auto 等自主执行模式):自动衔接执行 `/speccode:proposing`。判断依据不充分时 MUST 默认询问而非自动衔接。
-- 用户暂不落地文档 → 提示:开发完成后执行 `/speccode:finishing-worktree`。
+- 用户暂不落地文档 → 提示:开发完成后,若有落地文档先 `/speccode:syncing` → `/speccode:archiving` 再 `/speccode:finishing-worktree`;否则直接 `/speccode:finishing-worktree`。

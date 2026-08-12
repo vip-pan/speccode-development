@@ -55,8 +55,8 @@ tags: [speccode, workflow, plan, execute]
 
 **长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①每个 task 完成时;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。
 
-- 宣布:"我在用 finishing-worktree 完成这项工作。"
-- **REQUIRED SUB-SKILL:** 使用 `/speccode:finishing-worktree`
+- **收尾路由**:若 `speccode/changes/<slug>/` 存在(有落地文档)→ 手动模式用 AskUserQuestion 询问、auto 模式自动衔接执行 `/speccode:syncing`,判断依据不充分时 MUST 默认询问而非自动衔接,随后依次 `/speccode:archiving` → `/speccode:finishing-worktree`(顺序硬约束:syncing/archiving 需 worktree-* 分支,finishing-worktree 会移除 worktree);若不存在 → 直接执行 `/speccode:finishing-worktree`。
+- **REQUIRED SUB-SKILL:** 按上述收尾路由执行(`/speccode:finishing-worktree` 为最终收尾)
 - 按该命令验证测试、呈现选项、执行选择
 
 ## When to Stop and Ask for Help(何时停下求助)

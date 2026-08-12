@@ -22,6 +22,12 @@ tags: [speccode, workflow, worktree, merge]
 1. 按标记文件探测测试命令:`package.json` → `npm test`;`Cargo.toml` → `cargo test`;`requirements.txt` / `pyproject.toml` → `pytest`;`go.mod` → `go test ./...`;均无 → 询问用户测试命令(用户可明确选择跳过)。
 2. 在 worktree 内运行全量测试。**失败 → 展示失败摘要并停止,不呈现合并选项。**(早前通过的测试只证明当时那棵树;合并选项只在新鲜全绿后出现。)
 
+## 未归档变更检查(warn-only)
+
+合并选项呈现前,检查 `speccode/changes/<slug>/` 是否存在:
+- 存在(有未归档的落地文档)→ 打印警告「建议先执行 /speccode:syncing 与 /speccode:archiving,再回来收尾 worktree」,MUST NOT 阻断,继续呈现合并选项。
+- 不存在 → 静默,直接进入合并选项。
+
 ## 询问合并方式(恰好四项)
 
 用 AskUserQuestion:
