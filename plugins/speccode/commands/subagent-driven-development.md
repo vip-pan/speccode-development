@@ -75,6 +75,7 @@ digraph process {
     "Dispatch final code reviewer (code-reviewer.md)" [shape=box];
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" [shape=box];
     "Final review clean: delete this plan's workspace" [shape=box];
+    "Route completion: docs? sync+archive+finish : direct finish" [shape=diamond];
     "Use /speccode:finishing-worktree" [shape=box style=filled fillcolor=lightgreen];
 
     "Setup: worktree, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (implementer-prompt.md)";
@@ -104,7 +105,8 @@ digraph process {
     "More tasks remain?" -> "Dispatch final code reviewer (code-reviewer.md)" [label="no"];
     "Dispatch final code reviewer (code-reviewer.md)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
-    "Final review clean: delete this plan's workspace" -> "Use /speccode:finishing-worktree";
+    "Final review clean: delete this plan's workspace" -> "Route completion: docs? sync+archive+finish : direct finish";
+    "Route completion: docs? sync+archive+finish : direct finish" -> "Use /speccode:finishing-worktree";
 }
 ```
 
@@ -289,7 +291,9 @@ EOF
 
 **长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①每个 task 完成时;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。
 
-调用 `/speccode:finishing-worktree`。
+**收尾路由**:
+- 若 `speccode/changes/<slug>/` 存在(有落地文档):手动模式 → 用 AskUserQuestion 询问是否执行 `/speccode:syncing`;auto 模式 → 自动衔接执行 `/speccode:syncing`。判断依据不充分时 MUST 默认询问而非自动衔接。随后依次执行 `/speccode:archiving` → `/speccode:finishing-worktree`(顺序硬约束:syncing/archiving 需在 worktree-* 分支上运行,而 finishing-worktree 会移除 worktree)。
+- 若 `speccode/changes/<slug>/` 不存在(未落地文档):直接执行 `/speccode:finishing-worktree`,不引导 syncing/archiving。
 
 ## 常见合理化借口(Common Rationalizations)
 
@@ -368,5 +372,5 @@ Final reviewer: 所有需求满足。Deferred minor 分诊:无一阻塞合并。
 
 [删除本 plan 的工作区——记录现在活在 git 里]
 
-完成!调用 /speccode:finishing-worktree。
+完成!若有落地文档,先 /speccode:syncing → /speccode:archiving,再 /speccode:finishing-worktree;否则直接 /speccode:finishing-worktree。
 ```
