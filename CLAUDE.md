@@ -8,7 +8,9 @@ speccode 是一个 **Claude Code 流程编排插件**,用 21 个 `/speccode:*` s
 
 完整设计文档见 `plugins/speccode/README.md`(定位、21 命令表、三层分支拓扑图、风险 R1-R13)。规格主档在 `speccode/spec/`(8 个 capability),归档在 `speccode/archive/`。
 
-文档分工:根 `README.md` 是 marketplace 用户门面(安装 / Quickstart / 对比定位),`plugins/speccode/README.md` 是插件设计文档,本文件是开发文档。本仓库同时是 Claude Code marketplace 仓(`.claude-plugin/marketplace.json` 声明,托管 speccode 插件)。
+文档分工:根 `README.md`(英文)/ `README_CN.md`(中文)是 marketplace 用户门面,`plugins/speccode/README.md`(英文)/ `plugins/speccode/README_CN.md`(中文)是插件设计文档,本文件是开发文档(不翻译)。本仓库同时是 Claude Code marketplace 仓(`.claude-plugin/marketplace.json` 声明,托管 speccode 插件)。
+
+**多语言维护**:根 README 与插件 README 各有中英两版(README.md=EN,README_CN.md=zh),两版结构一一对应(根 12 段 / 插件 §1-14),任何内容改动 MUST 同步全部语言版本;两版均不得硬编码版本号与测试数量(以 CHANGELOG 链接为单一数据源)。
 
 ## 常用命令
 
