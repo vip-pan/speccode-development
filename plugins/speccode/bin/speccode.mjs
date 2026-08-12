@@ -7,7 +7,7 @@ import { detectPrToolFromUrl, isInstalled, queryPrState } from '../lib/prtool.mj
 import { reconcile } from '../lib/reconcile.mjs';
 import { loadConfig, saveConfig, backupConfig } from '../lib/config.mjs';
 import { readState, writeState, deleteState, WORKTREE_STATUS } from '../lib/state.mjs';
-import { detectKnowledgeTools, resolveWorktreeDir } from '../lib/detect.mjs';
+import { detectKnowledgeTools, resolveWorktreeDir, worktreeDirIgnoreState } from '../lib/detect.mjs';
 import { sddWorkspace, taskBrief, reviewPackage } from '../lib/sdd.mjs';
 import { buildHookPayload, runHook } from '../lib/hooks.mjs';
 import { readMemory, writeMemory } from '../lib/memory.mjs';
@@ -118,7 +118,8 @@ const VERBS = {
 
   'resolve-worktree-dir': ({ cwd }) => {
     const cfg = loadConfig(speccodeDirOf(cwd));
-    return { ok: true, ...resolveWorktreeDir(cfg) };
+    const { dir, source } = resolveWorktreeDir(cfg);
+    return { ok: true, dir, source, ignore: worktreeDirIgnoreState(repoRoot(cwd), dir) };
   },
 
   'sdd-workspace': ({ cwd, plan }) => {

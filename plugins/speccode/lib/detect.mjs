@@ -71,6 +71,6 @@ export function isPathInside(root, target) {
 // 且不调用 git(其对外部路径 fatal+exit 128);仅仓库内分支跑 check-ignore。
 export function worktreeDirIgnoreState(repoRootDir, dir) {
   if (!isPathInside(repoRootDir, dir)) return { scope: 'outside' };
-  const r = git(['check-ignore', '-q', dir], { cwd: repoRootDir, allowFail: true });
+  const r = git(['check-ignore', '-q', `${dir.replace(/\/+$/, '')}/`], { cwd: repoRootDir, allowFail: true });
   return { scope: 'inside', ignored: r.code === 0 };
 }
