@@ -1,6 +1,6 @@
 {
   "name": "speccode",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "多需求并行开发 + spec 文档托管 + PR/MR 流程标准化 + SDD 方法论(探索/文档/计划/子代理执行/评审)的 Claude Code 流程编排插件",
   "author": { "name": "speccode" },
   "license": "MIT",
