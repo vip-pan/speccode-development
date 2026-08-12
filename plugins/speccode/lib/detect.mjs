@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { git } from './git.mjs';
 
 // Knowledge-base tool detection for /speccode:init. Every environment access
 // (fs read, command -v, homeDir) is injectable via opts so unit tests never
@@ -64,4 +65,12 @@ export function isPathInside(root, target) {
   const base = resolve(root);
   const resolved = resolve(root, target);
   return resolved === base || resolved.startsWith(base + sep);
+}
+
+// creating-worktree 的 gitignore 校验:仓库外目录永不被 git 跟踪 → outside,
+// 且不调用 git(其对外部路径 fatal+exit 128);仅仓库内分支跑 check-ignore。
+export function worktreeDirIgnoreState(repoRootDir, dir) {
+  if (!isPathInside(repoRootDir, dir)) return { scope: 'outside' };
+  const r = git(['check-ignore', '-q', dir], { cwd: repoRootDir, allowFail: true });
+  return { scope: 'inside', ignored: r.code === 0 };
 }
