@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  KNOWLEDGE_TOOL_DETECTORS, detectKnowledgeTools, resolveWorktreeDir,
+  KNOWLEDGE_TOOL_DETECTORS, detectKnowledgeTools, resolveWorktreeDir, isPathInside,
 } from '../lib/detect.mjs';
 
 test('KNOWLEDGE_TOOL_DETECTORS covers the five required tools', () => {
@@ -114,4 +114,12 @@ test('resolveWorktreeDir three states', () => {
   assert.deepEqual(resolveWorktreeDir({}), { dir: '.claude/worktrees', source: 'default' });
   assert.deepEqual(resolveWorktreeDir(null), { dir: '.claude/worktrees', source: 'default' });
   assert.deepEqual(resolveWorktreeDir({ worktree_dir: '  ' }), { dir: '.claude/worktrees', source: 'default' });
+});
+
+test('isPathInside: inside / outside / relative / sibling-prefix / root-self', () => {
+  assert.equal(isPathInside('/repo', '/repo/a/b'), true);
+  assert.equal(isPathInside('/repo', '/other'), false);
+  assert.equal(isPathInside('/repo', 'a/b'), true);         // 相对 target 按 root 解析
+  assert.equal(isPathInside('/repo', '/repo-evil'), false); // 兄弟前缀陷阱
+  assert.equal(isPathInside('/repo', '/repo'), true);       // root 自身
 });

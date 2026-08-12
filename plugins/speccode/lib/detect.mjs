@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 // Knowledge-base tool detection for /speccode:init. Every environment access
@@ -56,4 +56,12 @@ export function resolveWorktreeDir(config) {
   const dir = config && typeof config.worktree_dir === 'string' ? config.worktree_dir.trim() : '';
   if (dir) return { dir, source: 'config' };
   return { dir: '.claude/worktrees', source: 'default' };
+}
+
+// 判定 target 是否位于 root 之内(含 root 自身)。target 相对/绝对均可,
+// 一律 resolve(root, target) 归一;前缀补分隔符防 /repo vs /repo-evil 兄弟前缀误判。
+export function isPathInside(root, target) {
+  const base = resolve(root);
+  const resolved = resolve(root, target);
+  return resolved === base || resolved.startsWith(base + sep);
 }
