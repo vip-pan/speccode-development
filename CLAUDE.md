@@ -14,7 +14,7 @@ speccode 是一个 **Claude Code 流程编排插件**,用 21 个 `/speccode:*` s
 
 ## 常用命令
 
-Node ≥ 24,纯 ESM,**零第三方依赖**(仅 `node:` 内置模块,无 `package.json`)。
+Node ≥ 24,无 `package.json`(纯 ESM、零第三方依赖——仅 `node:` 内置模块,由源码 import 可见,不在此重复)。
 
 ```bash
 # 全量测试 —— 必须用 glob 形式
@@ -33,7 +33,7 @@ node plugins/speccode/bin/speccode.mjs <verb> --cwd . [--flags]
 
 无 lint / build 步骤。
 
-**发布纪律**:bump `plugins/speccode/.claude-plugin/plugin.json` `version` 的提交必须同步更新 `CHANGELOG.md` 对应版本小节(见 `speccode/spec/plugin-packaging/spec.md`「版本发布纪律」)。
+本仓库自身的开发工作流(v2 原生链路、dogfood 约定、发布纪律)以 skill 形式维护:真源在 `skills/speccode-workflow/SKILL.md`(进 git),经 `bash scripts/install-skills.sh` 安装到 `.claude/skills/`(本机,供 Claude Code 懒加载)。首次 clone 或 skills/ 有改动后重跑该脚本同步。
 
 ## 架构:三层,必须理解的分工
 
@@ -72,10 +72,6 @@ node plugins/speccode/bin/speccode.mjs <verb> --cwd . [--flags]
 
 ## 测试约定
 
-- 全量测试(用例数量以 `tests/` 目录为准)。涉及 git 的测试用 `plugins/speccode/tests/helpers/tmprepo.mjs` 的 `makeRepo()` / `commitFile()` 建**真实临时 git 仓库**,用完清理。
+- 全量测试(用例数量以 `tests/` 目录为准,对应关系可由 `ls tests/` 直接看到)。涉及 git 的测试用 `plugins/speccode/tests/helpers/tmprepo.mjs` 的 `makeRepo()` / `commitFile()` 建**真实临时 git 仓库**,用完清理。
 - PR/等待类逻辑(`prtool` / reconcile 的 pr_open 推进)通过**依赖注入**(注入 `run` / `queryPr` / `spawn`)做单测,不依赖真实 `gh`/`glab` 或真实等待。
-- 每个 lib 模块对应一个 `plugins/speccode/tests/<module>.test.mjs`;CLI verb 在 `plugins/speccode/tests/cli.test.mjs` 用 `spawnSync('node', [BIN, ...])` 端到端测(写 verb 用 `input` 传 stdin),`BIN` 已用 `import.meta.url` 定位,与 cwd 无关。
-
-## speccode 工作流
-
-本仓库自身的开发由 speccode 自托管(dogfood),不依赖任何外部 spec/方法论工具。变更走 v2 原生链路:`/speccode:creating-feature` → `/speccode:creating-worktree` → `/speccode:proposing`(复杂需求先 `/speccode:brainstorming`)→ `/speccode:writing-plans` → 执行 → `/speccode:syncing`(delta 合并进 `speccode/spec/`)→ `/speccode:archiving` → `/speccode:finishing-worktree` → `/speccode:finishing-feature`(单 PR 直通 trunk)。规格主档在 `speccode/spec/`,归档在 `speccode/archive/`;脑暴文档由 brainstorming 原生落到 `speccode/changes/<slug>/brainstorm/`,落盘即提交。
+- CLI verb 在 `plugins/speccode/tests/cli.test.mjs` 用 `spawnSync('node', [BIN, ...])` 端到端测(写 verb 用 `input` 传 stdin),`BIN` 已用 `import.meta.url` 定位,与 cwd 无关。

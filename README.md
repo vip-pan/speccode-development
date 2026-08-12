@@ -1,6 +1,6 @@
 # speccode
 
-Make Claude Code work with engineering discipline — parallel multi-requirement development, in-repo spec document hosting, standardized PR flow: 21 `/speccode:*` commands crystallize the SDD methodology (explore / document / plan / subagent execution / review) into the default path.
+An end-to-end SDD (Spec-Driven Development) and automated development system built on Claude Code — not just a plugin, but a complete methodology: parallel multi-requirement development, in-repo spec document hosting, a standardized PR flow, and a self-hosting toolchain that dogfoods the whole workflow. The `speccode` plugin (21 `/speccode:*` commands) is the runtime that crystallizes the SDD methodology (explore / document / plan / subagent execution / review) into the default path; this repo also hosts the spec master (`speccode/spec/`), the archive of every change, and the development-workflow skills that automate the repo's own development.
 
 [English](README.md) | [简体中文](README_CN.md)
 
@@ -11,6 +11,7 @@ Make Claude Code work with engineering discipline — parallel multi-requirement
 - **Parallel multi-requirement development**: a three-layer trunk / feature / worktree topology; a reconciliation algorithm automatically assigns every worktree, so multiple features and worktrees proceed in parallel without interfering with each other.
 - **In-repo document hosting**: spec documents (`speccode/changes → spec/ → archive/`) are tracked on every branch and committed on save, riding the PR chain up to trunk.
 - **Standardized workflow**: 21 commands + hooks (14 lifecycle events) + cross-session memory turn team conventions into executable primitives.
+- **Self-hosting automated development**: this repo develops itself with speccode (dogfood) — every change walks the full SDD chain, the spec master and archive live in-repo, and development-workflow skills automate the repo's own process. It is a working reference for an automated development system, not just a plugin to install.
 
 ## See It in Action
 
@@ -81,10 +82,14 @@ Test-driven · systematic over improvisation · reduce complexity · evidence ov
 | [Plugin README](./plugins/speccode/README.md) | 21-command reference, three-layer topology, R1-R13 risks, 0.1 → 0.2 migration (plugin design document) |
 | [CHANGELOG](./CHANGELOG.md) | Release history (Keep a Changelog, all in Chinese) |
 | [CLAUDE.md](./CLAUDE.md) | Development documentation: three-layer engine architecture, testing conventions, speccode workflow |
+| `skills/` | Development-workflow skills (true source) — installed to `.claude/skills/` via `scripts/install-skills.sh` for Claude Code lazy-loading |
+| `speccode/spec/` · `speccode/archive/` | SDD spec master (8 capabilities) and archived change records — the system's own living documentation |
 
 ## Contributing
 
 This repo is dogfooded by speccode itself — spec changes go through the `speccode/changes/` workflow, so contributing means walking the same workflow (exploring → creating-feature → … → finishing-feature). PRs to speccode, written with speccode, are welcome.
+
+After cloning, run `bash scripts/install-skills.sh` to install this repo's development-workflow skill into `.claude/skills/` (keeps the `speccode-workflow` skill — the v2 native chain, dogfood conventions, and release discipline — available to Claude Code sessions in this repo).
 
 ## License
 
