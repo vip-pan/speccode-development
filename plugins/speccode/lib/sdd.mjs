@@ -29,7 +29,7 @@ export function sddWorkspace(planFile, cwd) {
   return dir;
 }
 
-// Port of the superpowers task-brief awk: fence lines toggle state; task
+// Port of the speccode task-brief awk: fence lines toggle state; task
 // headings only count outside fences; "Task N" must be followed by a non-digit
 // or EOL so Task 1 never matches Task 10. Fence lines inside a task are kept.
 export function extractTaskBrief(planText, n) {

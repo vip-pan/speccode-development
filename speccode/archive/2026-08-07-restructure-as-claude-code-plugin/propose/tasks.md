@@ -33,7 +33,7 @@
 - [x] 5.2 确认 `plugins/speccode/README.md`（2.4 搬来的）内容为用户文档：10 命令表 / 分支拓扑图 / R1-R10 风险，无需改动内容
 - [x] 5.3 重写 `CLAUDE.md` 为开发视角：三层引擎架构（路径全部更新为 `plugins/speccode/{bin,lib}/`）、测试命令更新为 `node --test ./plugins/speccode/tests/*.test.mjs`、OpenSpec 工作流、marketplace 结构说明、手动调试用 `node plugins/speccode/bin/speccode.mjs` 的提示
 - [x] 5.4 grep 复查 `CLAUDE.md` 与 `plugins/speccode/README.md` 无残留 `.claude/speccode/` 旧路径
-- [x] 5.5 在 `docs/superpowers/plans/2026-07-10-speccode-plugin.md` 文件头加 DEPRECATED 说明：标注为历史实现计划、路径已过时、当前结构以 `openspec/changes/restructure-as-claude-code-plugin/` 与 `plugins/speccode/` 为准（不删除、不改正文）
+- [x] 5.5 在 `../../2026-07-13-add-speccode-plugin/plan/2026-07-10-speccode-plugin.md` 文件头加 DEPRECATED 说明：标注为历史实现计划、路径已过时、当前结构以 `openspec/changes/restructure-as-claude-code-plugin/` 与 `plugins/speccode/` 为准（不删除、不改正文）
 
 ## 6. 配置与清理
 
