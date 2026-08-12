@@ -127,9 +127,11 @@ import { git } from './git.mjs';
 ```js
 // creating-worktree 的 gitignore 校验:仓库外目录永不被 git 跟踪 → outside,
 // 且不调用 git(其对外部路径 fatal+exit 128);仅仓库内分支跑 check-ignore。
+// 查询带尾斜杠:check-ignore 对不存在的路径无法判断「目录」语义,裸路径
+// 即使被 dir 模式(.wt/)忽略也会返回 exit 1;`<dir>/` 明确按目录判定。
 export function worktreeDirIgnoreState(repoRootDir, dir) {
   if (!isPathInside(repoRootDir, dir)) return { scope: 'outside' };
-  const r = git(['check-ignore', '-q', dir], { cwd: repoRootDir, allowFail: true });
+  const r = git(['check-ignore', '-q', `${dir.replace(/\/+$/, '')}/`], { cwd: repoRootDir, allowFail: true });
   return { scope: 'inside', ignored: r.code === 0 };
 }
 ```
