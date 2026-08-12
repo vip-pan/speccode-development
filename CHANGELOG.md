@@ -4,6 +4,30 @@
 
 纪律:bump `plugin.json` version 的提交必须同步更新本文件对应版本小节(见 `speccode/spec/plugin-packaging/spec.md`「版本发布纪律」)。
 
+## [0.2.3] - 2026-08-13
+
+0.2.2 之后六轮收尾的 patch 发布:仓库外 worktree 目录的 gitignore 校验 fatal 修复、开发完成收尾路由统一、speccode 定位重写为「SDD + 自动化开发系统」并新增 workflow skill、归档结构去 superpowers/openspec 残留。
+
+### Fixed
+
+- `creating-worktree`:`worktree_dir` 指向仓库外目录时,原裸调 `git check-ignore -q <dir>` 会 `fatal` + exit 128;改用 `detect.worktreeDirIgnoreState` 三态判定——仓库外目录(`scope: outside`)静默放行、不调 git,仅仓库内分支才跑 `check-ignore`(且查询带尾斜杠以正确判定目录语义,避免 `.wt/` 模式误判)。
+
+### Added
+
+- `detect`:导出 `isPathInside`(路径归属判定,前缀补分隔符防 `/repo` vs `/repo-evil` 兄弟前缀误判)、`worktreeDirIgnoreState`(三态 gitignore 判定,返回 `{scope, ignored?}`)。
+- CLI:`resolve-worktree-dir` verb 返回新增 `ignore` 字段(`{scope: outside | inside, ignored?: boolean}`)。
+
+### Changed
+
+- 收尾路由统一:`executing-plans` / `subagent-driven-development` / `creating-worktree` / `finishing-worktree` 四命令统一「`speccode/changes/<slug>/` 存在 → `syncing` → `archiving` → `finishing-worktree`,否则直接 `finishing-worktree`」收尾路由(顺序硬约束:syncing/archiving 需在 `worktree-*` 分支上运行,finishing-worktree 会移除 worktree);`finishing-worktree` 新增「未归档变更检查」warn-only(存在未归档文档时打印建议、不阻断)。
+- 仓库定位重写:根 `README.md` / `README_CN.md` / `CLAUDE.md` 将 speccode 重定位为「SDD + 自动化开发系统」;新增 `skills/speccode-workflow` skill 与 `scripts/install-skills.sh` 安装脚本(本机懒加载)。
+- 归档结构:移除 superpowers/openspec 残留标记(`.openspec.yaml`),归档目录统一 `propose/` 子布局。
+- 双语 README 门面重构与英文 README 补全。
+
+### 内部规格演进
+
+- `git-workflow-lifecycle`:钉入收尾路由与对账 orphan 判定;`knowledge-tool-integration`:worktree_dir 三态 ignore 判定 delta 归位;worktree squash 演进。
+
 ## [0.2.2] - 2026-08-11
 
 四轮 dogfood 修复:creating-feature 推断来源、reconcile orphan 虚警、memory append 边界、visual-companion scheme 门禁与死 CSS;规格层版本断言改为不随发版漂移的不变量。
@@ -83,6 +107,7 @@ v2 全量迭代:四层拓扑收敛为三层、SDD 方法论与文档生命周期
 - 「文档剥离四步走」与 finish 阶段 `commit --amend` 折叠:保证 trunk 上功能提交为单一语义 commit,display reset 不误删文档。
 - GitHub / GitLab remote 探测,自动选择 `gh` / `glab` CLI,无 CLI 时降级为打印等效命令。
 
+[0.2.3]: https://github.com/vip-pan/speccode-development/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/vip-pan/speccode-development/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/vip-pan/speccode-development/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/vip-pan/speccode-development/compare/99797ad...v0.2.0
