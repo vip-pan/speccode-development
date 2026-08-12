@@ -26,9 +26,10 @@ tags: [speccode, workflow, worktree]
 1. **解析 worktree 目录**:运行 `speccode.mjs resolve-worktree-dir --cwd .`。
    - `source="config"` → 用返回的 `dir`。
    - `source="default"`(config 缺少 worktree_dir 键,含被用户手动删除)→ 用 AskUserQuestion 询问 worktree 存放目录(默认 `.claude/worktrees`),然后经 `write-config --json-stdin` 把 `worktree_dir` 写回 config(读当前 config → 加字段 → 整体写回),再继续。
-2. **gitignore 校验(warn-only)**:`git check-ignore -q <dir>`。
-   - 未被忽略(退出码非 0,即该目录会被 git 跟踪)→ 警告"worktree 目录 <dir> 未被 .gitignore 忽略,worktree 元数据可能进入 git;建议先加入 .gitignore",询问用户是否继续。
-   - 已被忽略 → 静默继续。
+2. **gitignore 校验(warn-only)**:按 `resolve-worktree-dir` 返回的 `ignore` 字段三分支:
+   - `ignore.scope === "outside"` → 仓库外目录,永不被 git 跟踪 → 静默继续。
+   - `ignore.scope === "inside" && ignore.ignored === false` → 警告"worktree 目录 <dir> 未被 .gitignore 忽略,worktree 元数据可能进入 git;建议先加入 .gitignore",询问用户是否继续。
+   - `ignore.scope === "inside" && ignore.ignored === true` → 已忽略 → 静默继续。
 3. `git worktree add <dir>/<branch> -b <branch> <feature>`。
 4. **项目 setup**:在 `<dir>/<branch>` 下按标记文件执行(存在多个时按序执行,均不存在则跳过并说明):
    - `package.json` → `npm install`
