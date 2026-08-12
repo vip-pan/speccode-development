@@ -8,6 +8,8 @@ speccode 是一个 **Claude Code 流程编排插件**,用 21 个 `/speccode:*` s
 
 完整设计文档见 `plugins/speccode/README.md`(定位、21 命令表、三层分支拓扑图、风险 R1-R13)。规格主档在 `speccode/spec/`(8 个 capability),归档在 `speccode/archive/`。
 
+文档分工:根 `README.md` 是 marketplace 用户门面(安装 / Quickstart / 对比定位),`plugins/speccode/README.md` 是插件设计文档,本文件是开发文档。本仓库同时是 Claude Code marketplace 仓(`.claude-plugin/marketplace.json` 声明,托管 speccode 插件)。
+
 ## 常用命令
 
 Node ≥ 24,纯 ESM,**零第三方依赖**(仅 `node:` 内置模块,无 `package.json`)。
@@ -28,6 +30,8 @@ node plugins/speccode/bin/speccode.mjs <verb> --cwd . [--flags]
 ```
 
 无 lint / build 步骤。
+
+**发布纪律**:bump `plugins/speccode/.claude-plugin/plugin.json` `version` 的提交必须同步更新 `CHANGELOG.md` 对应版本小节(见 `speccode/spec/plugin-packaging/spec.md`「版本发布纪律」)。
 
 ## 架构:三层,必须理解的分工
 
@@ -66,7 +70,7 @@ node plugins/speccode/bin/speccode.mjs <verb> --cwd . [--flags]
 
 ## 测试约定
 
-- 全量 **137 个用例**。涉及 git 的测试用 `plugins/speccode/tests/helpers/tmprepo.mjs` 的 `makeRepo()` / `commitFile()` 建**真实临时 git 仓库**,用完清理。
+- 全量测试(用例数量以 `tests/` 目录为准)。涉及 git 的测试用 `plugins/speccode/tests/helpers/tmprepo.mjs` 的 `makeRepo()` / `commitFile()` 建**真实临时 git 仓库**,用完清理。
 - PR/等待类逻辑(`prtool` / reconcile 的 pr_open 推进)通过**依赖注入**(注入 `run` / `queryPr` / `spawn`)做单测,不依赖真实 `gh`/`glab` 或真实等待。
 - 每个 lib 模块对应一个 `plugins/speccode/tests/<module>.test.mjs`;CLI verb 在 `plugins/speccode/tests/cli.test.mjs` 用 `spawnSync('node', [BIN, ...])` 端到端测(写 verb 用 `input` 传 stdin),`BIN` 已用 `import.meta.url` 定位,与 cwd 无关。
 
