@@ -12,3 +12,14 @@
 
 # Mac 生成文件
 .DS_Store
+.codemap/
+.codemaker/codemap/
+.codemaker/codeindex/
+.codemaker/rules/codemap.mdc
+.codemaker/mcps.json
+.codemaker/hooks.json
+.claude/skills/codemap-*/
+.claude/skills/code-index-*/
+.claude/settings.local.json
+opencode.json
+.mcp.json
