@@ -75,3 +75,38 @@ node plugins/speccode/bin/speccode.mjs <verb> --cwd . [--flags]
 - 全量测试(用例数量以 `tests/` 目录为准,对应关系可由 `ls tests/` 直接看到)。涉及 git 的测试用 `plugins/speccode/tests/helpers/tmprepo.mjs` 的 `makeRepo()` / `commitFile()` 建**真实临时 git 仓库**,用完清理。
 - PR/等待类逻辑(`prtool` / reconcile 的 pr_open 推进)通过**依赖注入**(注入 `run` / `queryPr` / `spawn`)做单测,不依赖真实 `gh`/`glab` 或真实等待。
 - CLI verb 在 `plugins/speccode/tests/cli.test.mjs` 用 `spawnSync('node', [BIN, ...])` 端到端测(写 verb 用 `input` 传 stdin),`BIN` 已用 `import.meta.url` 定位,与 cwd 无关。
+
+<!-- codemap:start -->
+## Codemap MCP
+
+**[Important!!!] Whether in the parent agent or in a subagent, always use codemap MCP tools instead of Grep/Read tools. Only fall back to Grep/Read when codemap is unavailable.**
+
+### Tools
+
+| Tool | Use case |
+|------|----------|
+| `search_code` | Fuzzy keyword or concept search (FTS + vector). For exact name lookup, use find_symbol. |
+| `find_symbol` | Exact/prefix/suffix name lookup. Use when you know the symbol name. |
+| `get_symbol_detail` | Get a symbol's location, signature, docs, and body. |
+| `get_call_chain` | Trace upstream callers and/or downstream callees. |
+| `get_type_hierarchy` | Class/interface parent and child hierarchy. |
+| `get_dependencies` | Find all symbols that reference a given symbol. |
+| `get_graph_stats` | Graph statistics: file/symbol/edge counts. |
+| `search_knowledge` | Business rules and architecture docs from codeindex. |
+| `query_cypher` | Count/aggregate structural queries: "how many functions in X?", "which class has most methods?", duplicate names, cross-cutting analysis. |
+
+
+**Name resolution:** Pass `symbol_name` — simple name (`parse_config`) or qualified (`ClassName.method`). No module prefix needed. **Symbol ID:** `filepath:kind:scopedName` (e.g. `player.py:method:Player.attack`, `models.py:class:Outer.Inner`)
+
+**Slash commands:** `/codemap-exploring`, `/codemap-debugging`, `/codemap-impact-analysis`
+
+### Rules
+
+- **After `get_symbol_detail`: edit immediately.** Do NOT re-Read the same file.
+- **Use `search_code` first**, not broad `find_symbol` prefix queries.
+- **Use batch queries:** `search_code({matches: ["A", "B"]})`, `find_symbol({symbol_name: ["X", "Y"]})`.
+- **For obvious single-file bugs: skip codemap.** Error → Read → Edit.
+- **Counting or aggregation questions** (how many, which has most, rank by): use `query_cypher`, NOT read/grep.
+- **If a subagent is needed, use `general`, not `explore`** (`explore` does not support MCP and cannot call codemap tools).
+
+<!-- codemap:end -->

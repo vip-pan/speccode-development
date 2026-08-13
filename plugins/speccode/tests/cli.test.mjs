@@ -252,8 +252,9 @@ test('detect-knowledge-tools returns a tools array', () => {
   assert.ok(json.ok);
   assert.ok(Array.isArray(json.tools));
   for (const t of json.tools) {
-    assert.ok(t.id && t.kind && t.evidence);
-    assert.ok(['plugin', 'mcp', 'cli', 'project-dir'].includes(t.kind));
+    assert.ok(t.id);
+    assert.equal(typeof t.available.value, 'boolean');
+    assert.equal(typeof t.integrated.value, 'boolean');
   }
   rmSync(repo, { recursive: true, force: true });
 });
@@ -274,7 +275,9 @@ test('detect-knowledge-tools from a subdirectory resolves against the main repo 
   assert.equal(second.code, 0);
   assert.ok(second.json.ok);
   assert.ok(second.json.tools.some((t) => t.id === 'codegraph'
-    && t.kind === 'mcp' && t.evidence === '.mcp.json:codegraph'),
+    && t.available.value === true
+    && t.integrated.value === true
+    && t.integrated.evidence === '.mcp.json:codegraph'),
   `expected codegraph mcp hit, got ${JSON.stringify(second.json.tools)}`);
   rmSync(repo, { recursive: true, force: true });
 });

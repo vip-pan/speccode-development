@@ -10,51 +10,121 @@ test('KNOWLEDGE_TOOL_DETECTORS covers the five required tools', () => {
   assert.deepEqual(ids, ['understand-anything', 'codegraph', 'graphify', 'codemap', 'lightrag']);
 });
 
-test('detects a Claude Code plugin via installed_plugins.json key', () => {
+test('plugin hit short-circuits commandV probe for tools with a bin', () => {
+  const readJson = (p) => (p.endsWith('installed_plugins.json')
+    ? { version: 2, plugins: { 'codegraph@codegraph': [{ version: '1.0.0' }] } }
+    : null);
+  const probedBins = [];
+  const tools = detectKnowledgeTools('/repo', {
+    homeDir: '/home/u', readJson,
+    commandV: (bin) => { probedBins.push(bin); return true; },
+    exists: () => false,
+  });
+  const cg = tools.find((t) => t.id === 'codegraph');
+  assert.deepEqual(cg.available, { value: true, evidence: 'codegraph@codegraph' });
+  assert.ok(!probedBins.includes('codegraph'),
+    'commandV must not be invoked for codegraph once its pluginHit already exists');
+});
+
+test('plugin installed but no project integration → available-only', () => {
   const readJson = (p) => (p.endsWith('installed_plugins.json')
     ? { version: 2, plugins: { 'understand-anything@understand-anything': [{ version: '2.9.4' }] } }
     : null);
   const tools = detectKnowledgeTools('/repo', {
     homeDir: '/home/u', readJson, commandV: () => false, exists: () => false,
   });
-  assert.deepEqual(tools, [
-    { id: 'understand-anything', kind: 'plugin', evidence: 'understand-anything@understand-anything' },
-  ]);
+  const ua = tools.find((t) => t.id === 'understand-anything');
+  assert.deepEqual(ua.available, { value: true, evidence: 'understand-anything@understand-anything' });
+  assert.deepEqual(ua.integrated, { value: false, evidence: null });
 });
 
-test('detects an MCP server from project .mcp.json and user .claude.json', () => {
-  const readJson = (p) => {
-    if (p.endsWith('/repo/.mcp.json')) return { mcpServers: { CodeGraph: {} } };
-    if (p.endsWith('/home/u/.claude.json')) return { mcpServers: { 'lightrag-server': {} } };
-    return null;
-  };
+test('project .mcp.json → both available and integrated', () => {
+  const readJson = (p) => (p.endsWith('/repo/.mcp.json') ? { mcpServers: { CodeGraph: {} } } : null);
   const tools = detectKnowledgeTools('/repo', {
     homeDir: '/home/u', readJson, commandV: () => false, exists: () => false,
   });
-  assert.deepEqual(tools, [
-    { id: 'codegraph', kind: 'mcp', evidence: '.mcp.json:CodeGraph' },
-    { id: 'lightrag', kind: 'mcp', evidence: '~/.claude.json:lightrag-server' },
-  ]);
+  const cg = tools.find((t) => t.id === 'codegraph');
+  assert.equal(cg.available.value, true);
+  assert.deepEqual(cg.integrated, { value: true, evidence: '.mcp.json:CodeGraph' });
 });
 
-test('detects a local-scope MCP server from ~/.claude.json projects[cwd].mcpServers', () => {
+test('user ~/.claude.json mcp → available-only (not integrated)', () => {
+  const readJson = (p) => (p.endsWith('/home/u/.claude.json') ? { mcpServers: { 'lightrag-server': {} } } : null);
+  const tools = detectKnowledgeTools('/repo', {
+    homeDir: '/home/u', readJson, commandV: () => false, exists: () => false,
+  });
+  const lr = tools.find((t) => t.id === 'lightrag');
+  assert.equal(lr.available.value, true);
+  assert.equal(lr.integrated.value, false);
+});
+
+test('projects[cwd].mcpServers → both available and integrated', () => {
   const readJson = (p) => (p.endsWith('/home/u/.claude.json')
-    ? { projects: { '/repo': { mcpServers: { graphify: {} } } } }
-    : null);
+    ? { projects: { '/repo': { mcpServers: { graphify: {} } } } } : null);
   const tools = detectKnowledgeTools('/repo', {
     homeDir: '/home/u', readJson, commandV: () => false, exists: () => false,
   });
-  assert.deepEqual(tools, [
-    { id: 'graphify', kind: 'mcp', evidence: '~/.claude.json[projects]:graphify' },
-  ]);
+  const gf = tools.find((t) => t.id === 'graphify');
+  assert.equal(gf.available.value, true);
+  assert.deepEqual(gf.integrated, { value: true, evidence: '~/.claude.json[projects]:graphify' });
 });
 
-test('detects a CLI binary via command -v', () => {
+test('project dir → integrated only (legacy .codemaker/codemap, real .codemaker/codeindex absent)', () => {
+  const tools = detectKnowledgeTools('/repo', {
+    homeDir: '/home/u', readJson: () => null, commandV: () => false,
+    exists: (p) => p === '/repo/.codemaker/codemap',
+  });
+  const cm = tools.find((t) => t.id === 'codemap');
+  assert.deepEqual(cm.available, { value: false, evidence: null });
+  assert.deepEqual(cm.integrated, { value: true, evidence: '.codemaker/codemap' });
+});
+
+test('.codemaker/codeindex present → codemap integrated (real project index dir)', () => {
+  const tools = detectKnowledgeTools('/repo', {
+    homeDir: '/home/u', readJson: () => null, commandV: () => false,
+    exists: (p) => p === '/repo/.codemaker/codeindex',
+  });
+  const cm = tools.find((t) => t.id === 'codemap');
+  assert.deepEqual(cm.integrated, { value: true, evidence: '.codemaker/codeindex' });
+});
+
+test('.codemaker/codeindex wins over .codemaker/codemap when both present (first-existing wins)', () => {
+  const tools = detectKnowledgeTools('/repo', {
+    homeDir: '/home/u', readJson: () => null, commandV: () => false,
+    exists: (p) => p === '/repo/.codemaker/codeindex' || p === '/repo/.codemaker/codemap',
+  });
+  const cm = tools.find((t) => t.id === 'codemap');
+  assert.deepEqual(cm.integrated, { value: true, evidence: '.codemaker/codeindex' });
+});
+
+test('.understand-anything (legacy dir) present → understand-anything integrated', () => {
+  const tools = detectKnowledgeTools('/repo', {
+    homeDir: '/home/u', readJson: () => null, commandV: () => false,
+    exists: (p) => p === '/repo/.understand-anything',
+  });
+  const ua = tools.find((t) => t.id === 'understand-anything');
+  assert.deepEqual(ua.integrated, { value: true, evidence: '.understand-anything' });
+});
+
+test('cli → available-only', () => {
   const tools = detectKnowledgeTools('/repo', {
     homeDir: '/home/u', readJson: () => null,
     commandV: (bin) => bin === 'graphify', exists: () => false,
   });
-  assert.deepEqual(tools, [{ id: 'graphify', kind: 'cli', evidence: 'graphify' }]);
+  const gf = tools.find((t) => t.id === 'graphify');
+  assert.equal(gf.available.value, true);
+  assert.equal(gf.integrated.value, false);
+});
+
+test('no hits → all five tools have available=false and integrated=false', () => {
+  const tools = detectKnowledgeTools('/repo', {
+    homeDir: '/home/u', readJson: () => null, commandV: () => false, exists: () => false,
+  });
+  assert.equal(tools.length, 5);
+  for (const t of tools) {
+    assert.deepEqual(t.available, { value: false, evidence: null });
+    assert.deepEqual(t.integrated, { value: false, evidence: null });
+  }
 });
 
 test('understand-anything has no cli probe (generic `understand` binary must not false-positive)', () => {
@@ -67,47 +137,12 @@ test('understand-anything has no cli probe (generic `understand` binary must not
   const tools = detectKnowledgeTools('/repo', {
     homeDir: '/home/u', readJson: () => null, commandV: () => true, exists: () => false,
   });
-  assert.ok(!tools.some((t) => t.id === 'understand-anything'),
+  const ua = tools.find((t) => t.id === 'understand-anything');
+  assert.equal(ua.available.value, false,
     'understand-anything must not be detected via a generic `understand` binary');
   // the other tools keep their cli probes
-  assert.ok(tools.some((t) => t.id === 'graphify' && t.kind === 'cli'));
-});
-
-test('detects a project config directory', () => {
-  const tools = detectKnowledgeTools('/repo', {
-    homeDir: '/home/u', readJson: () => null, commandV: () => false,
-    exists: (p) => p === '/repo/.codemaker/codemap',
-  });
-  assert.deepEqual(tools, [{ id: 'codemap', kind: 'project-dir', evidence: '.codemaker/codemap' }]);
-});
-
-test('plugin wins over cli for the same tool (precedence), and no hits returns []', () => {
-  const readJson = (p) => (p.endsWith('installed_plugins.json')
-    ? { version: 2, plugins: { 'codegraph@foo': [{}] } } : null);
-  const tools = detectKnowledgeTools('/repo', {
-    homeDir: '/home/u', readJson, commandV: (bin) => bin === 'codegraph', exists: () => false,
-  });
-  assert.deepEqual(tools, [{ id: 'codegraph', kind: 'plugin', evidence: 'codegraph@foo' }]);
-  const none = detectKnowledgeTools('/repo', {
-    homeDir: '/home/u', readJson: () => null, commandV: () => false, exists: () => false,
-  });
-  assert.deepEqual(none, []);
-});
-
-test('mcp wins over cli for the same tool (precedence)', () => {
-  const readJson = (p) => (p.endsWith('/repo/.mcp.json') ? { mcpServers: { codemap: {} } } : null);
-  const tools = detectKnowledgeTools('/repo', {
-    homeDir: '/home/u', readJson, commandV: (bin) => bin === 'codemap', exists: () => false,
-  });
-  assert.deepEqual(tools, [{ id: 'codemap', kind: 'mcp', evidence: '.mcp.json:codemap' }]);
-});
-
-test('cli wins over project-dir for the same tool (precedence)', () => {
-  const tools = detectKnowledgeTools('/repo', {
-    homeDir: '/home/u', readJson: () => null,
-    commandV: (bin) => bin === 'lightrag', exists: (p) => p === '/repo/.lightrag',
-  });
-  assert.deepEqual(tools, [{ id: 'lightrag', kind: 'cli', evidence: 'lightrag' }]);
+  const gf = tools.find((t) => t.id === 'graphify');
+  assert.equal(gf.available.value, true);
 });
 
 test('resolveWorktreeDir three states', () => {

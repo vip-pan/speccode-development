@@ -180,7 +180,7 @@ speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>_
 3. **CLI**:`command -v <bin>`
 4. **项目目录**:如 `.ua/`、`.codegraph/` 等
 
-探测结果逐项用 AskUserQuestion 展示(`<id>(<kind>: <evidence>)`),**仅用户确认的项**登记进 config 的 `knowledge_tools`;一个都未确认则写空数组。
+探测结果区分「可用 available」与「集成 integrated」两个维度;仅 `available` 与 `integrated` 都为 true 的工具才逐项用 AskUserQuestion 展示,经用户确认后登记进 config 的 `knowledge_tools`;可用但未集成的工具 MUST NOT 登记;一个都未确认则写空数组。
 
 使用约定:`/speccode:exploring`、`/speccode:proposing`、`/speccode:brainstorming` 优先咨询已登记的知识库工具;工具缺失或调用失败时**回退到常规代码阅读,永不报错**——知识库是增强,不是依赖。
 
