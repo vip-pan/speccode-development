@@ -23,8 +23,12 @@ tags: [speccode, workflow, init]
 3. **确认 worktree_prefix**:默认 `worktree-`,请用户确认(一般直接采用默认)。
 4. **询问 worktree_dir**:worktree 存放的基础目录,默认 `.claude/worktrees`,请用户确认或自定义(相对项目根的路径)。
 5. **探测知识库工具**:运行 `speccode.mjs detect-knowledge-tools --cwd .`。
-   - 对返回的每个 `{id, kind, evidence}`,用 AskUserQuestion 逐项展示("探测到 <id>(<kind>: <evidence>),是否登记?")并询问是否登记进 `knowledge_tools`。
-   - 仅被用户确认的项写入;一个都未确认则写 `"knowledge_tools": []`。
+   - 对返回的每个 `{id, available: {value, evidence}, integrated: {value, evidence}}`:
+     - 仅当 `available.value && integrated.value` 时才登记该工具,展示「探测到 <id>(可用: <available.evidence>, 已集成: <integrated.evidence>),是否登记?」经确认写入。
+     - `available.value === true && integrated.value === false`(可用但项目未集成)→ 展示为「<id> 本机可用但本项目未集成」,MUST NOT 登记,不询问登记。
+     - `integrated.value === true && available.value === false`(项目有集成痕迹但工具不可用)→ 展示告警,不登记。
+     - `available.value === false && integrated.value === false`(两者皆 false,常态)→ 不展示、不询问、不登记(静默跳过)。
+   - 一个都未确认则写 `"knowledge_tools": []`。
 6. **询问 hooks(可选)**:告知用户可在 SDD 各节点挂 shell 命令(如 IM 通知),事件名固定 14 个:onExplored / onFeatureCreated / onWorktreeCreated / onProposed / onBrainstormed / onPlanned / onTaskCompleted / onCodeReviewRequested / onCodeReviewCompleted / onWorktreeFinished / onFeatureFinished / onPrOpened / onSynced / onArchived。
    - 用户选择配置 → 逐项询问「事件名 + shell 命令」,组装为 `hooks` 对象。
    - 用户跳过 → **不写入 `hooks` 字段**(缺失即无 hook)。
@@ -40,6 +44,7 @@ tags: [speccode, workflow, init]
 3. 用 `diffFields` 逐字段比较旧/新:
    - 值未变 → 跳过。
    - 值变化 → 用 AskUserQuestion 展示 `[旧值] → [新值]`,询问"保持 / 改用新值 / 清除"。
+   - 对 config 中已登记、但本次探测判定为 `integrated.value === false` 的工具,在 diff 中标记「建议移除」(项目未集成),经用户确认后才移除——绝不静默删除。
 4. **v1 → v2 迁移**:若旧 config `version` 为 1(或无 version):
    - `display` / `spec_tools` / `untracked_permanent` 三字段标记为「移除」列入 diff;
    - 若用户接受升级(`version: 2`),三字段 MUST 被移除,不存在混合态;

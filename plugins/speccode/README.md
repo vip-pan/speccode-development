@@ -180,7 +180,7 @@ speccode maintains one cross-session memory per feature: `.speccode/memory/<type
 3. **CLI**: `command -v <bin>`
 4. **Project directories**: e.g. `.ua/`, `.codegraph/`, etc.
 
-Probe results are presented item by item via AskUserQuestion (`<id>(<kind>: <evidence>)`); **only the items the user confirms** are registered into the config's `knowledge_tools`; if none are confirmed, an empty array is written.
+Probe results distinguish two dimensions — **available** and **integrated**; only tools where both `available` and `integrated` are true are presented item by item via AskUserQuestion and, upon user confirmation, registered into the config's `knowledge_tools`; tools that are available but not integrated MUST NOT be registered; if none are confirmed, an empty array is written.
 
 Usage convention: `/speccode:exploring`, `/speccode:proposing`, and `/speccode:brainstorming` consult the registered knowledge-base tools first; when a tool is missing or a call fails, they **fall back to plain code reading and never error out** — the knowledge base is an enhancement, not a dependency.
 

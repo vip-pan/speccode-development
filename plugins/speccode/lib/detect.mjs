@@ -10,11 +10,14 @@ import { git } from './git.mjs';
 export const KNOWLEDGE_TOOL_DETECTORS = [
   // no `bin` for understand-anything: the generic name `understand` would
   // false-positive on unrelated binaries, so it only gets plugin/mcp/dir probes.
-  { id: 'understand-anything', match: 'understand-anything', dir: '.ua' },
-  { id: 'codegraph', match: 'codegraph', bin: 'codegraph', dir: '.codegraph' },
-  { id: 'graphify', match: 'graphify', bin: 'graphify', dir: '.graphify' },
-  { id: 'codemap', match: 'codemap', bin: 'codemap', dir: '.codemaker/codemap' },
-  { id: 'lightrag', match: 'lightrag', bin: 'lightrag', dir: '.lightrag' },
+  // dirs: 探测目录候选列表,按序 probe,第一个命中的目录即证据(first-existing wins)。
+  { id: 'understand-anything', match: 'understand-anything', dirs: ['.ua', '.understand-anything'] },
+  { id: 'codegraph', match: 'codegraph', bin: 'codegraph', dirs: ['.codegraph'] },
+  { id: 'graphify', match: 'graphify', bin: 'graphify', dirs: ['.graphify'] },
+  // codemap 真实项目索引目录是 .codemaker/codeindex/(其 skill 自述"初始化 .codemaker/codeindex/"),
+  // .codemaker/codemap 是历史/home-install 路径,两者都探测,索引目录优先。
+  { id: 'codemap', match: 'codemap', bin: 'codemap', dirs: ['.codemaker/codeindex', '.codemaker/codemap'] },
+  { id: 'lightrag', match: 'lightrag', bin: 'lightrag', dirs: ['.lightrag'] },
 ];
 
 function defaultReadJson(path) {
@@ -32,25 +35,50 @@ export function detectKnowledgeTools(cwd, opts = {}) {
   const pluginKeys = Object.keys(pluginsJson?.plugins ?? {});
   const projectMcp = readJson(join(cwd, '.mcp.json'));
   const userMcp = readJson(join(homeDir, '.claude.json'));
-  const mcpKeys = [
+
+  // available 维度:任意 MCP 配置(项目 .mcp.json / 用户 mcpServers / projects[cwd])也算「可用」
+  const anyMcpKeys = [
     ...Object.keys(projectMcp?.mcpServers ?? {}).map((k) => `.mcp.json:${k}`),
     ...Object.keys(userMcp?.mcpServers ?? {}).map((k) => `~/.claude.json:${k}`),
-    // `claude mcp add` local scope lands under projects["<repo abs path>"].mcpServers
-    ...Object.keys(userMcp?.projects?.[cwd]?.mcpServers ?? {})
-      .map((k) => `~/.claude.json[projects]:${k}`),
+    ...Object.keys(userMcp?.projects?.[cwd]?.mcpServers ?? {}).map((k) => `~/.claude.json[projects]:${k}`),
+  ];
+  // integrated 维度:项目级 MCP(项目 .mcp.json 或 projects[cwd]),不含用户全局 mcpServers
+  // 注:userMcp?.projects?.[cwd] 以主仓根(CLI 传入的 repoRoot(cwd))为 key;若用户在
+  // linked worktree 内跑 `claude mcp add`,该 key 会落在 worktree 路径下,不会命中这里
+  // (与主仓根不一致),从而漏判为未集成。历史遗留,目前影响面可接受,未处理。
+  const projectMcpKeys = [
+    ...Object.keys(projectMcp?.mcpServers ?? {}).map((k) => `.mcp.json:${k}`),
+    ...Object.keys(userMcp?.projects?.[cwd]?.mcpServers ?? {}).map((k) => `~/.claude.json[projects]:${k}`),
   ];
 
-  const found = [];
+  const tools = [];
   for (const t of KNOWLEDGE_TOOL_DETECTORS) {
     const needle = t.match.toLowerCase();
+
     const pluginHit = pluginKeys.find((k) => k.toLowerCase().includes(needle));
-    if (pluginHit) { found.push({ id: t.id, kind: 'plugin', evidence: pluginHit }); continue; }
-    const mcpHit = mcpKeys.find((k) => k.toLowerCase().includes(needle));
-    if (mcpHit) { found.push({ id: t.id, kind: 'mcp', evidence: mcpHit }); continue; }
-    if (t.bin && commandV(t.bin)) { found.push({ id: t.id, kind: 'cli', evidence: t.bin }); continue; }
-    if (exists(join(cwd, t.dir))) found.push({ id: t.id, kind: 'project-dir', evidence: t.dir });
+    // pluginHit 已在下方 available 三元里排在 cliHit 之前,插件命中时无需再 spawn 一次 command -v。
+    const cliHit = (!pluginHit && t.bin && commandV(t.bin)) ? t.bin : null;
+    const anyMcpHit = anyMcpKeys.find((k) => k.toLowerCase().includes(needle));
+    const projectMcpHit = projectMcpKeys.find((k) => k.toLowerCase().includes(needle));
+    const dirHit = (t.dirs ?? []).find((d) => exists(join(cwd, d))) ?? null;
+
+    const available = pluginHit
+      ? { value: true, evidence: pluginHit }
+      : cliHit
+        ? { value: true, evidence: cliHit }
+        : anyMcpHit
+          ? { value: true, evidence: anyMcpHit }
+          : { value: false, evidence: null };
+
+    const integrated = projectMcpHit
+      ? { value: true, evidence: projectMcpHit }
+      : dirHit
+        ? { value: true, evidence: dirHit }
+        : { value: false, evidence: null };
+
+    tools.push({ id: t.id, available, integrated });
   }
-  return found;
+  return tools;
 }
 
 export function resolveWorktreeDir(config) {
