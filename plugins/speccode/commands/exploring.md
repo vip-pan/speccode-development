@@ -36,6 +36,12 @@ tags: [speccode, workflow, explore, thinking]
 - 若 `knowledge_tools` 为空或 config 缺失:静默使用基础工具。
 - 任何情况下工具缺失或不可用 MUST NOT 导致报错。
 
+## 知识库入口
+
+1. 运行 `speccode.mjs read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
+2. 判断本任务相关主题 → `speccode.mjs read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
+3. 读取失败或目录不存在 → 静默跳过,绝不阻断主流程(T0 兜底,永不报错)。
+
 ## 你不必做的事
 
 - 遵循脚本;每次问同样的问题;产出特定工件;必须得出结论;话题跑题但有价值就继续;简短(这是思考时间)

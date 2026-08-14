@@ -6,7 +6,7 @@
 
 ## 1. speccode 是什么
 
-speccode 是一个 Claude Code 流程编排插件,用 21 个 `/speccode:*` slash 命令把「多需求并行开发 + spec 文档托管 + PR/MR 流程标准化」这些原本靠人工约定的环节固化为可执行原语。
+speccode 是一个 Claude Code 流程编排插件,用 23 个 `/speccode:*` slash 命令把「多需求并行开发 + spec 文档托管 + PR/MR 流程标准化」这些原本靠人工约定的环节固化为可执行原语。
 
 **适用场景**:在同一仓库内**并行开发多个需求**的小团队或个人开发者——当你需要同时跑几个 feature、每个 feature 下再拆多个 worktree 并行施工,又不想在「文档放哪」「该从哪个分支切」「PR 谁来开」这些问题上反复纠结时,speccode 提供了一条端到端的默认路径。
 
@@ -18,7 +18,7 @@ speccode 是一个 Claude Code 流程编排插件,用 21 个 `/speccode:*` slash
 - `gh` CLI(GitHub remote)或 `glab` CLI(GitLab remote)——用于创建/查询 PR/MR;未安装时 `pr_tool` 自动降级为 `none`,命令会打印等效命令供用户手动执行,不会因缺少 CLI 而失败
 - Node.js **≥ 24**(引擎运行在 Node 之上;纯 ESM、零第三方依赖)
 
-## 2. 21 个命令快速参考表
+## 2. 23 个命令快速参考表
 
 生命周期:
 
@@ -42,6 +42,13 @@ speccode 是一个 Claude Code 流程编排插件,用 21 个 `/speccode:*` slash
 | `/speccode:writing-plans` | 详细实现计划(brainstorm/ 优先,propose/ 兜底),落 `plan/` | worktree-* 分支 |
 | `/speccode:syncing` | 增量变更合并进 `speccode/spec/` 主规格(brainstorm 残余吸收,幂等) | worktree-* 分支 |
 | `/speccode:archiving` | 归档:changes/<slug>/ 移入 `speccode/archive/<YYYY-MM-DD>-<slug>/` | worktree-* 分支 |
+
+知识:
+
+| 命令 | 作用 | 前置(运行分支) |
+|---|---|---|
+| `/speccode:promote-knowledge` | 从 spec/ + archive/ 蒸馏 knowledge/ 的 promoted 段(全量重建 + 来源标记),人工闸门后落盘,落盘即提交 | worktree-* 分支 |
+| `/speccode:memorize` | 知识直接写入 hand-written 段(草稿 → 人工闸门 → 原子写),落盘即提交 | worktree-* 分支 |
 
 方法论:
 
@@ -112,13 +119,18 @@ speccode/
 │   ├── brainstorm/          # 设计精化文档(brainstorming 产出)
 │   └── plan/                # 实现计划(writing-plans 产出)
 ├── spec/<capability>/       # 主规格(syncing 合并 delta 后的落地处)
-└── archive/<YYYY-MM-DD>-<slug>/   # 归档(archiving 整体移动,不删除)
+├── archive/<YYYY-MM-DD>-<slug>/   # 归档(archiving 整体移动,不删除)
+└── knowledge/               # 知识集(promote-knowledge / memorize 产出)
+    ├── _index.md            # 检索索引:标题 + 文件 + 一句话摘要,按需重建
+    ├── business/            # domain.md / workflows.md / lineage.md
+    └── development/         # architecture.md / standards.md / environment.md / integrations.md / pitfalls.md / security.md
 ```
 
 约定:
 
-- **落盘即 commit**:proposing / brainstorming / writing-plans / syncing / archiving 每一步产出文档后立即提交,文档历史与代码历史同分支同行。
+- **落盘即 commit**:proposing / brainstorming / writing-plans / syncing / archiving / promote-knowledge / memorize 每一步产出文档后立即提交,文档历史与代码历史同分支同行。
 - **同 feature 多轮重建不冲突**:changes/<slug>/ 归档后目录释放,同一 slug 可再次 proposing 开新一轮;未归档重建时 proposing 会询问「续写 / 先归档 / 取消」。
+- **知识集:promoted 与 hand-written 分层**:`knowledge/` 下每个 topic 文件可混合两类内容。`promote-knowledge` 把 `spec/` 与 `archive/` 蒸馏为**promoted 块**,用 `<!-- promoted-from: <source> --> ... <!-- /promoted -->` 标记包裹,每次运行全量重建(来源已消失的块随之删除);`memorize` 则在这些标记之外追加自由格式的**手写(hand-written)**内容。重建对标记之外的一切内容逐字节保留,故手写内容在每次 promoted 块重建后原样存活。
 
 > 插件侧辅助资源:`plugins/speccode/references/` 内含 visual-companion(brainstorming 的可视化伴侣,见 `references/visual-companion.md`)、评审提示与调试方法论等,随插件源码跟踪。
 

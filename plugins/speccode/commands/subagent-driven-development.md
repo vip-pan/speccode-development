@@ -43,6 +43,12 @@ digraph when_to_use {
 - 每任务之后审查(spec 符合性 + 代码质量),结尾整支终审
 - 更快迭代(任务之间没有 human-in-loop)
 
+## 知识库入口
+
+1. 运行 `speccode.mjs read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
+2. 判断本任务相关主题 → `speccode.mjs read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
+3. 读取失败或目录不存在 → 静默跳过,绝不阻断主流程(T0 兜底,永不报错)。
+
 ## 流程
 
 ```dot

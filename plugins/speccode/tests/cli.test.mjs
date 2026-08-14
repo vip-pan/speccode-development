@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { rmSync, mkdirSync, realpathSync, writeFileSync, readFileSync, mkdtempSync } from 'node:fs';
+import { rmSync, mkdirSync, realpathSync, writeFileSync, readFileSync, mkdtempSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -652,5 +652,155 @@ test('resolve-worktree-dir: 仓库内已忽略 → ignore inside+ignored:true', 
   const { code, json } = runCli(repo, 'resolve-worktree-dir', '--cwd', repo);
   assert.equal(code, 0);
   assert.deepEqual(json.ignore, { scope: 'inside', ignored: true });
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('read-knowledge --index returns content and exists flag', () => {
+  const repo = makeRepo();
+  const root = join(repo, 'speccode', 'knowledge');
+  mkdirSync(join(root, 'business'), { recursive: true });
+  writeFileSync(join(root, '_index.md'), '# 知识索引\n');
+  writeFileSync(join(root, 'business', 'domain.md'), '# 领域知识\n');
+  const { code, json } = runCli(repo, 'read-knowledge', '--cwd', repo, '--index');
+  assert.equal(code, 0);
+  assert.equal(json.exists, true);
+  assert.equal(json.content, '# 知识索引\n');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('read-knowledge --topic resolves by basename', () => {
+  const repo = makeRepo();
+  const root = join(repo, 'speccode', 'knowledge');
+  mkdirSync(join(root, 'business'), { recursive: true });
+  writeFileSync(join(root, 'business', 'domain.md'), '# 领域知识\n');
+  const { code, json } = runCli(repo, 'read-knowledge', '--cwd', repo, '--topic', 'domain');
+  assert.equal(code, 0);
+  assert.equal(json.exists, true);
+  assert.equal(json.path, 'business/domain.md');
+  assert.equal(json.content, '# 领域知识\n');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('read-knowledge on project without knowledge dir returns exists false, exit 0', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'read-knowledge', '--cwd', repo, '--index');
+  assert.equal(code, 0);
+  assert.equal(json.ok, true);
+  assert.equal(json.exists, false);
+  assert.equal(json.content, null);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('read-knowledge without flags lists files and index', () => {
+  const repo = makeRepo();
+  const root = join(repo, 'speccode', 'knowledge');
+  mkdirSync(join(root, 'business'), { recursive: true });
+  writeFileSync(join(root, 'business', 'domain.md'), '# 领域知识\n');
+  const { code, json } = runCli(repo, 'read-knowledge', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.deepEqual(json.files, ['business/domain.md']);
+  assert.equal(json.index, null);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+function runCliStdin(repo, ...args) {
+  const input = args.pop();
+  const r = spawnSync('node', [BIN, ...args], { cwd: repo, encoding: 'utf8', input });
+  return { code: r.status, json: JSON.parse(r.stdout.trim()) };
+}
+
+test('write-knowledge replace writes atomically via stdin JSON', () => {
+  const repo = makeRepo();
+  const { code, json } = runCliStdin(repo, 'write-knowledge', '--cwd', repo, '--rel', 'business/domain.md', '--json-stdin',
+    JSON.stringify({ mode: 'replace', content: '# 领域知识\n' }));
+  assert.equal(code, 0);
+  assert.equal(json.ok, true);
+  assert.equal(json.path, 'business/domain.md');
+  assert.equal(readFileSync(join(repo, 'speccode', 'knowledge', 'business', 'domain.md'), 'utf8'), '# 领域知识\n');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-knowledge append-hand appends hand-written section', () => {
+  const repo = makeRepo();
+  const p = join(repo, 'speccode', 'knowledge', 'development', 'pitfalls.md');
+  mkdirSync(dirname(p), { recursive: true });
+  writeFileSync(p, '# 坑\n');
+  const { code, json } = runCliStdin(repo, 'write-knowledge', '--cwd', repo, '--rel', 'development/pitfalls.md', '--json-stdin',
+    JSON.stringify({ mode: 'append-hand', content: '## 手写\n新坑一条\n' }));
+  assert.equal(code, 0);
+  assert.equal(json.ok, true);
+  assert.equal(readFileSync(p, 'utf8'), '# 坑\n## 手写\n新坑一条\n');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-knowledge replace-promoted rebuilds only promoted blocks', () => {
+  const repo = makeRepo();
+  const p = join(repo, 'speccode', 'knowledge', 'development', 'pitfalls.md');
+  mkdirSync(dirname(p), { recursive: true });
+  writeFileSync(p, 'hand A\n<!-- promoted-from: old/ -->\nold body\n<!-- /promoted -->\nhand B\n');
+  const { code, json } = runCliStdin(repo, 'write-knowledge', '--cwd', repo, '--rel', 'development/pitfalls.md', '--json-stdin',
+    JSON.stringify({ mode: 'replace-promoted', blocks: [{ source: 'old/', body: 'new body' }] }));
+  assert.equal(code, 0);
+  assert.equal(json.ok, true);
+  assert.equal(readFileSync(p, 'utf8'), 'hand A\n<!-- promoted-from: old/ -->\nnew body\n<!-- /promoted -->\nhand B\n');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-knowledge rejects unsafe rel with exit 1', () => {
+  const repo = makeRepo();
+  const { code, json } = runCliStdin(repo, 'write-knowledge', '--cwd', repo, '--rel', '../evil.md', '--json-stdin',
+    JSON.stringify({ mode: 'replace', content: 'x' }));
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-knowledge requires --json-stdin', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'write-knowledge', '--cwd', repo, '--rel', 'a.md');
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('read-knowledge --topic --blocks returns parsed promoted blocks', () => {
+  const repo = makeRepo();
+  const root = join(repo, 'speccode', 'knowledge');
+  mkdirSync(join(root, 'development'), { recursive: true });
+  writeFileSync(join(root, 'development', 'pitfalls.md'), 'hand\n<!-- promoted-from: archive/a/ -->\nbody\n<!-- /promoted -->\n');
+  const { code, json } = runCli(repo, 'read-knowledge', '--cwd', repo, '--topic', 'pitfalls', '--blocks');
+  assert.equal(code, 0);
+  assert.equal(json.exists, true);
+  assert.deepEqual(json.blocks, [{ source: 'archive/a/', body: 'body' }]);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-knowledge mode index renders and writes _index.md', () => {
+  const repo = makeRepo();
+  const w = spawnSync('node', [BIN, 'write-knowledge', '--cwd', repo, '--rel', '_index.md', '--json-stdin'],
+    { cwd: repo, encoding: 'utf8', input: JSON.stringify({ mode: 'index', entries: [{ section: '业务方向', items: [{ title: '领域知识', file: 'business/domain.md', summary: '术语' }] }] }) });
+  assert.equal(w.status, 0);
+  assert.equal(JSON.parse(w.stdout.trim()).ok, true);
+  assert.equal(readFileSync(join(repo, 'speccode', 'knowledge', '_index.md'), 'utf8'), '# 知识索引\n\n## 业务方向\n- 领域知识 → business/domain.md:术语\n');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-knowledge --rel with no value returns a clean error and writes no junk file', () => {
+  const repo = makeRepo();
+  // `--rel` as the trailing flag with nothing after it parses to boolean
+  // `true` (parseArgs), not a missing value; `!rel` doesn't catch that.
+  const { code, json } = runCli(repo, 'write-knowledge', '--cwd', repo, '--json-stdin', '--rel');
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  assert.ok(!existsSync(join(repo, 'speccode', 'knowledge', 'true')));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('read-knowledge --topic with no value returns a clean error, not a TypeError leak', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'read-knowledge', '--cwd', repo, '--topic');
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  assert.ok(!/is not a function/.test(json.error || ''), `expected a clean error, got: ${json.error}`);
   rmSync(repo, { recursive: true, force: true });
 });

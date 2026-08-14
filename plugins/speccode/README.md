@@ -6,7 +6,7 @@
 
 ## 1. What is speccode
 
-speccode is a Claude Code workflow orchestration plugin that turns the practices previously held together by manual convention — parallel development of multiple requirements, spec document hosting, and a standardized PR/MR flow — into executable primitives exposed as 21 `/speccode:*` slash commands.
+speccode is a Claude Code workflow orchestration plugin that turns the practices previously held together by manual convention — parallel development of multiple requirements, spec document hosting, and a standardized PR/MR flow — into executable primitives exposed as 23 `/speccode:*` slash commands.
 
 **Who it's for**: small teams or solo developers running **multiple requirements in parallel inside the same repo** — when you need to run several features at once, split each feature into multiple worktrees for parallel work, and don't want to keep second-guessing "where do the docs go", "which branch do I branch from", "who opens the PR" — speccode offers an end-to-end default path.
 
@@ -18,7 +18,7 @@ speccode is a Claude Code workflow orchestration plugin that turns the practices
 - `gh` CLI (GitHub remote) or `glab` CLI (GitLab remote) — used to create/query PRs/MRs; when not installed, `pr_tool` automatically degrades to `none`, and commands print the equivalent command for you to run manually instead of failing
 - Node.js **≥ 24** (the engine runs on Node; pure ESM, zero third-party dependencies)
 
-## 2. 21-Command Quick Reference
+## 2. 23-Command Quick Reference
 
 Lifecycle:
 
@@ -42,6 +42,13 @@ Documentation flow (every step commits on save):
 | `/speccode:writing-plans` | Detailed implementation plan (brainstorm/ first, propose/ as fallback), lands in `plan/` | worktree-* branch |
 | `/speccode:syncing` | Merge incremental changes into the `speccode/spec/` main spec (absorbs leftover brainstorm material; idempotent) | worktree-* branch |
 | `/speccode:archiving` | Archive: move changes/<slug>/ into `speccode/archive/<YYYY-MM-DD>-<slug>/` | worktree-* branch |
+
+Knowledge:
+
+| Command | Purpose | Prerequisite (branch to run on) |
+|---|---|---|
+| `/speccode:promote-knowledge` | Distill promoted sections of `speccode/knowledge/` from `spec/` + `archive/` (full rebuild with source markers); human gate before write; commits on save | worktree-* branch |
+| `/speccode:memorize` | Write knowledge directly into hand-written sections (draft → human gate → atomic write); commits on save | worktree-* branch |
 
 Methodology:
 
@@ -112,13 +119,18 @@ speccode/
 │   ├── brainstorm/          # design refinement documents (produced by brainstorming)
 │   └── plan/                # implementation plan (produced by writing-plans)
 ├── spec/<capability>/       # main spec (where syncing merges deltas)
-└── archive/<YYYY-MM-DD>-<slug>/   # archive (archiving moves the whole directory, never deletes)
+├── archive/<YYYY-MM-DD>-<slug>/   # archive (archiving moves the whole directory, never deletes)
+└── knowledge/               # curated knowledge set (produced by promote-knowledge / memorize)
+    ├── _index.md            # retrieval index: topic title + file + one-line summary, regenerated on demand
+    ├── business/            # domain.md / workflows.md / lineage.md
+    └── development/         # architecture.md / standards.md / environment.md / integrations.md / pitfalls.md / security.md
 ```
 
 Conventions:
 
-- **Commit on save**: proposing / brainstorming / writing-plans / syncing / archiving each commit immediately after producing their documents, so document history and code history stay on the same branch, moving together.
+- **Commit on save**: proposing / brainstorming / writing-plans / syncing / archiving / promote-knowledge / memorize each commit immediately after producing their documents, so document history and code history stay on the same branch, moving together.
 - **Multi-round rebuilds of the same feature don't collide**: once changes/<slug>/ is archived the directory is freed, and the same slug can start a new round via proposing again; when rebuilding without archiving first, proposing asks "continue / archive first / cancel".
+- **Knowledge set: promoted vs. hand-written split**: each topic file under `knowledge/` can mix two kinds of content. `promote-knowledge` distills `spec/` and `archive/` into **promoted blocks**, wrapped in `<!-- promoted-from: <source> --> ... <!-- /promoted -->` markers, and rebuilds them in full on every run (a block whose source has disappeared is dropped); `memorize` appends free-form **hand-written** prose outside those markers. The rebuild is byte-preserving for everything outside the markers, so hand-written content survives every promoted-block rebuild untouched.
 
 > Plugin-side helper resources: `plugins/speccode/references/` contains visual-companion (the visual companion for brainstorming, see `references/visual-companion.md`), review prompts, and debugging methodology; all tracked with the plugin source.
 
