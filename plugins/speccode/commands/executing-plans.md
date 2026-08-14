@@ -15,6 +15,12 @@ tags: [speccode, workflow, plan, execute]
 
 **注意:** 告诉人类伙伴,有子代理可用时执行效果好得多(Claude Code、Codex CLI、Codex App、Copilot CLI、Gemini CLI 都满足子代理可用条件)。如果子代理可用,改用 `/speccode:subagent-driven-development`,而不是本命令。
 
+## 知识库入口
+
+1. 运行 `speccode.mjs read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
+2. 判断本任务相关主题 → `speccode.mjs read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
+3. 读取失败或目录不存在 → 静默跳过,绝不阻断主流程(T0 兜底,永不报错)。
+
 ## 流程
 
 ### 入口绑定(第 1 步之前)

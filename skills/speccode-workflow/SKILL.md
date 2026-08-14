@@ -16,7 +16,7 @@ description: 本仓库(speccode 插件)自身的开发工作流与发布纪律�
 → /speccode:archiving → /speccode:finishing-worktree → /speccode:finishing-feature(单 PR 直通 trunk)
 ```
 
-- 规格主档在 `speccode/spec/`(8 个 capability),归档在 `speccode/archive/`。
+- 规格主档在 `speccode/spec/`(9 个 capability),归档在 `speccode/archive/`。
 - 脑暴文档由 brainstorming 原生落到 `speccode/changes/<slug>/brainstorm/`,落盘即提交。
 
 ## 发布纪律

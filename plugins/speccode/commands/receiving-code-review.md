@@ -13,6 +13,12 @@ tags: [speccode, workflow, review]
 
 **核心原则:** 实施之前先核实。假设之前先提问。技术正确性高于社交舒适。
 
+## 知识库入口
+
+1. 运行 `speccode.mjs read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
+2. 判断本任务相关主题 → `speccode.mjs read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
+3. 读取失败或目录不存在 → 静默跳过,绝不阻断主流程(T0 兜底,永不报错)。
+
 ## 响应模式(The Response Pattern)
 
 ```

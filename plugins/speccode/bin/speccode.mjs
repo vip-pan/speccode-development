@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { isatty } from 'node:tty';
 import { git } from '../lib/git.mjs';
@@ -11,6 +11,7 @@ import { detectKnowledgeTools, resolveWorktreeDir, worktreeDirIgnoreState } from
 import { sddWorkspace, taskBrief, reviewPackage } from '../lib/sdd.mjs';
 import { buildHookPayload, runHook } from '../lib/hooks.mjs';
 import { readMemory, writeMemory } from '../lib/memory.mjs';
+import { assertSafeRel, buildIndex, knowledgeRoot, listTopics, parsePromotedBlocks, replacePromotedBlocks, writeKnowledge } from '../lib/knowledge.mjs';
 import { validateBranch } from '../lib/slug.mjs';
 
 function readStdin() {
@@ -211,6 +212,66 @@ const VERBS = {
     if (typeof content !== 'string') return { ok: false, error: 'write-memory content must be a string' };
     const path = writeMemory(speccodeDirOf(cwd), branch, content, mode);
     return { ok: true, path };
+  },
+
+  'read-knowledge': ({ cwd, index, topic, blocks }) => {
+    const root = knowledgeRoot(cwd);
+    if (index) {
+      const p = join(root, '_index.md');
+      return existsSync(p)
+        ? { ok: true, exists: true, path: '_index.md', content: readFileSync(p, 'utf8') }
+        : { ok: true, exists: false, path: '_index.md', content: null };
+    }
+    if (topic === true) return { ok: false, error: '--topic requires a value' };
+    if (topic) {
+      const want = topic.endsWith('.md') ? topic : `${topic}.md`;
+      const { files } = listTopics(root);
+      const match = files.find((f) => f === want || f.endsWith(`/${want}`));
+      if (!match) return { ok: true, exists: false, path: want, content: null };
+      const content = readFileSync(join(root, match), 'utf8');
+      if (blocks) return { ok: true, exists: true, path: match, blocks: parsePromotedBlocks(content) };
+      return { ok: true, exists: true, path: match, content };
+    }
+    const { files, index: idx } = listTopics(root);
+    return { ok: true, files, index: idx };
+  },
+
+  'write-knowledge': ({ cwd, rel, 'json-stdin': jsonStdin }) => {
+    if (jsonStdin === undefined) return { ok: false, error: 'write-knowledge requires --json-stdin' };
+    if (!rel) return { ok: false, error: 'write-knowledge requires --rel' };
+    const safe = assertSafeRel(rel);
+    if (!safe.ok) return { ok: false, error: safe.error };
+    let payload;
+    try {
+      payload = JSON.parse(readStdin());
+    } catch {
+      return { ok: false, error: 'invalid JSON on stdin' };
+    }
+    const root = knowledgeRoot(cwd);
+    const target = join(root, safe.rel);
+    const { mode, content, blocks, entries } = payload;
+    if (mode === 'replace') {
+      writeKnowledge(root, safe.rel, String(content ?? ''));
+      return { ok: true, path: safe.rel };
+    }
+    if (mode === 'append-hand') {
+      const existing = existsSync(target) ? readFileSync(target, 'utf8') : '';
+      const sep = existing && !existing.endsWith('\n') && !String(content ?? '').startsWith('\n') ? '\n' : '';
+      writeKnowledge(root, safe.rel, existing + sep + String(content ?? ''));
+      return { ok: true, path: safe.rel };
+    }
+    if (mode === 'replace-promoted') {
+      if (!Array.isArray(blocks)) return { ok: false, error: 'mode replace-promoted requires blocks: [{source, body}]' };
+      const existing = existsSync(target) ? readFileSync(target, 'utf8') : '';
+      writeKnowledge(root, safe.rel, replacePromotedBlocks(existing, blocks));
+      return { ok: true, path: safe.rel };
+    }
+    if (mode === 'index') {
+      if (!Array.isArray(entries)) return { ok: false, error: 'mode index requires entries: [{section, items: [{title, file, summary}]}]' };
+      writeKnowledge(root, safe.rel, buildIndex(entries));
+      return { ok: true, path: safe.rel };
+    }
+    return { ok: false, error: `unknown mode: ${mode}` };
   },
 };
 

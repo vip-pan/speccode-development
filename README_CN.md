@@ -1,6 +1,6 @@
 # speccode
 
-基于 Claude Code 的整套 SDD(规格驱动开发)与自动化开发体系——不只是插件,而是一套完整方法论:多需求并行开发、spec 文档仓内托管、PR 流程标准化,外加自托管工具链 dogfood 整条工作流。`speccode` 插件(21 个 `/speccode:*` 命令)是把 SDD 方法论(探索/文档/计划/子代理执行/评审)固化成默认路径的运行时;本仓库还托管规格主档(`speccode/spec/`)、每次变更的归档,以及自动化本仓库自身开发的开发工作流 skills。
+基于 Claude Code 的整套 SDD(规格驱动开发)与自动化开发体系——不只是插件,而是一套完整方法论:多需求并行开发、spec 文档仓内托管、PR 流程标准化,外加自托管工具链 dogfood 整条工作流。`speccode` 插件(23 个 `/speccode:*` 命令)是把 SDD 方法论(探索/文档/计划/子代理执行/评审)固化成默认路径的运行时;本仓库还托管规格主档(`speccode/spec/`)、每次变更的归档,以及自动化本仓库自身开发的开发工作流 skills。
 
 [English](README.md) | [简体中文](README_CN.md)
 
@@ -10,7 +10,7 @@
 
 - **多需求并行**:trunk / feature / worktree 三层拓扑,对账算法自动归属每个 worktree,多 feature、多 worktree 并行施工互不干扰。
 - **文档仓内托管**:spec 文档(`speccode/changes → spec/ → archive/`)所有分支 tracked、落盘即提交,随 PR 链路上 trunk。
-- **流程标准化**:21 命令 + hooks(14 个生命周期事件)+ 跨会话 memory,团队约定变成可执行原语。
+- **流程标准化**:23 命令 + hooks(14 个生命周期事件)+ 跨会话 memory,团队约定变成可执行原语。
 - **自托管自动化开发**:本仓库用 speccode 开发自身(dogfood)——每次变更走完整 SDD 链路,规格主档与归档仓内托管,开发工作流 skills 自动化仓库自身流程。它是一个可运行的自动化开发体系样板,而不只是一个待安装的插件。
 
 ## 看它干活
@@ -45,12 +45,13 @@ $ /speccode:finishing-feature
 
 安装后命令以 `/speccode:` 前缀出现,如 `/speccode:init`、`/speccode:status`、`/speccode:finishing-feature`。
 
-## 21 个命令速览
+## 23 个命令速览
 
 | 组 | 命令 |
 |---|---|
 | 生命周期 | `init` `exploring` `creating-feature` `creating-worktree` `finishing-worktree` `finishing-feature` `status` `reset` |
 | 文档流 | `proposing` `brainstorming` `writing-plans` `syncing` `archiving` |
+| 知识 | `promote-knowledge` `memorize` |
 | 方法论 | `subagent-driven-development` `executing-plans` `dispatching-parallel-agents` `test-driven-development` `systematic-debugging` `requesting-code-review` `receiving-code-review` `verification-before-completion` |
 
 各命令作用与前置条件见 [插件 README §2 命令表](./plugins/speccode/README_CN.md)。
@@ -79,11 +80,11 @@ spec 文档在所有分支 tracked,随 PR 链路上 trunk
 
 | 文档 | 内容 |
 |---|---|
-| [插件 README](./plugins/speccode/README_CN.md) | 21 命令详表、三层拓扑、R1-R13 风险、0.1→0.2 迁移(插件设计文档) |
+| [插件 README](./plugins/speccode/README_CN.md) | 23 命令详表、三层拓扑、R1-R13 风险、0.1→0.2 迁移(插件设计文档) |
 | [CHANGELOG](./CHANGELOG.md) | 版本发布记录(Keep a Changelog,全中文) |
 | [CLAUDE.md](./CLAUDE.md) | 开发文档:引擎三层架构、测试约定、speccode 工作流 |
 | `skills/` | 开发工作流 skills(真源)——经 `scripts/install-skills.sh` 安装到 `.claude/skills/`,供 Claude Code 懒加载 |
-| `speccode/spec/` · `speccode/archive/` | SDD 规格主档(8 个 capability)与变更归档——体系自身的活文档 |
+| `speccode/spec/` · `speccode/archive/` | SDD 规格主档(9 个 capability)与变更归档——体系自身的活文档 |
 
 ## 贡献
 
