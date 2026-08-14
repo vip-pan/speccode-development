@@ -1,6 +1,6 @@
 ---
 name: speccode-workflow
-description: 本仓库(speccode 插件)自身的开发工作流与发布纪律——v2 原生链路顺序、dogfood 约定、版本发布时 CHANGELOG 同步规则。在本仓库做开发或发布时加载。
+description: 本仓库(speccode 插件)自身的开发工作流与发布纪律——原生链路顺序、dogfood 约定、版本发布时 CHANGELOG 同步规则。在本仓库做开发或发布时加载。
 ---
 
 # speccode 仓库开发工作流
@@ -11,12 +11,12 @@ description: 本仓库(speccode 插件)自身的开发工作流与发布纪律�
 
 ```
 /speccode:exploring → /speccode:creating-feature → /speccode:creating-worktree
-→ /speccode:proposing(复杂需求先 /speccode:brainstorming)
+→ /speccode:proposing(复杂需求要再执行 /speccode:brainstorming，将变更内容落地后回写 proposing 文档)
 → /speccode:writing-plans → 执行 → /speccode:syncing(delta 合并进 speccode/spec/)
 → /speccode:archiving → /speccode:finishing-worktree → /speccode:finishing-feature(单 PR 直通 trunk)
 ```
 
-- 规格主档在 `speccode/spec/`(9 个 capability),归档在 `speccode/archive/`。
+- 规格主档在 `speccode/spec/`,归档在 `speccode/archive/`。
 - 脑暴文档由 brainstorming 原生落到 `speccode/changes/<slug>/brainstorm/`,落盘即提交。
 
 ## 发布纪律
