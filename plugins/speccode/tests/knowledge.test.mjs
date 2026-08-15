@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, realpathSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { knowledgeRoot, assertSafeRel, listTopics, parsePromotedBlocks, replacePromotedBlocks, buildIndex, writeKnowledge } from '../lib/knowledge.mjs';
+import { knowledgeRoot, assertSafeRel, listTopics, parseDistilledBlocks, replaceDistilledBlocks, buildIndex, writeKnowledge } from '../lib/knowledge.mjs';
 import { makeRepo } from './helpers/tmprepo.mjs';
 
 test('knowledgeRoot resolves to <worktree-root>/speccode/knowledge', () => {
@@ -64,99 +64,99 @@ test('listTopics on missing root returns empty files and null index', () => {
   rmSync(repo, { recursive: true, force: true });
 });
 
-test('parsePromotedBlocks extracts source and body', () => {
+test('parseDistilledBlocks extracts source and body', () => {
   const text = [
     '# topic',
-    '<!-- promoted-from: archive/a/ -->',
+    '<!-- distilled-from: archive/a/ -->',
     'body line 1',
     'body line 2',
-    '<!-- /promoted -->',
+    '<!-- /distilled -->',
     'hand written',
   ].join('\n');
-  assert.deepEqual(parsePromotedBlocks(text), [
+  assert.deepEqual(parseDistilledBlocks(text), [
     { source: 'archive/a/', body: 'body line 1\nbody line 2' },
   ]);
 });
 
-test('parsePromotedBlocks throws on unclosed marker', () => {
-  assert.throws(() => parsePromotedBlocks('<!-- promoted-from: x -->\nno end'));
+test('parseDistilledBlocks throws on unclosed marker', () => {
+  assert.throws(() => parseDistilledBlocks('<!-- distilled-from: x -->\nno end'));
 });
 
-test('parsePromotedBlocks throws on close without open', () => {
-  assert.throws(() => parsePromotedBlocks('<!-- /promoted -->'));
+test('parseDistilledBlocks throws on close without open', () => {
+  assert.throws(() => parseDistilledBlocks('<!-- /distilled -->'));
 });
 
-test('replacePromotedBlocks keeps hand-written lines byte-identical', () => {
-  const text = 'hand A\n<!-- promoted-from: old/ -->\nold body\n<!-- /promoted -->\nhand B';
-  const out = replacePromotedBlocks(text, [{ source: 'old/', body: 'new body' }]);
-  assert.equal(out, 'hand A\n<!-- promoted-from: old/ -->\nnew body\n<!-- /promoted -->\nhand B\n');
+test('replaceDistilledBlocks keeps hand-written lines byte-identical', () => {
+  const text = 'hand A\n<!-- distilled-from: old/ -->\nold body\n<!-- /distilled -->\nhand B';
+  const out = replaceDistilledBlocks(text, [{ source: 'old/', body: 'new body' }]);
+  assert.equal(out, 'hand A\n<!-- distilled-from: old/ -->\nnew body\n<!-- /distilled -->\nhand B\n');
 });
 
-test('replacePromotedBlocks drops promoted blocks whose source is gone and appends new sources', () => {
-  const text = 'keep\n<!-- promoted-from: gone/ -->\nold\n<!-- /promoted -->\ntail';
-  const out = replacePromotedBlocks(text, [{ source: 'fresh/', body: 'new' }]);
-  assert.equal(out, 'keep\ntail\n\n<!-- promoted-from: fresh/ -->\nnew\n<!-- /promoted -->\n');
+test('replaceDistilledBlocks drops distilled blocks whose source is gone and appends new sources', () => {
+  const text = 'keep\n<!-- distilled-from: gone/ -->\nold\n<!-- /distilled -->\ntail';
+  const out = replaceDistilledBlocks(text, [{ source: 'fresh/', body: 'new' }]);
+  assert.equal(out, 'keep\ntail\n\n<!-- distilled-from: fresh/ -->\nnew\n<!-- /distilled -->\n');
 });
 
-test('replacePromotedBlocks appends blocks to empty text without leading newline, but with trailing newline', () => {
-  const out = replacePromotedBlocks('', [{ source: 'x/', body: 'b' }]);
-  assert.equal(out, '<!-- promoted-from: x/ -->\nb\n<!-- /promoted -->\n');
+test('replaceDistilledBlocks appends blocks to empty text without leading newline, but with trailing newline', () => {
+  const out = replaceDistilledBlocks('', [{ source: 'x/', body: 'b' }]);
+  assert.equal(out, '<!-- distilled-from: x/ -->\nb\n<!-- /distilled -->\n');
 });
 
-test('replacePromotedBlocks does not double up trailing newline when source already ends with one', () => {
-  const text = 'hand A\n<!-- promoted-from: old/ -->\nold body\n<!-- /promoted -->\nhand B\n';
-  const out = replacePromotedBlocks(text, [{ source: 'old/', body: 'new body' }]);
-  assert.equal(out, 'hand A\n<!-- promoted-from: old/ -->\nnew body\n<!-- /promoted -->\nhand B\n');
+test('replaceDistilledBlocks does not double up trailing newline when source already ends with one', () => {
+  const text = 'hand A\n<!-- distilled-from: old/ -->\nold body\n<!-- /distilled -->\nhand B\n';
+  const out = replaceDistilledBlocks(text, [{ source: 'old/', body: 'new body' }]);
+  assert.equal(out, 'hand A\n<!-- distilled-from: old/ -->\nnew body\n<!-- /distilled -->\nhand B\n');
 });
 
-test('replacePromotedBlocks throws on malformed existing markers', () => {
-  assert.throws(() => replacePromotedBlocks('a\n<!-- promoted-from: x -->\nno end', []));
-  assert.throws(() => replacePromotedBlocks('a\n<!-- /promoted -->\n', []));
+test('replaceDistilledBlocks throws on malformed existing markers', () => {
+  assert.throws(() => replaceDistilledBlocks('a\n<!-- distilled-from: x -->\nno end', []));
+  assert.throws(() => replaceDistilledBlocks('a\n<!-- /distilled -->\n', []));
 });
 
-test('replacePromotedBlocks throws on nested promoted markers', () => {
+test('replaceDistilledBlocks throws on nested distilled markers', () => {
   assert.throws(
-    () => replacePromotedBlocks('<!-- promoted-from: a/ -->\n<!-- promoted-from: b/ -->\nbody\n<!-- /promoted -->', []),
-    /knowledge: nested promoted marker/,
+    () => replaceDistilledBlocks('<!-- distilled-from: a/ -->\n<!-- distilled-from: b/ -->\nbody\n<!-- /distilled -->', []),
+    /knowledge: nested distilled marker/,
   );
 });
 
-test('replacePromotedBlocks throws on nested markers surrounded by content', () => {
+test('replaceDistilledBlocks throws on nested markers surrounded by content', () => {
   assert.throws(
-    () => replacePromotedBlocks('a\n<!-- promoted-from: x/ -->\n<!-- promoted-from: y/ -->\nz\n<!-- /promoted -->\nb', []),
-    /knowledge: nested promoted marker/,
+    () => replaceDistilledBlocks('a\n<!-- distilled-from: x/ -->\n<!-- distilled-from: y/ -->\nz\n<!-- /distilled -->\nb', []),
+    /knowledge: nested distilled marker/,
   );
 });
 
-test('replacePromotedBlocks throws on duplicate source in blocks (existing block for that source present)', () => {
-  const text = 'keep\n<!-- promoted-from: S -->\nold\n<!-- /promoted -->\ntail';
+test('replaceDistilledBlocks throws on duplicate source in blocks (existing block for that source present)', () => {
+  const text = 'keep\n<!-- distilled-from: S -->\nold\n<!-- /distilled -->\ntail';
   assert.throws(
-    () => replacePromotedBlocks(text, [{ source: 'S', body: 'b1' }, { source: 'S', body: 'b2' }]),
-    /knowledge: duplicate promoted source: S/,
+    () => replaceDistilledBlocks(text, [{ source: 'S', body: 'b1' }, { source: 'S', body: 'b2' }]),
+    /knowledge: duplicate distilled source: S/,
   );
 });
 
-test('replacePromotedBlocks throws on duplicate source in blocks (no existing block for that source)', () => {
+test('replaceDistilledBlocks throws on duplicate source in blocks (no existing block for that source)', () => {
   assert.throws(
-    () => replacePromotedBlocks('hand-written only, no markers', [{ source: 'S', body: 'b1' }, { source: 'S', body: 'b2' }]),
-    /knowledge: duplicate promoted source: S/,
+    () => replaceDistilledBlocks('hand-written only, no markers', [{ source: 'S', body: 'b1' }, { source: 'S', body: 'b2' }]),
+    /knowledge: duplicate distilled source: S/,
   );
 });
 
-test('replacePromotedBlocks throws when a body contains a promoted marker string', () => {
+test('replaceDistilledBlocks throws when a body contains a distilled marker string', () => {
   assert.throws(
-    () => replacePromotedBlocks('', [{ source: 'x/', body: 'oops <!-- /promoted --> mid-body' }]),
+    () => replaceDistilledBlocks('', [{ source: 'x/', body: 'oops <!-- /distilled --> mid-body' }]),
     /knowledge: body contains marker string/,
   );
   assert.throws(
-    () => replacePromotedBlocks('', [{ source: 'y/', body: 'oops <!-- promoted-from: z/ -->' }]),
+    () => replaceDistilledBlocks('', [{ source: 'y/', body: 'oops <!-- distilled-from: z/ -->' }]),
     /knowledge: body contains marker string/,
   );
 });
 
-test('replacePromotedBlocks treats a missing body as an explicit empty string, not the literal "undefined"', () => {
-  const out = replacePromotedBlocks('', [{ source: 'x/' }]);
-  assert.equal(out, '<!-- promoted-from: x/ -->\n\n<!-- /promoted -->\n');
+test('replaceDistilledBlocks treats a missing body as an explicit empty string, not the literal "undefined"', () => {
+  const out = replaceDistilledBlocks('', [{ source: 'x/' }]);
+  assert.equal(out, '<!-- distilled-from: x/ -->\n\n<!-- /distilled -->\n');
 });
 
 test('buildIndex renders sections with topic lines', () => {
@@ -177,4 +177,48 @@ test('writeKnowledge writes atomically and creates parent dirs', () => {
   assert.equal(readFileSync(p, 'utf8'), '# 领域知识\n');
   assert.ok(!existsSync(`${p}.${process.pid}.tmp`));
   rmSync(repo, { recursive: true, force: true });
+});
+
+test('parseDistilledBlocks parses legacy promoted markers', () => {
+  const text = 'hand\n<!-- promoted-from: archive/a/ -->\nbody\n<!-- /promoted -->\n';
+  assert.deepEqual(parseDistilledBlocks(text), [{ source: 'archive/a/', body: 'body' }]);
+});
+
+test('parseDistilledBlocks parses mixed current and legacy markers in order', () => {
+  const text = [
+    '<!-- distilled-from: spec/x/ -->',
+    'new body',
+    '<!-- /distilled -->',
+    'middle hand',
+    '<!-- promoted-from: archive/y/ -->',
+    'old body',
+    '<!-- /promoted -->',
+  ].join('\n');
+  assert.deepEqual(parseDistilledBlocks(text), [
+    { source: 'spec/x/', body: 'new body' },
+    { source: 'archive/y/', body: 'old body' },
+  ]);
+});
+
+test('parseDistilledBlocks throws on mismatched opening/closing marker formats', () => {
+  assert.throws(
+    () => parseDistilledBlocks('<!-- distilled-from: x/ -->\nbody\n<!-- /promoted -->'),
+    /knowledge: mismatched distilled marker/,
+  );
+  assert.throws(
+    () => parseDistilledBlocks('<!-- promoted-from: x/ -->\nbody\n<!-- /distilled -->'),
+    /knowledge: mismatched distilled marker/,
+  );
+});
+
+test('replaceDistilledBlocks rewrites legacy markers to the current format, preserving hand-written bytes', () => {
+  const text = 'hand A\n<!-- promoted-from: old/ -->\nold body\n<!-- /promoted -->\nhand B\n';
+  const out = replaceDistilledBlocks(text, [{ source: 'old/', body: 'new body' }]);
+  assert.equal(out, 'hand A\n<!-- distilled-from: old/ -->\nnew body\n<!-- /distilled -->\nhand B\n');
+});
+
+test('replaceDistilledBlocks drops legacy blocks whose source is gone', () => {
+  const text = 'keep\n<!-- promoted-from: gone/ -->\nold\n<!-- /promoted -->\ntail';
+  const out = replaceDistilledBlocks(text, []);
+  assert.equal(out, 'keep\ntail\n');
 });

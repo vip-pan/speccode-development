@@ -49,48 +49,60 @@ export function listTopics(root) {
   };
 }
 
-const PROMOTED_START = /^<!-- promoted-from:\s*(.+?)\s*-->$/;
-const PROMOTED_END = '<!-- /promoted -->';
+const DISTILLED_START = /^<!-- distilled-from:\s*(.+?)\s*-->$/;
+const DISTILLED_END = '<!-- /distilled -->';
+// Legacy pre-rename format ("promoted" era): parsed on read forever, never
+// written. Existing knowledge files migrate to the current format on their
+// next full rebuild (replaceDistilledBlocks rewrites every block it keeps).
+const LEGACY_PROMOTED_START = /^<!-- promoted-from:\s*(.+?)\s*-->$/;
+const LEGACY_PROMOTED_END = '<!-- /promoted -->';
 
-// Extract promoted blocks as [{source, body}]. Malformed markers throw —
-// corrupted knowledge files need a human, never silent repair (design D5).
-export function parsePromotedBlocks(text) {
+// Extract distilled blocks as [{source, body}]. Both the current
+// (distilled-from//distilled) and legacy (promoted-from//promoted) marker
+// formats are recognized, in order of appearance; a block's closing marker
+// must match its opening format. Malformed markers throw — corrupted
+// knowledge files need a human, never silent repair (design D5).
+export function parseDistilledBlocks(text) {
   const blocks = [];
   const lines = String(text).split('\n');
   let open = null;
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
-    const m = PROMOTED_START.exec(line);
+    const isNew = DISTILLED_START.exec(line);
+    const m = isNew || LEGACY_PROMOTED_START.exec(line);
     if (m) {
-      if (open) throw new Error('knowledge: nested promoted marker');
-      open = { source: m[1].trim(), start: i };
-    } else if (line.trim() === PROMOTED_END) {
-      if (!open) throw new Error('knowledge: closing promoted marker without opening');
+      if (open) throw new Error('knowledge: nested distilled marker');
+      open = { source: m[1].trim(), start: i, end: isNew ? DISTILLED_END : LEGACY_PROMOTED_END };
+    } else if (line.trim() === DISTILLED_END || line.trim() === LEGACY_PROMOTED_END) {
+      if (!open) throw new Error('knowledge: closing distilled marker without opening');
+      if (line.trim() !== open.end) throw new Error('knowledge: mismatched distilled marker');
       blocks.push({ source: open.source, body: lines.slice(open.start + 1, i).join('\n') });
       open = null;
     }
     i += 1;
   }
-  if (open) throw new Error('knowledge: unclosed promoted marker');
+  if (open) throw new Error('knowledge: unclosed distilled marker');
   return blocks;
 }
 
-// Full rebuild of promoted blocks (design D2): every existing promoted block
-// is replaced by the new block with the same source, or dropped when its
-// source is gone; new sources are appended at the end (preceded by a blank
+// Full rebuild of distilled blocks (design D2): every existing block —
+// current or legacy format — is replaced by the new block with the same
+// source, or dropped when its source is gone; kept and new blocks are always
+// written in the CURRENT format, so a legacy-marked file migrates on its
+// first rebuild. New sources are appended at the end (preceded by a blank
 // line). Everything outside markers passes through untouched, so hand-written
 // content is preserved byte-for-byte (split/join is lossless).
 //
 // `blocks` is validated up front: a duplicate `source` would silently drop
 // one gate-confirmed block (whichever the write path or the append loop
 // happens to keep), and a `body` containing a marker string would produce a
-// file that parsePromotedBlocks then rejects as corrupt — both convert a
+// file that parseDistilledBlocks then rejects as corrupt — both convert a
 // silent wrong write into an explicit pre-write error (design D5).
-export function replacePromotedBlocks(text, blocks) {
+export function replaceDistilledBlocks(text, blocks) {
   const seen = new Set();
   for (const b of blocks) {
-    if (seen.has(b.source)) throw new Error(`knowledge: duplicate promoted source: ${b.source}`);
+    if (seen.has(b.source)) throw new Error(`knowledge: duplicate distilled source: ${b.source}`);
     seen.add(b.source);
     const body = String(b.body ?? '');
     if (body.includes('<!--') || body.includes('-->')) {
@@ -103,25 +115,29 @@ export function replacePromotedBlocks(text, blocks) {
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
-    const m = PROMOTED_START.exec(line);
+    const isNew = DISTILLED_START.exec(line);
+    const m = isNew || LEGACY_PROMOTED_START.exec(line);
     if (m) {
       const source = m[1].trim();
+      const end = isNew ? DISTILLED_END : LEGACY_PROMOTED_END;
       let j = i + 1;
-      while (j < lines.length && lines[j].trim() !== PROMOTED_END) {
-        if (PROMOTED_START.exec(lines[j])) throw new Error('knowledge: nested promoted marker');
+      while (j < lines.length && lines[j].trim() !== end) {
+        if (DISTILLED_START.exec(lines[j]) || LEGACY_PROMOTED_START.exec(lines[j])) {
+          throw new Error('knowledge: nested distilled marker');
+        }
         j += 1;
       }
-      if (j >= lines.length) throw new Error('knowledge: unclosed promoted marker');
+      if (j >= lines.length) throw new Error('knowledge: unclosed distilled marker');
       const block = blocks.find((b) => b.source === source);
       if (block) {
-        out.push(`<!-- promoted-from: ${source} -->`, String(block.body ?? ''), PROMOTED_END);
+        out.push(`<!-- distilled-from: ${source} -->`, String(block.body ?? ''), DISTILLED_END);
         emitted.add(source);
       }
       i = j + 1;
       continue;
     }
-    if (line.trim() === PROMOTED_END) {
-      throw new Error('knowledge: closing promoted marker without opening');
+    if (line.trim() === DISTILLED_END || line.trim() === LEGACY_PROMOTED_END) {
+      throw new Error('knowledge: closing distilled marker without opening');
     }
     out.push(line);
     i += 1;
@@ -129,7 +145,7 @@ export function replacePromotedBlocks(text, blocks) {
   for (const b of blocks) {
     if (emitted.has(b.source)) continue;
     if (out.length > 0 && out[out.length - 1] !== '') out.push('');
-    out.push(`<!-- promoted-from: ${b.source} -->`, String(b.body ?? ''), PROMOTED_END);
+    out.push(`<!-- distilled-from: ${b.source} -->`, String(b.body ?? ''), DISTILLED_END);
   }
   // Mirror buildIndex's trailing newline, but only when the join doesn't
   // already end with one (source already ending in `\n` round-trips through

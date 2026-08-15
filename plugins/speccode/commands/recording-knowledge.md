@@ -1,11 +1,11 @@
 ---
-name: "SpecCode: Memorize"
-description: "把知识直接写进知识集:经人工闸门写入 speccode/knowledge/ 的 hand-written 段"
+name: "SpecCode: Recording Knowledge"
+description: "把知识直接记录进知识集:经人工闸门写入 speccode/knowledge/ 的 hand-written 段"
 category: Workflow
 tags: [speccode, workflow, knowledge]
 ---
 
-把用户/agent 提供的知识直接写进 `speccode/knowledge/`(hand-written 段),经人工闸门落盘。全程中文交互。**应在 worktree-* 分支上运行**。
+把用户/agent 提供的知识直接记录进 `speccode/knowledge/`(hand-written 段),经人工闸门落盘。全程中文交互。**应在 worktree-* 分支上运行**。
 
 ## 前置
 
@@ -19,7 +19,7 @@ tags: [speccode, workflow, knowledge]
 ## 收集内容
 
 向用户询问(选择题优先):
-- 主题:映射到现有 topic(如「开发准则」→ development/standards.md);无合适 topic → 询问是否新建 topic 文件(落在 `development/` 下,文件名小写连字符,`.md` 结尾,如 `development/ops.md`——promote 的蒸馏目标只含 development/ 下自建 topic,根级文件无法分组且会被日落)。
+- 主题:映射到现有 topic(如「开发准则」→ development/standards.md);无合适 topic → 询问是否新建 topic 文件(落在 `development/` 下,文件名小写连字符,`.md` 结尾,如 `development/ops.md`——distilling-knowledge 的蒸馏目标只含 development/ 下自建 topic,根级文件无法分组且会被日落)。
 - 内容:用户/agent 给出的知识文本。
 
 ## 闸门
@@ -33,15 +33,15 @@ tags: [speccode, workflow, knowledge]
 ## 落盘
 
 1. `_index.md` 需更新时(新 topic、摘要变化、或索引缺失——read-knowledge 返回 index 为 null 但 topic 文件存在)→ 组装 entries(实扫现有 topic 文件(跳过内容为空的 topic 文件——日落后被清空的存量文件不再收录),按顶层目录名分组为 sections,如 development;不硬编码固定 section 清单),经 `write-knowledge --rel _index.md --json-stdin`(mode=index,entries=...)写入新索引内容。
-2. 经 `speccode.mjs write-memory --cwd . --branch <F> --json-stdin`(mode=append)追加本次 memorize 摘要(写入位置 + topic)。
+2. 经 `speccode.mjs write-memory --cwd . --branch <F> --json-stdin`(mode=append)追加本次记录摘要(写入位置 + topic)。
 3. MUST 立即提交:
    ```bash
    git add speccode/knowledge/
-   git commit -m "docs(knowledge): memorize <topic>"
+   git commit -m "docs(knowledge): record <topic>"
    ```
 4. 报告写入位置。
 
 ## 约束
 
-- 只写 hand-written 段(不写 marker);写 promoted 块是 promote-knowledge 的职责。
+- 只写 hand-written 段(不写 marker);写蒸馏块是 distilling-knowledge 的职责。
 - 内容不得包含 `<!--` 或 `-->` 字符串。

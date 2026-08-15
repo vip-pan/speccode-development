@@ -51,7 +51,7 @@ $ /speccode:finishing-feature
 |---|---|
 | 生命周期 | `init` `exploring` `creating-feature` `creating-worktree` `finishing-worktree` `finishing-feature` `status` `reset` |
 | 文档流 | `proposing` `brainstorming` `writing-plans` `syncing` `archiving` |
-| 知识 | `promote-knowledge` `memorize` |
+| 知识 | `distilling-knowledge` `recording-knowledge` |
 | 方法论 | `subagent-driven-development` `executing-plans` `dispatching-parallel-agents` `test-driven-development` `systematic-debugging` `requesting-code-review` `receiving-code-review` `verification-before-completion` |
 
 各命令作用与前置条件见 [插件 README §2 命令表](./plugins/speccode/README_CN.md)。

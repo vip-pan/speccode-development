@@ -4,6 +4,18 @@
 
 纪律:bump `plugin.json` version 的提交必须同步更新本文件对应版本小节(见 `speccode/spec/plugin-packaging/spec.md`「版本发布纪律」)。
 
+## [Unreleased]
+
+### Changed
+
+- **BREAKING(命令改名)**:知识集两条写入命令更名并对齐动名词构词——`/speccode:memorize` → `/speccode:recording-knowledge`(记录/直写 hand-written 段),`/speccode:promote-knowledge` → `/speccode:distilling-knowledge`(从 spec/ + archive/ 全量蒸馏)。旧命令文件删除,不留跳转 stub。
+- **BREAKING(marker 写侧格式)**:蒸馏块 marker 写侧改为 `<!-- distilled-from: <source> --> … <!-- /distilled -->`;读侧永久兼容旧 `<!-- promoted-from: -->`/`<!-- /promoted -->`。存量 knowledge 文件无需手动迁移——首次运行 distilling-knowledge 经全量重建自动重写为新格式,hand-written 段逐字节保留。
+- **BREAKING(内部契约)**:`write-knowledge` verb 的 mode `replace-promoted` → `replace-distilled`;lib 导出 `parsePromotedBlocks`/`replacePromotedBlocks` → `parseDistilledBlocks`/`replaceDistilledBlocks`。
+
+### 内部规格演进
+
+- `knowledge-set`:晋升命令 → 蒸馏命令、直写命令 → 记录命令(RENAMED),来源标记改「写侧新格式 + 读侧双格式」;`plugin-packaging`:命令命名空间枚举 21 → 23(补录知识两条命令)。
+
 ## [0.2.3] - 2026-08-13
 
 0.2.2 之后六轮收尾的 patch 发布:仓库外 worktree 目录的 gitignore 校验 fatal 修复、开发完成收尾路由统一、speccode 定位重写为「SDD + 自动化开发系统」并新增 workflow skill、归档结构去 superpowers/openspec 残留。
