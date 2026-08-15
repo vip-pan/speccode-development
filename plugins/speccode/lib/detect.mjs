@@ -17,7 +17,7 @@ export const KNOWLEDGE_TOOL_DETECTORS = [
   // codemap 真实项目索引目录是 .codemaker/codeindex/(其 skill 自述"初始化 .codemaker/codeindex/"),
   // .codemaker/codemap 是历史/home-install 路径,两者都探测,索引目录优先。
   { id: 'codemap', match: 'codemap', bin: 'codemap', dirs: ['.codemaker/codeindex', '.codemaker/codemap'] },
-  { id: 'lightrag', match: 'lightrag', bin: 'lightrag', dirs: ['.lightrag'] },
+  { id: 'gitnexus', match: 'gitnexus', bin: 'gitnexus', dirs: ['.gitnexus'] },
 ];
 
 function defaultReadJson(path) {

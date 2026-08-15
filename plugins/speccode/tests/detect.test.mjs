@@ -7,7 +7,7 @@ import {
 
 test('KNOWLEDGE_TOOL_DETECTORS covers the five required tools', () => {
   const ids = KNOWLEDGE_TOOL_DETECTORS.map((t) => t.id);
-  assert.deepEqual(ids, ['understand-anything', 'codegraph', 'graphify', 'codemap', 'lightrag']);
+  assert.deepEqual(ids, ['understand-anything', 'codegraph', 'graphify', 'codemap', 'gitnexus']);
 });
 
 test('plugin hit short-circuits commandV probe for tools with a bin', () => {
@@ -49,13 +49,13 @@ test('project .mcp.json → both available and integrated', () => {
 });
 
 test('user ~/.claude.json mcp → available-only (not integrated)', () => {
-  const readJson = (p) => (p.endsWith('/home/u/.claude.json') ? { mcpServers: { 'lightrag-server': {} } } : null);
+  const readJson = (p) => (p.endsWith('/home/u/.claude.json') ? { mcpServers: { 'gitnexus-mcp': {} } } : null);
   const tools = detectKnowledgeTools('/repo', {
     homeDir: '/home/u', readJson, commandV: () => false, exists: () => false,
   });
-  const lr = tools.find((t) => t.id === 'lightrag');
-  assert.equal(lr.available.value, true);
-  assert.equal(lr.integrated.value, false);
+  const gn = tools.find((t) => t.id === 'gitnexus');
+  assert.equal(gn.available.value, true);
+  assert.equal(gn.integrated.value, false);
 });
 
 test('projects[cwd].mcpServers → both available and integrated', () => {
@@ -95,6 +95,26 @@ test('.codemaker/codeindex wins over .codemaker/codemap when both present (first
   });
   const cm = tools.find((t) => t.id === 'codemap');
   assert.deepEqual(cm.integrated, { value: true, evidence: '.codemaker/codeindex' });
+});
+
+test('.gitnexus dir present → gitnexus integrated', () => {
+  const tools = detectKnowledgeTools('/repo', {
+    homeDir: '/home/u', readJson: () => null, commandV: () => false,
+    exists: (p) => p === '/repo/.gitnexus',
+  });
+  const gn = tools.find((t) => t.id === 'gitnexus');
+  assert.deepEqual(gn.available, { value: false, evidence: null });
+  assert.deepEqual(gn.integrated, { value: true, evidence: '.gitnexus' });
+});
+
+test('gitnexus cli → available-only', () => {
+  const tools = detectKnowledgeTools('/repo', {
+    homeDir: '/home/u', readJson: () => null,
+    commandV: (bin) => bin === 'gitnexus', exists: () => false,
+  });
+  const gn = tools.find((t) => t.id === 'gitnexus');
+  assert.equal(gn.available.value, true);
+  assert.equal(gn.integrated.value, false);
 });
 
 test('.understand-anything (legacy dir) present → understand-anything integrated', () => {
