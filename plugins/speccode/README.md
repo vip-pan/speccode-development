@@ -47,8 +47,8 @@ Knowledge:
 
 | Command | Purpose | Prerequisite (branch to run on) |
 |---|---|---|
-| `/speccode:promote-knowledge` | Distill promoted sections of `speccode/knowledge/` from `spec/` + `archive/` (full rebuild with source markers); human gate before write; commits on save | worktree-* branch |
-| `/speccode:memorize` | Write knowledge directly into hand-written sections (draft → human gate → atomic write); commits on save | worktree-* branch |
+| `/speccode:promote-knowledge` | Distill promoted sections of `speccode/knowledge/` from `spec/` + `archive/` (full rebuild with source markers; SDD process knowledge only, out-of-scope topics sunset via the gate); human gate before write; commits on save | worktree-* branch |
+| `/speccode:memorize` | Write knowledge directly into hand-written sections (fit check: process knowledge stays, business knowledge is pointed to external RAG; draft → human gate → atomic write); commits on save | worktree-* branch |
 
 Methodology:
 
@@ -122,7 +122,6 @@ speccode/
 ├── archive/<YYYY-MM-DD>-<slug>/   # archive (archiving moves the whole directory, never deletes)
 └── knowledge/               # curated knowledge set (produced by promote-knowledge / memorize)
     ├── _index.md            # retrieval index: topic title + file + one-line summary, regenerated on demand
-    ├── business/            # domain.md / workflows.md / lineage.md
     └── development/         # architecture.md / standards.md / environment.md / integrations.md / pitfalls.md / security.md
 ```
 
@@ -130,7 +129,7 @@ Conventions:
 
 - **Commit on save**: proposing / brainstorming / writing-plans / syncing / archiving / promote-knowledge / memorize each commit immediately after producing their documents, so document history and code history stay on the same branch, moving together.
 - **Multi-round rebuilds of the same feature don't collide**: once changes/<slug>/ is archived the directory is freed, and the same slug can start a new round via proposing again; when rebuilding without archiving first, proposing asks "continue / archive first / cancel".
-- **Knowledge set: promoted vs. hand-written split**: each topic file under `knowledge/` can mix two kinds of content. `promote-knowledge` distills `spec/` and `archive/` into **promoted blocks**, wrapped in `<!-- promoted-from: <source> --> ... <!-- /promoted -->` markers, and rebuilds them in full on every run (a block whose source has disappeared is dropped); `memorize` appends free-form **hand-written** prose outside those markers. The rebuild is byte-preserving for everything outside the markers, so hand-written content survives every promoted-block rebuild untouched.
+- **Knowledge set: promoted vs. hand-written split**: each topic file under `knowledge/` can mix two kinds of content. `promote-knowledge` distills `spec/` and `archive/` into **promoted blocks**, wrapped in `<!-- promoted-from: <source> --> ... <!-- /promoted -->` markers, and rebuilds them in full on every run (a block whose source has disappeared is dropped); `memorize` appends free-form **hand-written** prose outside those markers. The rebuild is byte-preserving for everything outside the markers, so hand-written content survives every promoted-block rebuild untouched. The set curates SDD process knowledge only (`development/*`; pitfalls also covers recurring review findings and team review consensus). Business knowledge is left to external RAG systems: `memorize` runs a fit check before writing (a recommendation, not a hard block), and `promote-knowledge` sunsets promoted blocks of out-of-scope topics through the same human gate while preserving hand-written content byte-for-byte.
 
 > Plugin-side helper resources: `plugins/speccode/references/` contains visual-companion (the visual companion for brainstorming, see `references/visual-companion.md`), review prompts, and debugging methodology; all tracked with the plugin source.
 
