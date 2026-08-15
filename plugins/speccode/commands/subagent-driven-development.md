@@ -271,6 +271,22 @@ echo '{"command":"subagent-driven-development","feature_branch":"<F>","worktree_
 
 输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
 
+**勾选 plan 进度(与 ledger 同点)**:在写完 ledger `complete` 行、触发 `onTaskCompleted` 之后,运行
+
+```bash
+speccode.mjs tick-task --cwd . --plan <PLAN_FILE> --task <N>
+```
+
+把 plan 中 Task N 的 step checkbox 勾选为 `[x]`。verb 输出 `ticked`(本次真正勾选的 step 行)与 `already`(此前已是 `[x]` 的行):`ticked` 非空才提交勾选 diff
+
+```bash
+git add <PLAN_FILE> && git commit -m "docs(speccode): tick task <N>"
+```
+
+`ticked` 为空(全在 `already`,如恢复后重跑同一 task)时 MUST 跳过 commit——plan 文件未被改写,`git commit` 会以 "nothing to commit" 非零退出,把幂等重跑误报成失败。
+
+**时序硬约束**:勾选 commit 须在审查干净之后——它在实现 commit(`head`)之后产生,故不在 `review-package` 的 `base..head` diff 内,不污染任务审查者看到的范围。ledger(`progress.md`)仍是崩溃恢复的唯一权威,plan checkbox 仅作完成态派生视图,不参与恢复判断。
+
 然后把 todo 标记完成,继续前进。只要审查还有既未修复、也未在熔断处带 ruling park 的 Critical/Important 未决项,就永远不要进入下一个任务。
 
 ## 终审(Final Review)

@@ -48,6 +48,18 @@ tags: [speccode, workflow, plan, execute]
    echo '{"command":"executing-plans","feature_branch":"<F>","worktree_branch":"<W>","task":<N>}' | speccode.mjs run-hook --cwd . --event onTaskCompleted
    ```
    输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
+6. **同步勾选 plan 进度**:运行
+   ```bash
+   speccode.mjs tick-task --cwd . --plan <PLAN_FILE> --task <N>
+   ```
+   把 plan 中 Task N 的 step checkbox 勾选为 `[x]`。verb 输出 `ticked`(本次真正勾选的 step 行)与 `already`(此前已是 `[x]` 的行),二者共同表达幂等:重跑同一 task 时 `ticked` 为空、`already` 列出全部,plan 文件不被改写。
+   - `ticked` **非空**:把勾选 diff 折进本簿记点提交
+     ```bash
+     git add <PLAN_FILE> && git commit -m "docs(speccode): tick task <N>"
+     ```
+   - `ticked` **为空**(全在 `already`):MUST 跳过 commit——没有变化可提,`git commit` 会以 "nothing to commit" 非零退出,误导控制器判定失败。
+
+   plan 是 tracked 设计文档,进度随 PR 上 trunk;ledger 仍是崩溃恢复的唯一权威,checkbox 仅作完成态派生视图。`<PLAN_FILE>` 为本命令加载的 plan 路径(第 1 步)。
 
 ### 第 3 步:完成开发
 

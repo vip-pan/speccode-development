@@ -872,3 +872,67 @@ test('write-consumed-archives without --json-stdin fails', () => {
   assert.equal(json.ok, false);
   rmSync(repo, { recursive: true, force: true });
 });
+
+test('tick-task verb ticks plan checkboxes and returns ticked/already', () => {
+  const repo = makeRepo();
+  const plan = join(repo, 'plan.md');
+  writeFileSync(plan, [
+    '# P', '', '### Task 1: A', '', '- [ ] s1', '', '```js', '- [ ] fenced', '```', '',
+    '- [ ] s2', '', '### Task 2: B', '', '- [ ] s3', '',
+  ].join('\n'));
+  const { code, json } = runCli(repo, 'tick-task', '--cwd', repo, '--plan', plan, '--task', '1');
+  assert.equal(code, 0);
+  assert.equal(json.ok, true);
+  assert.equal(json.task, 1);
+  assert.equal(json.ticked.length, 2);
+  const after = readFileSync(plan, 'utf8');
+  assert.ok(after.includes('- [x] s1'));
+  assert.ok(after.includes('- [ ] fenced'));
+  assert.ok(after.includes('- [ ] s3'));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('tick-task verb errors when task N absent', () => {
+  const repo = makeRepo();
+  const plan = join(repo, 'plan.md');
+  writeFileSync(plan, '# P\n\n### Task 1: A\n\n- [ ] s1\n');
+  const { code, json } = runCli(repo, 'tick-task', '--cwd', repo, '--plan', plan, '--task', '9');
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  assert.match(json.error, /task 9 not found/);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('executing-plans.md documents the tick-task completion step', () => {
+  const md = readFileSync(join(__dirname, '..', 'commands', 'executing-plans.md'), 'utf8');
+  assert.ok(md.includes('tick-task'), 'executing-plans must reference tick-task verb');
+  assert.ok(md.includes('docs(speccode): tick task'), 'executing-plans must commit the tick');
+  // 幂等路径:ticked 为空时不能硬跑 git commit(nothing to commit → exit 1)
+  assert.ok(/`ticked`[^\n]*为空[\s\S]{0,120}跳过 commit/.test(md), 'must skip the commit when ticked is empty');
+});
+
+test('subagent-driven-development.md documents the tick-task completion step', () => {
+  const md = readFileSync(join(__dirname, '..', 'commands', 'subagent-driven-development.md'), 'utf8');
+  assert.ok(md.includes('tick-task'), 'subagent-driven-development must reference tick-task');
+  assert.ok(md.includes('docs(speccode): tick task'), 'must commit the tick');
+  // 时序约束:勾选须在审查通过后,不进 review-package diff
+  assert.ok(/审查通过后|不.*review-package|review.*之外/.test(md), 'must state tick is post-review / outside review-package diff');
+  // 幂等路径:ticked 为空时不能硬跑 git commit(nothing to commit → exit 1)
+  assert.ok(/`ticked`[^\n]*为空[\s\S]{0,120}跳过 commit/.test(md), 'must skip the commit when ticked is empty');
+});
+
+test('tick-task verb is idempotent and leaves the plan byte-identical on re-run', () => {
+  const repo = makeRepo();
+  const plan = join(repo, 'plan.md');
+  writeFileSync(plan, '# P\n\n### Task 1: A\n\n- [ ] s1\n\n## 收尾\n\n- [ ] tail\n');
+  const first = runCli(repo, 'tick-task', '--cwd', repo, '--plan', plan, '--task', '1');
+  assert.equal(first.json.ticked.length, 1);
+  const afterFirst = readFileSync(plan, 'utf8');
+  assert.ok(afterFirst.includes('- [ ] tail')); // 任务区段止于 `## 收尾`
+  const { code, json } = runCli(repo, 'tick-task', '--cwd', repo, '--plan', plan, '--task', '1');
+  assert.equal(code, 0);
+  assert.deepEqual(json.ticked, []);
+  assert.equal(json.already.length, 1);
+  assert.equal(readFileSync(plan, 'utf8'), afterFirst);
+  rmSync(repo, { recursive: true, force: true });
+});

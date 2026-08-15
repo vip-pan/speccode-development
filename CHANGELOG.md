@@ -6,8 +6,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- **plan 进度勾选**:新增 `tick-task --plan <P> --task <N>` verb 与引擎函数 `sdd.tickTask(planFile, n)`——把 plan 文档中 Task N 区段内 fence 外的 `- [ ]` step checkbox 勾选为 `- [x]`,`atomic.writeTextAtomic` 原子落盘,输出 `ticked`(本次勾选行)/ `already`(此前已勾选行);幂等(本次无勾选则不改写文件),Task N 不存在时 `{ok:false,error}` + exit 1 且不动 plan。
+- `sdd`:导出 `scanPlan(lines)`——plan 区段扫描的单一真源(每行标注 `{inFence, taskNo}`),由 `extractTaskBrief` 与 `tickTask` 共用,保证抽取与勾选看到同一套区段。
+
 ### Changed
 
+- `executing-plans` / `subagent-driven-development`:在每个 task 完成点(标记 completed / ledger 写 `complete` 行、`onTaskCompleted` 之后)调用 `tick-task` 勾选 plan checkbox,`ticked` 非空时 commit `docs(speccode): tick task <N>`、为空时跳过 commit(幂等重跑无变化可提,避免 "nothing to commit" 非零退出被误判为失败)。勾选 commit 落在审查之后,不进 `review-package` 的 base..head diff;ledger 仍是崩溃恢复的唯一权威,checkbox 仅作完成态派生视图。
+- `sdd` plan 扫描按 CommonMark 收紧 fence 与区段边界:开栏的 K 个反引号只能被 `>=` K 个反引号且其后无内容的行闭合(嵌套/加长 fence,如 ````markdown 块内含 ```bash,不再在块内翻转状态导致块内素材被当正文);`Task N` 区段止于下一个同级或更高级标题(不再吞掉 `## 收尾` / `## Self-Review` 等尾部章节)。影响 `task-brief` 与 `tick-task` 两者。
 - **BREAKING(命令改名)**:知识集两条写入命令更名并对齐动名词构词——`/speccode:memorize` → `/speccode:recording-knowledge`(记录/直写 hand-written 段),`/speccode:promote-knowledge` → `/speccode:distilling-knowledge`(从 spec/ + archive/ 全量蒸馏)。旧命令文件删除,不留跳转 stub。
 - **BREAKING(marker 写侧格式)**:蒸馏块 marker 写侧改为 `<!-- distilled-from: <source> --> … <!-- /distilled -->`;读侧永久兼容旧 `<!-- promoted-from: -->`/`<!-- /promoted -->`。存量 knowledge 文件无需手动迁移——首次运行 distilling-knowledge 经全量重建自动重写为新格式,hand-written 段逐字节保留。
 - **BREAKING(内部契约)**:`write-knowledge` verb 的 mode `replace-promoted` → `replace-distilled`;lib 导出 `parsePromotedBlocks`/`replacePromotedBlocks` → `parseDistilledBlocks`/`replaceDistilledBlocks`。
@@ -17,6 +24,7 @@
 
 - `knowledge-set`:晋升命令 → 蒸馏命令、直写命令 → 记录命令(RENAMED),来源标记改「写侧新格式 + 读侧双格式」;`plugin-packaging`:命令命名空间枚举 21 → 23(补录知识两条命令)。
 - `knowledge-set`:蒸馏命令 archive 读取改增量(sidecar `_distilled.meta.json` 追踪 `consumed_archives`、已消费包块 carry-forward、stale/superseded 闸门区分);新增「蒸馏消费追踪」requirement。
+- `sdd-document-lifecycle`:新增「plan 执行进度勾选」requirement(完成点勾选 + `ticked` 空则跳过 commit + 勾选不进审查 diff + ledger 恢复权威);「SDD 工件生成 verb」由三 verb 改为四 verb(补 `tick-task` 契约),并钉入 `task-brief`/`tick-task` 共用区段扫描、CommonMark fence 长度闭合、任务区段止于同级或更高级标题(MODIFIED)。
 
 ## [0.2.3] - 2026-08-13
 

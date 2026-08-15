@@ -8,7 +8,7 @@ import { reconcile } from '../lib/reconcile.mjs';
 import { loadConfig, saveConfig, backupConfig } from '../lib/config.mjs';
 import { readState, writeState, deleteState, WORKTREE_STATUS } from '../lib/state.mjs';
 import { detectKnowledgeTools, resolveWorktreeDir, worktreeDirIgnoreState } from '../lib/detect.mjs';
-import { sddWorkspace, taskBrief, reviewPackage } from '../lib/sdd.mjs';
+import { sddWorkspace, taskBrief, reviewPackage, tickTask } from '../lib/sdd.mjs';
 import { buildHookPayload, runHook } from '../lib/hooks.mjs';
 import { readMemory, writeMemory } from '../lib/memory.mjs';
 import { assertSafeRel, buildIndex, knowledgeRoot, listTopics, parseDistilledBlocks, replaceDistilledBlocks, writeKnowledge, archiveRoot, distilledMetaPath, readConsumedArchives, addConsumedArchives, listArchiveBundles, unconsumedArchives } from '../lib/knowledge.mjs';
@@ -144,6 +144,15 @@ const VERBS = {
     }
     const path = reviewPackage(plan, base, head, cwd, out === true ? undefined : out);
     return { ok: true, path };
+  },
+
+  'tick-task': ({ cwd, plan, task }) => {
+    if (!plan || plan === true || !task || task === true || !Number.isInteger(Number(task))) {
+      return { ok: false, error: 'tick-task requires --plan <path> --task <N>' };
+    }
+    const n = Number(task);
+    const { ticked, already } = tickTask(plan, n);
+    return { ok: true, plan, task: n, ticked, already };
   },
 
   'query-pr': ({ cwd, number }) => {

@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { makeRepo, commitFile } from './helpers/tmprepo.mjs';
 import {
-  worktreeRoot, sddWorkspace, extractTaskBrief, taskBrief, reviewPackage,
+  worktreeRoot, sddWorkspace, extractTaskBrief, taskBrief, reviewPackage, tickTask,
 } from '../lib/sdd.mjs';
 
 function headSha(repo) {
@@ -99,5 +99,122 @@ test('reviewPackage writes commits + stat + -U10 diff named by range', () => {
   assert.ok(content.includes('## Diff'));
   assert.ok(content.includes('b.txt'));
   assert.throws(() => reviewPackage(plan, 'deadbeef', head, repo));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+const TICK_PLAN = [
+  '# Plan', '',
+  '### Task 1: Alpha', '',
+  '- [ ] **Step 1: do A**', '',
+  '```js',
+  '- [ ] fenced-not-a-checkbox',
+  '```', '',
+  '- [ ] **Step 2: do B**', '',
+  '### Task 2: Beta', '',
+  '- [ ] **Step 1: gamma**', '',
+].join('\n');
+
+test('tickTask ticks task N checkboxes and skips fenced lines', () => {
+  const repo = makeRepo();
+  const plan = join(repo, 'plan.md');
+  writeFileSync(plan, TICK_PLAN);
+  const r = tickTask(plan, 1);
+  assert.equal(r.ticked.length, 2);
+  assert.equal(r.already.length, 0);
+  const after = readFileSync(plan, 'utf8');
+  assert.ok(after.includes('- [x] **Step 1: do A**'));
+  assert.ok(after.includes('- [x] **Step 2: do B**'));
+  assert.ok(after.includes('- [ ] fenced-not-a-checkbox')); // fence 内不动
+  assert.ok(after.includes('- [ ] **Step 1: gamma**'));     // Task 2 不动
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('tickTask is idempotent (already-checked reported, no rewrite noise)', () => {
+  const repo = makeRepo();
+  const plan = join(repo, 'plan.md');
+  writeFileSync(plan, TICK_PLAN);
+  tickTask(plan, 1);
+  const inoBefore = statSync(plan).ino;
+  const r = tickTask(plan, 1);
+  assert.deepEqual(r.ticked, []);
+  assert.equal(r.already.length, 2);
+  // A no-op run must not rewrite the file: writeTextAtomic renames a temp file
+  // over the target, so an unchanged inode proves no write happened.
+  assert.equal(statSync(plan).ino, inoBefore);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+// 外层 4 反引号块内含未缩进的 ```bash 内层 fence(奇数个),朴素 toggle 会在块内
+// 把状态翻回「fence 外」,块内素材被误勾、块后的 Task 标题被当 fence 内文本忽略。
+const NESTED_PLAN = [
+  '# Plan', '',
+  '### Task 1: Alpha', '',
+  '- [ ] **Step 1: 引用一段文档**', '',
+  '````markdown',
+  '- [ ] fenced-outer',
+  '```bash',
+  'echo hi',
+  '```',
+  '- [ ] fenced-after-inner',
+  '### Task 9: heading inside fence',
+  '````', '',
+  '- [ ] **Step 2: 块之后**', '',
+  '### Task 2: Beta', '',
+  '- [ ] **Step 1: gamma**', '',
+  '## 收尾', '',
+  '- [ ] 尾部章节条目', '',
+].join('\n');
+
+test('tickTask keeps nested/longer fences closed (no ticks inside a ````block)', () => {
+  const repo = makeRepo();
+  const plan = join(repo, 'plan.md');
+  writeFileSync(plan, NESTED_PLAN);
+  const r = tickTask(plan, 1);
+  assert.equal(r.ticked.length, 2); // 仅 Step 1 / Step 2,块内三行不算
+  const after = readFileSync(plan, 'utf8');
+  assert.ok(after.includes('- [x] **Step 1: 引用一段文档**'));
+  assert.ok(after.includes('- [x] **Step 2: 块之后**'));
+  assert.ok(after.includes('- [ ] fenced-outer'));        // 外层块首行
+  assert.ok(after.includes('- [ ] fenced-after-inner'));  // 内层 fence 之后仍在块内
+  assert.ok(after.includes('- [ ] **Step 1: gamma**'));   // Task 2 不动
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('tickTask ignores `### Task N` headings that live inside a fence', () => {
+  const repo = makeRepo();
+  const plan = join(repo, 'plan.md');
+  writeFileSync(plan, NESTED_PLAN);
+  assert.throws(() => tickTask(plan, 9), /task 9 not found/);
+  assert.equal(readFileSync(plan, 'utf8'), NESTED_PLAN); // 报错路径不改文件
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('tickTask stops a task section at the next same-or-higher heading', () => {
+  const repo = makeRepo();
+  const plan = join(repo, 'plan.md');
+  writeFileSync(plan, NESTED_PLAN);
+  const r = tickTask(plan, 2);
+  assert.deepEqual(r.ticked, ['- [ ] **Step 1: gamma**']); // 不吃 `## 收尾` 章节
+  assert.ok(readFileSync(plan, 'utf8').includes('- [ ] 尾部章节条目'));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('extractTaskBrief and tickTask share one scan (nested fence, section end)', () => {
+  const brief = extractTaskBrief(NESTED_PLAN, 1);
+  assert.ok(brief.includes('- [ ] fenced-outer'));
+  assert.ok(brief.includes('### Task 9: heading inside fence')); // fence 内行保留在任务体
+  assert.ok(brief.includes('- [ ] **Step 2: 块之后**'));
+  assert.ok(!brief.includes('gamma'));
+  assert.equal(extractTaskBrief(NESTED_PLAN, 9), null); // fence 内标题不是任务
+  const b2 = extractTaskBrief(NESTED_PLAN, 2);
+  assert.ok(b2.includes('gamma'));
+  assert.ok(!b2.includes('尾部章节条目')); // 区段止于 `## 收尾`
+});
+
+test('tickTask throws when task N is absent', () => {
+  const repo = makeRepo();
+  const plan = join(repo, 'plan.md');
+  writeFileSync(plan, TICK_PLAN);
+  assert.throws(() => tickTask(plan, 99), /task 99 not found/);
   rmSync(repo, { recursive: true, force: true });
 });
