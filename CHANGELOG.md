@@ -11,10 +11,12 @@
 - **BREAKING(命令改名)**:知识集两条写入命令更名并对齐动名词构词——`/speccode:memorize` → `/speccode:recording-knowledge`(记录/直写 hand-written 段),`/speccode:promote-knowledge` → `/speccode:distilling-knowledge`(从 spec/ + archive/ 全量蒸馏)。旧命令文件删除,不留跳转 stub。
 - **BREAKING(marker 写侧格式)**:蒸馏块 marker 写侧改为 `<!-- distilled-from: <source> --> … <!-- /distilled -->`;读侧永久兼容旧 `<!-- promoted-from: -->`/`<!-- /promoted -->`。存量 knowledge 文件无需手动迁移——首次运行 distilling-knowledge 经全量重建自动重写为新格式,hand-written 段逐字节保留。
 - **BREAKING(内部契约)**:`write-knowledge` verb 的 mode `replace-promoted` → `replace-distilled`;lib 导出 `parsePromotedBlocks`/`replacePromotedBlocks` → `parseDistilledBlocks`/`replaceDistilledBlocks`。
+- **distilling-knowledge 增量读 archive**:archive/ 读取从全量改为增量——只读"尚未消费"的归档包(经新增 sidecar `speccode/knowledge/_distilled.meta.json` 的 `consumed_archives` 追踪);已消费包整包跳过、其蒸馏块原样 carry forward(归档包不可变,无信息损失)。新增 `read-consumed-archives`/`write-consumed-archives` 两 verb 与 lib helper(`distilledMetaPath`/`readConsumedArchives`/`writeConsumedArchives`/`addConsumedArchives`/`archiveRoot`/`unconsumedArchives`/`listArchiveBundles`)。首次运行(sidecar 缺失)一次性全量读+种子;删 sidecar 即强制全量重蒸作官方逃生口(不设 `--full`)。闸门区分 stale(归档包已删)与 superseded(被新包取代)。非 BREAKING:既有 knowledge 集/旧 marker 格式/`replaceDistilledBlocks` 重建语义不变。
 
 ### 内部规格演进
 
 - `knowledge-set`:晋升命令 → 蒸馏命令、直写命令 → 记录命令(RENAMED),来源标记改「写侧新格式 + 读侧双格式」;`plugin-packaging`:命令命名空间枚举 21 → 23(补录知识两条命令)。
+- `knowledge-set`:蒸馏命令 archive 读取改增量(sidecar `_distilled.meta.json` 追踪 `consumed_archives`、已消费包块 carry-forward、stale/superseded 闸门区分);新增「蒸馏消费追踪」requirement。
 
 ## [0.2.3] - 2026-08-13
 

@@ -11,7 +11,7 @@ import { detectKnowledgeTools, resolveWorktreeDir, worktreeDirIgnoreState } from
 import { sddWorkspace, taskBrief, reviewPackage } from '../lib/sdd.mjs';
 import { buildHookPayload, runHook } from '../lib/hooks.mjs';
 import { readMemory, writeMemory } from '../lib/memory.mjs';
-import { assertSafeRel, buildIndex, knowledgeRoot, listTopics, parseDistilledBlocks, replaceDistilledBlocks, writeKnowledge } from '../lib/knowledge.mjs';
+import { assertSafeRel, buildIndex, knowledgeRoot, listTopics, parseDistilledBlocks, replaceDistilledBlocks, writeKnowledge, archiveRoot, distilledMetaPath, readConsumedArchives, addConsumedArchives, listArchiveBundles, unconsumedArchives } from '../lib/knowledge.mjs';
 import { validateBranch } from '../lib/slug.mjs';
 
 function readStdin() {
@@ -234,6 +234,33 @@ const VERBS = {
     }
     const { files, index: idx } = listTopics(root);
     return { ok: true, files, index: idx };
+  },
+
+  'read-consumed-archives': ({ cwd }) => {
+    const kroot = knowledgeRoot(cwd);
+    const aroot = archiveRoot(cwd);
+    const consumed = readConsumedArchives(kroot);
+    const present = listArchiveBundles(aroot);
+    const unconsumed = unconsumedArchives(aroot, consumed);
+    // `present` (盘上归档包全集) is the distiller's stale-detection source:
+    // consumed ∖ present = bundles a carry-forward block still cites but that
+    // no longer exist on disk. Not derivable from consumed/unconsumed alone.
+    return { ok: true, consumed, present, unconsumed, bootstrap: !existsSync(distilledMetaPath(kroot)) };
+  },
+
+  'write-consumed-archives': ({ cwd, 'json-stdin': jsonStdin }) => {
+    if (jsonStdin === undefined) return { ok: false, error: 'write-consumed-archives requires --json-stdin' };
+    let payload;
+    try {
+      payload = JSON.parse(readStdin());
+    } catch {
+      return { ok: false, error: 'invalid JSON on stdin' };
+    }
+    const add = Array.isArray(payload?.add) ? payload.add : undefined;
+    if (!add) return { ok: false, error: 'write-consumed-archives requires {add: [bundle,...]}' };
+    const kroot = knowledgeRoot(cwd);
+    const consumed = addConsumedArchives(kroot, add);
+    return { ok: true, consumed };
   },
 
   'write-knowledge': ({ cwd, rel, 'json-stdin': jsonStdin }) => {

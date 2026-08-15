@@ -816,3 +816,59 @@ test('read-knowledge --topic with no value returns a clean error, not a TypeErro
   assert.ok(!/is not a function/.test(json.error || ''), `expected a clean error, got: ${json.error}`);
   rmSync(repo, { recursive: true, force: true });
 });
+
+test('read-consumed-archives reports consumed/unconsumed and bootstrap flag', () => {
+  const repo = makeRepo();
+  const kroot = join(repo, 'speccode', 'knowledge');
+  const aroot = join(repo, 'speccode', 'archive');
+  mkdirSync(kroot, { recursive: true });
+  mkdirSync(join(aroot, '2026-08-10-foo'), { recursive: true });
+  mkdirSync(join(aroot, '2026-08-11-bar'), { recursive: true });
+  writeFileSync(join(kroot, '_distilled.meta.json'), JSON.stringify({ consumed_archives: ['2026-08-10-foo'] }));
+  const { code, json } = runCli(repo, 'read-consumed-archives', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.deepEqual(json.consumed, ['2026-08-10-foo']);
+  assert.deepEqual(json.unconsumed, ['2026-08-11-bar']);
+  // present = 盘上归档包全集(stale 判定的数据源:consumed 里指向已删包的条目
+  // 不在 present 中 → 其 carry-forward 块判 stale)。
+  assert.deepEqual(json.present, ['2026-08-10-foo', '2026-08-11-bar']);
+  assert.equal(json.bootstrap, false);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('read-consumed-archives bootstrap when sidecar missing', () => {
+  const repo = makeRepo();
+  mkdirSync(join(repo, 'speccode', 'archive', '2026-08-10-foo'), { recursive: true });
+  const { code, json } = runCli(repo, 'read-consumed-archives', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.deepEqual(json.consumed, []);
+  assert.deepEqual(json.unconsumed, ['2026-08-10-foo']);
+  assert.deepEqual(json.present, ['2026-08-10-foo']);
+  assert.equal(json.bootstrap, true);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-consumed-archives reads stdin and merges atomically', () => {
+  const repo = makeRepo();
+  const kroot = join(repo, 'speccode', 'knowledge');
+  mkdirSync(kroot, { recursive: true });
+  writeFileSync(join(kroot, '_distilled.meta.json'), JSON.stringify({ consumed_archives: ['a'] }));
+  const input = JSON.stringify({ add: ['b', 'a'] });
+  const w = spawnSync('node', [BIN, 'write-consumed-archives', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input, encoding: 'utf8' });
+  assert.equal(w.status, 0);
+  const out = JSON.parse(w.stdout.trim());
+  assert.ok(out.ok);
+  assert.deepEqual(out.consumed, ['a', 'b']);
+  const file = JSON.parse(readFileSync(join(kroot, '_distilled.meta.json'), 'utf8'));
+  assert.deepEqual(file.consumed_archives, ['a', 'b']);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-consumed-archives without --json-stdin fails', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'write-consumed-archives', '--cwd', repo);
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  rmSync(repo, { recursive: true, force: true });
+});
