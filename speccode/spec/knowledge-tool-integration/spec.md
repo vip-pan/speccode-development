@@ -2,7 +2,7 @@
 
 ## Purpose
 
-代码知识库工具的探测、登记与 advisory 咨询:init 通过插件目录 / MCP 配置 / CLI 二进制 / 项目配置目录四类启发式探测 understand-anything、CodeGraph、Graphify、CodeMap、LightRAG 等工具并登记入 config,供需求探索与脑暴减少代码索引的 token 消耗;以及 worktree 基础目录的配置化。
+代码知识库工具的探测、登记与 advisory 咨询:init 通过插件目录 / MCP 配置 / CLI 二进制 / 项目配置目录四类启发式探测 understand-anything、CodeGraph、Graphify、CodeMap、GitNexus 等工具并登记入 config,供需求探索与脑暴减少代码索引的 token 消耗;以及 worktree 基础目录的配置化。
 
 ## Requirements
 
@@ -11,9 +11,9 @@
 `/speccode:init` SHALL 通过四类探测识别代码知识库工具,并把每个工具的探测结果区分为**可用(available)**与**集成(integrated)**两个维度:
 
 - available(可用):(a) `~/.claude/plugins/installed_plugins.json` 命中;(b) `command -v <bin>` 退出码为 0;(c) 任意 MCP 配置命中(项目 `.mcp.json` 或用户 `~/.claude.json` 的 `mcpServers`)。
-- integrated(集成):(a) 项目 `.mcp.json` 的 `mcpServers` key 命中;(b) `~/.claude.json` 的 `projects[<cwd>].mcpServers` key 命中;(c) 项目配置目录存在(每个工具可探测多个候选目录,first-existing wins):understand-anything 为 `.ua` / `.understand-anything`,codegraph 为 `.codegraph`,graphify 为 `.graphify`,codemap 为 `.codemaker/codeindex` / `.codemaker/codemap`,lightrag 为 `.lightrag`。
+- integrated(集成):(a) 项目 `.mcp.json` 的 `mcpServers` key 命中;(b) `~/.claude.json` 的 `projects[<cwd>].mcpServers` key 命中;(c) 项目配置目录存在(每个工具可探测多个候选目录,first-existing wins):understand-anything 为 `.ua` / `.understand-anything`,codegraph 为 `.codegraph`,graphify 为 `.graphify`,codemap 为 `.codemaker/codeindex` / `.codemaker/codemap`,gitnexus 为 `.gitnexus`。
 
-内置探测表 MUST 至少覆盖 understand-anything、CodeGraph、Graphify、CodeMap、LightRAG。
+内置探测表 MUST 至少覆盖 understand-anything、CodeGraph、Graphify、CodeMap、GitNexus。
 
 #### Scenario: 插件目录命中
 - **WHEN** `~/.claude/plugins/installed_plugins.json` 存在 understand-anything 插件,但项目内不存在 `.ua/`(或 `.understand-anything/`)且无项目级 MCP 配置
@@ -27,9 +27,17 @@
 - **WHEN** 项目根存在 `.codemaker/codemap/` 目录
 - **THEN** 探测结果 MUST 标记 codemap `integrated = true`,evidence 为该目录
 
+#### Scenario: gitnexus 项目目录命中
+- **WHEN** 项目根存在 `.gitnexus/` 目录
+- **THEN** 探测结果 MUST 标记 gitnexus `integrated = true`,evidence 为 `.gitnexus`
+
 #### Scenario: 项目级 MCP 命中
 - **WHEN** 项目 `.mcp.json` 的 `mcpServers` 含某工具 key
 - **THEN** 探测结果 MUST 标记该工具 `integrated = true` 且 `available = true`,evidence 为该 MCP key
+
+#### Scenario: lightrag 不再探测
+- **WHEN** 执行 `detect-knowledge-tools`
+- **THEN** 探测结果 MUST NOT 含 `id` 为 `lightrag` 的条目
 
 ### Requirement: detect-knowledge-tools verb
 
@@ -52,7 +60,7 @@
 - **THEN** 命令 MUST 逐项展示探测证据并询问是否登记,仅被确认的项写入 config
 
 #### Scenario: 幂等 diff
-- **WHEN** 二次 init 时 knowledge_tools 从 `[codegraph]` 变为 `[codegraph, lightrag]`
+- **WHEN** 二次 init 时 knowledge_tools 从 `[codegraph]` 变为 `[codegraph, gitnexus]`
 - **THEN** 命令 MUST 显示该字段 diff 并经用户确认后才写入
 
 #### Scenario: available-only 不登记

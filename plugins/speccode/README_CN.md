@@ -185,7 +185,7 @@ speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>_
 
 ## 9. 知识库工具
 
-`/speccode:init` 探测五类知识库工具:**understand-anything / CodeGraph / Graphify / CodeMap / LightRAG**,覆盖四类来源:
+`/speccode:init` 探测五类知识库工具:**understand-anything / CodeGraph / Graphify / CodeMap / GitNexus**,覆盖四类来源:
 
 1. **插件**:`~/.claude/plugins/installed_plugins.json`
 2. **MCP**:项目 `.mcp.json`、`~/.claude.json`(含项目 local scope)

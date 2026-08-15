@@ -185,7 +185,7 @@ speccode maintains one cross-session memory per feature: `.speccode/memory/<type
 
 ## 9. Knowledge Base Tools
 
-`/speccode:init` probes five knowledge-base tools: **understand-anything / CodeGraph / Graphify / CodeMap / LightRAG**, covering four kinds of sources:
+`/speccode:init` probes five knowledge-base tools: **understand-anything / CodeGraph / Graphify / CodeMap / GitNexus**, covering four kinds of sources:
 
 1. **Plugins**: `~/.claude/plugins/installed_plugins.json`
 2. **MCP**: project `.mcp.json`, `~/.claude.json` (including the project's local scope)
