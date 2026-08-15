@@ -1,9 +1,9 @@
 // plugins/speccode/tests/knowledge.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, realpathSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, realpathSync, rmSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { knowledgeRoot, assertSafeRel, listTopics, parseDistilledBlocks, replaceDistilledBlocks, buildIndex, writeKnowledge } from '../lib/knowledge.mjs';
+import { knowledgeRoot, assertSafeRel, listTopics, parseDistilledBlocks, replaceDistilledBlocks, buildIndex, writeKnowledge, distilledMetaPath, readConsumedArchives, writeConsumedArchives, addConsumedArchives, archiveRoot, listArchiveBundles, unconsumedArchives } from '../lib/knowledge.mjs';
 import { makeRepo } from './helpers/tmprepo.mjs';
 
 test('knowledgeRoot resolves to <worktree-root>/speccode/knowledge', () => {
@@ -221,4 +221,136 @@ test('replaceDistilledBlocks drops legacy blocks whose source is gone', () => {
   const text = 'keep\n<!-- promoted-from: gone/ -->\nold\n<!-- /promoted -->\ntail';
   const out = replaceDistilledBlocks(text, []);
   assert.equal(out, 'keep\ntail\n');
+});
+
+test('distilledMetaPath points at <root>/_distilled.meta.json', () => {
+  assert.equal(distilledMetaPath('/x/knowledge'), '/x/knowledge/_distilled.meta.json');
+});
+
+test('readConsumedArchives returns [] when sidecar missing', () => {
+  const repo = makeRepo();
+  const root = join(repo, 'speccode', 'knowledge');
+  mkdirSync(root, { recursive: true });
+  assert.deepEqual(readConsumedArchives(root), []);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('readConsumedArchives returns the consumed_archives list', () => {
+  const repo = makeRepo();
+  const root = join(repo, 'speccode', 'knowledge');
+  mkdirSync(root, { recursive: true });
+  writeFileSync(distilledMetaPath(root), JSON.stringify({ consumed_archives: ['2026-08-10-foo', '2026-08-11-bar'] }));
+  assert.deepEqual(readConsumedArchives(root), ['2026-08-10-foo', '2026-08-11-bar']);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('readConsumedArchives throws on corrupt JSON', () => {
+  const repo = makeRepo();
+  const root = join(repo, 'speccode', 'knowledge');
+  mkdirSync(root, { recursive: true });
+  writeFileSync(distilledMetaPath(root), '{ not json');
+  assert.throws(() => readConsumedArchives(root), /corrupt/);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('readConsumedArchives throws when consumed_archives is not an array', () => {
+  const repo = makeRepo();
+  const root = join(repo, 'speccode', 'knowledge');
+  mkdirSync(root, { recursive: true });
+  writeFileSync(distilledMetaPath(root), JSON.stringify({ consumed_archives: 'oops' }));
+  assert.throws(() => readConsumedArchives(root), /corrupt/);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('writeConsumedArchives atomically writes deduped sorted list', () => {
+  const repo = makeRepo();
+  const root = join(repo, 'speccode', 'knowledge');
+  mkdirSync(root, { recursive: true });
+  const out = writeConsumedArchives(root, ['2026-08-11-bar', '2026-08-10-foo', '2026-08-11-bar']);
+  assert.deepEqual(out, ['2026-08-10-foo', '2026-08-11-bar']);
+  const file = JSON.parse(readFileSync(distilledMetaPath(root), 'utf8'));
+  assert.deepEqual(file, { consumed_archives: ['2026-08-10-foo', '2026-08-11-bar'] });
+  assert.ok(!existsSync(`${distilledMetaPath(root)}.${process.pid}.tmp`));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('addConsumedArchives merges new bundles into existing sidecar', () => {
+  const repo = makeRepo();
+  const root = join(repo, 'speccode', 'knowledge');
+  mkdirSync(root, { recursive: true });
+  writeConsumedArchives(root, ['2026-08-10-foo']);
+  const out = addConsumedArchives(root, ['2026-08-11-bar', '2026-08-10-foo']);
+  assert.deepEqual(out, ['2026-08-10-foo', '2026-08-11-bar']);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('addConsumedArchives creates sidecar when missing (bootstrap seed)', () => {
+  const repo = makeRepo();
+  const root = join(repo, 'speccode', 'knowledge');
+  mkdirSync(root, { recursive: true });
+  const out = addConsumedArchives(root, ['2026-08-10-foo']);
+  assert.deepEqual(out, ['2026-08-10-foo']);
+  assert.ok(existsSync(distilledMetaPath(root)));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('archiveRoot resolves to <worktree-root>/speccode/archive', () => {
+  const repo = makeRepo();
+  assert.equal(archiveRoot(repo), join(realpathSync(repo), 'speccode', 'archive'));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('unconsumedArchives returns [] when archive/ absent', () => {
+  const repo = makeRepo();
+  assert.deepEqual(unconsumedArchives(join(repo, 'speccode', 'archive'), []), []);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('unconsumedArchives subtracts consumed dir names and ignores non-dir entries', () => {
+  const repo = makeRepo();
+  const arch = join(repo, 'speccode', 'archive');
+  mkdirSync(join(arch, '2026-08-10-foo'), { recursive: true });
+  mkdirSync(join(arch, '2026-08-11-bar'), { recursive: true });
+  mkdirSync(join(arch, '2026-08-12-baz'), { recursive: true });
+  writeFileSync(join(arch, 'README.md'), 'x'); // 非目录条目须忽略
+  assert.deepEqual(unconsumedArchives(arch, ['2026-08-10-foo']), ['2026-08-11-bar', '2026-08-12-baz']);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('unconsumedArchives ignores consumed entries pointing at non-existent bundles (R2 stale harmless)', () => {
+  const repo = makeRepo();
+  const arch = join(repo, 'speccode', 'archive');
+  mkdirSync(join(arch, '2026-08-10-foo'), { recursive: true });
+  assert.deepEqual(unconsumedArchives(arch, ['ghost']), ['2026-08-10-foo']);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('listArchiveBundles returns sorted on-disk bundle dir names, ignoring non-dir entries', () => {
+  const repo = makeRepo();
+  const arch = join(repo, 'speccode', 'archive');
+  mkdirSync(join(arch, '2026-08-12-baz'), { recursive: true });
+  mkdirSync(join(arch, '2026-08-10-foo'), { recursive: true });
+  mkdirSync(join(arch, '2026-08-11-bar'), { recursive: true });
+  writeFileSync(join(arch, 'README.md'), 'x'); // 非目录条目须忽略
+  assert.deepEqual(listArchiveBundles(arch), ['2026-08-10-foo', '2026-08-11-bar', '2026-08-12-baz']);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('listArchiveBundles returns [] when archive/ absent', () => {
+  const repo = makeRepo();
+  assert.deepEqual(listArchiveBundles(join(repo, 'speccode', 'archive')), []);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+// withFileTypes reads the dirent from the directory entry itself — a dangling
+// symlink is reported as a symlink (not a directory) and skipped, where a
+// statSync(target) probe would throw ENOENT and take the whole run down.
+test('listArchiveBundles skips dangling symlinks instead of throwing', () => {
+  const repo = makeRepo();
+  const arch = join(repo, 'speccode', 'archive');
+  mkdirSync(join(arch, '2026-08-10-foo'), { recursive: true });
+  symlinkSync(join(repo, 'no-such-target'), join(arch, 'dangling'));
+  assert.deepEqual(listArchiveBundles(arch), ['2026-08-10-foo']);
+  assert.deepEqual(unconsumedArchives(arch, []), ['2026-08-10-foo']);
+  rmSync(repo, { recursive: true, force: true });
 });

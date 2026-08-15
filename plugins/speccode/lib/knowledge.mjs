@@ -1,7 +1,7 @@
 // plugins/speccode/lib/knowledge.mjs
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { writeTextAtomic } from './atomic.mjs';
+import { writeTextAtomic, writeJsonAtomic } from './atomic.mjs';
 import { git } from './git.mjs';
 
 // Tracked, curated knowledge set: <repo>/speccode/knowledge/ (peer of
@@ -173,4 +173,82 @@ export function writeKnowledge(root, rel, content) {
   const p = join(root, rel);
   writeTextAtomic(p, content);
   return p;
+}
+
+// Path to the distill-consumption sidecar: <knowledge>/_distilled.meta.json.
+// Tracks which archive bundles distilling-knowledge has already consumed, so
+// subsequent runs read archive/ incrementally (only unconsumed bundles).
+export function distilledMetaPath(root) {
+  return join(root, '_distilled.meta.json');
+}
+
+// Read consumed_archives from the sidecar. Missing file → [] (triggers first-
+// run bootstrap full read). Corrupt JSON / wrong shape → throw (no silent
+// repair, same principle as malformed distilled markers — a corrupted meta
+// needs a human).
+export function readConsumedArchives(root) {
+  const p = distilledMetaPath(root);
+  if (!existsSync(p)) return [];
+  let obj;
+  try {
+    obj = JSON.parse(readFileSync(p, 'utf8'));
+  } catch {
+    throw new Error('knowledge: _distilled.meta.json is corrupt (invalid JSON)');
+  }
+  if (!Array.isArray(obj?.consumed_archives)) {
+    throw new Error('knowledge: _distilled.meta.json is corrupt (no consumed_archives array)');
+  }
+  return obj.consumed_archives.filter((s) => typeof s === 'string');
+}
+
+// Atomic write of the consumed_archives sidecar (dedup + sort; order is
+// irrelevant but sorting keeps diffs stable). Mirrors config/state atomicity.
+export function writeConsumedArchives(root, list) {
+  const consumed = [...new Set(list.filter((s) => typeof s === 'string'))].sort();
+  writeJsonAtomic(distilledMetaPath(root), { consumed_archives: consumed });
+  return consumed;
+}
+
+// Merge bundles read this distilling run into the existing sidecar
+// (read ∪ bundles), then atomically persist. Idempotent: re-adding
+// already-consumed bundles is a no-op write (same set).
+export function addConsumedArchives(root, bundles) {
+  const merged = [...new Set([...readConsumedArchives(root), ...bundles.filter((s) => typeof s === 'string')])];
+  return writeConsumedArchives(root, merged);
+}
+
+// Path to the worktree's speccode/archive/ (tracked, per-worktree, peer of
+// speccode/knowledge/). Uses --show-toplevel deliberately — same worktree-root
+// resolution as knowledgeRoot (NOT the main-repo --git-common-dir used for
+// .speccode/ runtime state). See CLAUDE.md "SDD 工作区 show-toplevel(有意差异)".
+export function archiveRoot(cwd) {
+  const top = git(['rev-parse', '--show-toplevel'], { cwd }).stdout.trim();
+  return join(top, 'speccode', 'archive');
+}
+
+// On-disk archive bundle dir names (sorted). This is the stale-detection data
+// source: a `consumed_archives` entry absent from this list points at a deleted
+// bundle, so its carry-forward block is stale (the sidecar alone can never tell
+// — consumed entries survive the bundle's deletion, see R2). Returns [] when
+// archive/ is absent (fresh project / no archived changes yet).
+//
+// readdirSync({withFileTypes:true}) reads each entry's type from the directory
+// entry itself: non-directories (README.md, a dangling symlink) are skipped
+// rather than probed, where a statSync(join(...)) follow would throw ENOENT on
+// a dangling symlink and take the whole distill run down.
+export function listArchiveBundles(archiveRootPath) {
+  if (!existsSync(archiveRootPath)) return [];
+  return readdirSync(archiveRootPath, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name)
+    .sort();
+}
+
+// Archive bundles not yet consumed = on-disk bundle names − consumed set.
+// Compares by directory NAME (string), not absolute path, so the macOS
+// /var→/private/var realpath issue (C1) does not bite here. Returns [] when
+// archive/ is absent (fresh project / no archived changes yet).
+export function unconsumedArchives(archiveRootPath, consumed) {
+  const consumedSet = new Set(consumed);
+  return listArchiveBundles(archiveRootPath).filter((name) => !consumedSet.has(name));
 }

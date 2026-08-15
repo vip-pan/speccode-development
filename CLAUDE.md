@@ -40,7 +40,7 @@ node plugins/speccode/bin/speccode.mjs <verb> --cwd . [--flags]
 代码分三层(外加 `references/` 辅助层),改动前先定位属于哪一层——**确定性逻辑绝不写进命令 markdown,一律下沉到 lib**:
 
 1. **引擎 lib**(`plugins/speccode/lib/*.mjs`)—— 13 个经单测的纯逻辑模块(atomic / config / detect / git / hooks / knowledge / memory / prtool / reconcile / sdd / slug / state / timestamp)。所有 git 操作、JSON 读写、对账、hooks/memory、SDD 工件都在这里。改逻辑改这里,并配套改 `tests/`。
-2. **CLI 枢纽**(`plugins/speccode/bin/speccode.mjs`)—— 把 lib 暴露为输出 JSON 的 20 个 verb。读 verb 直接返回;**写 verb 必须走 `--json-stdin`**(`echo '<json>' | node ... write-state --json-stdin`),从 stdin 读 JSON 而不从 argv 读,避免超长/转义。未知 verb 或抛错 → `{ok:false,error}` + exit 1。
+2. **CLI 枢纽**(`plugins/speccode/bin/speccode.mjs`)—— 把 lib 暴露为输出 JSON 的一组 verb(清单以该文件的 `VERBS` 表为准)。读 verb 直接返回;**写 verb 必须走 `--json-stdin`**(`echo '<json>' | node ... write-state --json-stdin`),从 stdin 读 JSON 而不从 argv 读,避免超长/转义。未知 verb 或抛错 → `{ok:false,error}` + exit 1。
 3. **命令交互层**(`plugins/speccode/commands/*.md`)—— 23 个 slash 命令的 prose 指令,只负责提问/确认/调用 CLI verb/解析 JSON/报告。**不重复实现逻辑**,纯 git 动作(如 `git worktree add`)可直接写,其余走 verb。
 4. **references 层**(`plugins/speccode/references/`)—— 命令可引用的辅助文档(评审提示 / 调试与防御方法 / 测试要点等),与命令 markdown 分离、不承载交互逻辑,随插件源码跟踪。
 
