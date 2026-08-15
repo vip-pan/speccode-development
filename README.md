@@ -51,7 +51,7 @@ After installation, commands appear under the `/speccode:` prefix, e.g. `/specco
 |---|---|
 | Lifecycle | `init` `exploring` `creating-feature` `creating-worktree` `finishing-worktree` `finishing-feature` `status` `reset` |
 | Document flow | `proposing` `brainstorming` `writing-plans` `syncing` `archiving` |
-| Knowledge | `promote-knowledge` `memorize` |
+| Knowledge | `distilling-knowledge` `recording-knowledge` |
 | Methodology | `subagent-driven-development` `executing-plans` `dispatching-parallel-agents` `test-driven-development` `systematic-debugging` `requesting-code-review` `receiving-code-review` `verification-before-completion` |
 
 See [plugin README §2 command table](./plugins/speccode/README.md) for each command's purpose and prerequisites.

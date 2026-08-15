@@ -1,10 +1,13 @@
-# knowledge-set Specification
+# knowledge-set Delta: knowledge-command-rename
 
-## Purpose
+(应用顺序:先应用 RENAMED,再应用下方 MODIFIED。)
 
-知识集层:tracked、可检索、按主题组织的项目知识库,落 `speccode/knowledge/`(与 spec/changes/archive 平级)。由蒸馏命令(distilling-knowledge,从 spec/archive 蒸馏 distilled 段)与记录命令(recording-knowledge 写 hand-written 段)写入,均经人工闸门;SDD 认知型命令入口读 `_index.md` 索引并按需读 topic 文件,失败静默兜底。
+## RENAMED Requirements
 
-## Requirements
+- FROM: `### Requirement: 晋升命令` TO: `### Requirement: 蒸馏命令`
+- FROM: `### Requirement: 直写命令` TO: `### Requirement: 记录命令`
+
+## MODIFIED Requirements
 
 ### Requirement: 知识集目录结构
 
@@ -89,12 +92,3 @@ speccode MUST 支持 tracked 知识集目录 `speccode/knowledge/`,包含 `_inde
 
 - WHEN 内容被闸门判定为业务知识并建议进 RAG,用户仍坚持写入并指定 topic
 - THEN 内容 MUST 写入用户指定的 topic(不存在则在 `development/` 下新建),闸门陈述不阻断写入
-
-### Requirement: 消费入口
-
-SDD 认知型命令(exploring / proposing / brainstorming / writing-plans / executing-plans / subagent-driven-development / systematic-debugging / requesting-code-review / receiving-code-review)入口 MUST 读 `_index.md` 索引并按需读相关 topic 文件;`knowledge/` 不存在或读取失败时静默跳过,绝不阻断主流程。
-
-#### Scenario: 知识集缺失不阻断
-
-- WHEN 项目无 `knowledge/` 目录或读取失败
-- THEN 命令正常继续,不输出错误、不中断

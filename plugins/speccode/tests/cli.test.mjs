@@ -733,16 +733,16 @@ test('write-knowledge append-hand appends hand-written section', () => {
   rmSync(repo, { recursive: true, force: true });
 });
 
-test('write-knowledge replace-promoted rebuilds only promoted blocks', () => {
+test('write-knowledge replace-distilled migrates legacy markers and rebuilds only distilled blocks', () => {
   const repo = makeRepo();
   const p = join(repo, 'speccode', 'knowledge', 'development', 'pitfalls.md');
   mkdirSync(dirname(p), { recursive: true });
   writeFileSync(p, 'hand A\n<!-- promoted-from: old/ -->\nold body\n<!-- /promoted -->\nhand B\n');
   const { code, json } = runCliStdin(repo, 'write-knowledge', '--cwd', repo, '--rel', 'development/pitfalls.md', '--json-stdin',
-    JSON.stringify({ mode: 'replace-promoted', blocks: [{ source: 'old/', body: 'new body' }] }));
+    JSON.stringify({ mode: 'replace-distilled', blocks: [{ source: 'old/', body: 'new body' }] }));
   assert.equal(code, 0);
   assert.equal(json.ok, true);
-  assert.equal(readFileSync(p, 'utf8'), 'hand A\n<!-- promoted-from: old/ -->\nnew body\n<!-- /promoted -->\nhand B\n');
+  assert.equal(readFileSync(p, 'utf8'), 'hand A\n<!-- distilled-from: old/ -->\nnew body\n<!-- /distilled -->\nhand B\n');
   rmSync(repo, { recursive: true, force: true });
 });
 
@@ -763,11 +763,23 @@ test('write-knowledge requires --json-stdin', () => {
   rmSync(repo, { recursive: true, force: true });
 });
 
-test('read-knowledge --topic --blocks returns parsed promoted blocks', () => {
+test('read-knowledge --topic --blocks parses legacy promoted markers', () => {
   const repo = makeRepo();
   const root = join(repo, 'speccode', 'knowledge');
   mkdirSync(join(root, 'development'), { recursive: true });
   writeFileSync(join(root, 'development', 'pitfalls.md'), 'hand\n<!-- promoted-from: archive/a/ -->\nbody\n<!-- /promoted -->\n');
+  const { code, json } = runCli(repo, 'read-knowledge', '--cwd', repo, '--topic', 'pitfalls', '--blocks');
+  assert.equal(code, 0);
+  assert.equal(json.exists, true);
+  assert.deepEqual(json.blocks, [{ source: 'archive/a/', body: 'body' }]);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('read-knowledge --topic --blocks parses current distilled markers', () => {
+  const repo = makeRepo();
+  const root = join(repo, 'speccode', 'knowledge');
+  mkdirSync(join(root, 'development'), { recursive: true });
+  writeFileSync(join(root, 'development', 'pitfalls.md'), 'hand\n<!-- distilled-from: archive/a/ -->\nbody\n<!-- /distilled -->\n');
   const { code, json } = runCli(repo, 'read-knowledge', '--cwd', repo, '--topic', 'pitfalls', '--blocks');
   assert.equal(code, 0);
   assert.equal(json.exists, true);

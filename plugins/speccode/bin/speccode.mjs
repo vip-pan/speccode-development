@@ -11,7 +11,7 @@ import { detectKnowledgeTools, resolveWorktreeDir, worktreeDirIgnoreState } from
 import { sddWorkspace, taskBrief, reviewPackage } from '../lib/sdd.mjs';
 import { buildHookPayload, runHook } from '../lib/hooks.mjs';
 import { readMemory, writeMemory } from '../lib/memory.mjs';
-import { assertSafeRel, buildIndex, knowledgeRoot, listTopics, parsePromotedBlocks, replacePromotedBlocks, writeKnowledge } from '../lib/knowledge.mjs';
+import { assertSafeRel, buildIndex, knowledgeRoot, listTopics, parseDistilledBlocks, replaceDistilledBlocks, writeKnowledge } from '../lib/knowledge.mjs';
 import { validateBranch } from '../lib/slug.mjs';
 
 function readStdin() {
@@ -229,7 +229,7 @@ const VERBS = {
       const match = files.find((f) => f === want || f.endsWith(`/${want}`));
       if (!match) return { ok: true, exists: false, path: want, content: null };
       const content = readFileSync(join(root, match), 'utf8');
-      if (blocks) return { ok: true, exists: true, path: match, blocks: parsePromotedBlocks(content) };
+      if (blocks) return { ok: true, exists: true, path: match, blocks: parseDistilledBlocks(content) };
       return { ok: true, exists: true, path: match, content };
     }
     const { files, index: idx } = listTopics(root);
@@ -260,10 +260,10 @@ const VERBS = {
       writeKnowledge(root, safe.rel, existing + sep + String(content ?? ''));
       return { ok: true, path: safe.rel };
     }
-    if (mode === 'replace-promoted') {
-      if (!Array.isArray(blocks)) return { ok: false, error: 'mode replace-promoted requires blocks: [{source, body}]' };
+    if (mode === 'replace-distilled') {
+      if (!Array.isArray(blocks)) return { ok: false, error: 'mode replace-distilled requires blocks: [{source, body}]' };
       const existing = existsSync(target) ? readFileSync(target, 'utf8') : '';
-      writeKnowledge(root, safe.rel, replacePromotedBlocks(existing, blocks));
+      writeKnowledge(root, safe.rel, replaceDistilledBlocks(existing, blocks));
       return { ok: true, path: safe.rel };
     }
     if (mode === 'index') {
