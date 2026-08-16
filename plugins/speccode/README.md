@@ -18,6 +18,23 @@ speccode is a Claude Code workflow orchestration plugin that turns the practices
 - `gh` CLI (GitHub remote) or `glab` CLI (GitLab remote) — used to create/query PRs/MRs; when not installed, `pr_tool` automatically degrades to `none`, and commands print the equivalent command for you to run manually instead of failing
 - Node.js **≥ 24** (the engine runs on Node; pure ESM, zero third-party dependencies)
 
+## Table of Contents
+
+1. [What is speccode](#1-what-is-speccode)
+2. [23-Command Quick Reference](#2-23-command-quick-reference)
+3. [Three-Layer Branch Topology](#3-three-layer-branch-topology)
+4. [Development Workflow](#4-development-workflow)
+5. [Documentation Layout](#5-documentation-layout)
+6. [The `.speccode/` Directory Structure](#6-the-speccode-directory-structure)
+7. [Hooks](#7-hooks)
+8. [Memory](#8-memory)
+9. [Code Intelligence Tools](#9-code-intelligence-tools)
+10. [Risks & Mitigations (R1–R13)](#10-risks--mitigations-r1r13)
+11. [Migrating from 0.1](#11-migrating-from-01)
+12. [Philosophy](#12-philosophy)
+13. [Open Issues](#13-open-issues)
+14. [⚠ Important Warning](#14-⚠-important-warning)
+
 ## 2. 23-Command Quick Reference
 
 Lifecycle:

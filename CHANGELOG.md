@@ -4,14 +4,20 @@
 
 纪律:bump `plugin.json` version 的提交必须同步更新本文件对应版本小节(见 `speccode/spec/plugin-packaging/spec.md`「版本发布纪律」)。
 
+> **English highlights**: each version section below carries a one-line English summary at its top (`> EN: …`) for readers arriving from the English README. The Chinese entries remain the authoritative body.
+
 ## [Unreleased]
 
 ## [0.2.5] - 2026-08-16
+
+> EN: Knowledge commands (distilling/recording) now run from trunk — bootstrap a chore/knowledge-* maintenance branch + direct PR to trunk, no longer bound to feature/worktree state.
 
 ### BREAKING
 - `distilling-knowledge` / `recording-knowledge`:改为从 trunk 运行(不再要求 worktree 分支);trunk 上 bootstrap `chore/knowledge-*` 维护分支 + 直通 PR 回 trunk,不再绑 feature/worktree state;维护摘要改写 trunk 级 `.speccode/memory/_knowledge.md`。在 worktree/feature 分支运行会被拒(提示回 trunk)。
 
 ## [0.2.4] - 2026-08-16
+
+> EN: Code-intel rename (knowledge_tools → code_intel_tools); plan task checkboxes via tick-task; distilling-knowledge reads archive incrementally (consumed_archives sidecar).
 
 ### Added
 
@@ -41,6 +47,8 @@
 - `speccode-config-management`:MODIFIED config 字段集(`knowledge_tools`→`code_intel_tools`)。
 
 ## [0.2.3] - 2026-08-13
+
+> EN: Repositioned as an SDD + automated development system; worktree-dir gitignore fatal fix; unified finishing routing across four commands.
 
 0.2.2 之后六轮收尾的 patch 发布:仓库外 worktree 目录的 gitignore 校验 fatal 修复、开发完成收尾路由统一、speccode 定位重写为「SDD + 自动化开发系统」并新增 workflow skill、归档结构去 superpowers/openspec 残留。
 

@@ -18,6 +18,23 @@ speccode 是一个 Claude Code 流程编排插件,用 23 个 `/speccode:*` slash
 - `gh` CLI(GitHub remote)或 `glab` CLI(GitLab remote)——用于创建/查询 PR/MR;未安装时 `pr_tool` 自动降级为 `none`,命令会打印等效命令供用户手动执行,不会因缺少 CLI 而失败
 - Node.js **≥ 24**(引擎运行在 Node 之上;纯 ESM、零第三方依赖)
 
+## 目录
+
+1. [speccode 是什么](#1-speccode-是什么)
+2. [23 个命令快速参考表](#2-23-个命令快速参考表)
+3. [三层分支拓扑图](#3-三层分支拓扑图)
+4. [开发流程](#4-开发流程)
+5. [文档目录](#5-文档目录)
+6. [`.speccode/` 目录结构](#6-speccode-目录结构)
+7. [hooks](#7-hooks)
+8. [memory](#8-memory)
+9. [代码智能工具](#9-代码智能工具)
+10. [风险与缓解(R1–R13)](#10-风险与缓解r1r13)
+11. [从 0.1 迁移](#11-从-01-迁移)
+12. [理念](#12-理念)
+13. [未解决问题](#13-未解决问题)
+14. [⚠ 重要警告](#14-⚠-重要警告)
+
 ## 2. 23 个命令快速参考表
 
 生命周期:
@@ -221,7 +238,7 @@ speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>_
 
 ```text
 /plugin marketplace update speccode-development   # 刷新 marketplace 缓存(git 拉取)
-→ 检测到 plugin.json version 变化(0.1.0 → 0.2.0)触发更新检测
+→ 检测到 plugin.json version 变化触发更新检测
 → /plugin install speccode@speccode-development   # 按提示更新安装
 ```
 
