@@ -6,7 +6,13 @@ import { branchToStateName } from './slug.mjs';
 // Per-feature session memory: <main repo>/.speccode/memory/<type>__<slug>.md.
 // Untracked by convention like the rest of .speccode/; resolved from the main
 // repo root so multiple worktrees of one feature share a single memory file.
-// `_exploring` is the one non-feature key (trunk-level exploring conclusions).
+
+// Trunk-level (non-feature) memory keys: no-slash keys that bypass the
+// <type>/<slug> branch validation. `_exploring` = exploring conclusions before
+// a feature exists; `_knowledge` = knowledge-command maintenance summaries
+// (knowledge commands run from trunk, not bound to a feature).
+export const TRUNK_MEMORY_KEYS = ['_exploring', '_knowledge'];
+
 export function memoryDir(speccodeDir) {
   return join(speccodeDir, 'memory');
 }

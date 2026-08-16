@@ -4,6 +4,11 @@
 
 纪律:bump `plugin.json` version 的提交必须同步更新本文件对应版本小节(见 `speccode/spec/plugin-packaging/spec.md`「版本发布纪律」)。
 
+## [Unreleased]
+
+### BREAKING
+- `distilling-knowledge` / `recording-knowledge`:改为从 trunk 运行(不再要求 worktree 分支);trunk 上 bootstrap `chore/knowledge-*` 维护分支 + 直通 PR 回 trunk,不再绑 feature/worktree state;维护摘要改写 trunk 级 `.speccode/memory/_knowledge.md`。在 worktree/feature 分支运行会被拒(提示回 trunk)。
+
 ## [0.2.4] - 2026-08-16
 
 ### Added
