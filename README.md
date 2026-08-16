@@ -4,14 +4,14 @@ An end-to-end SDD (Spec-Driven Development) and automated development system bui
 
 [English](README.md) | [简体中文](README_CN.md)
 
-[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![platform: macOS/Linux](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)]() [![GitHub stars](https://img.shields.io/github/stars/vip-pan/speccode-development)]()
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![platform: macOS/Linux](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)]() [![version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/vip-pan/speccode-development/main/plugins/speccode/.claude-plugin/plugin.json&query=$.version&label=version&color=blue)](https://github.com/vip-pan/speccode-development/releases) [![tests](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml/badge.svg)](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml) [![GitHub stars](https://img.shields.io/github/stars/vip-pan/speccode-development)]()
 
 ## Why speccode
 
-- **Parallel multi-requirement development**: a three-layer trunk / feature / worktree topology; a reconciliation algorithm automatically assigns every worktree, so multiple features and worktrees proceed in parallel without interfering with each other.
-- **In-repo document hosting**: spec documents (`speccode/changes → spec/ → archive/`) are tracked on every branch and committed on save, riding the PR chain up to trunk.
-- **Standardized workflow**: 23 commands + hooks (14 lifecycle events) + cross-session memory turn team conventions into executable primitives.
-- **Self-hosting automated development**: this repo develops itself with speccode (dogfood) — every change walks the full SDD chain, the spec master and archive live in-repo, and development-workflow skills automate the repo's own process. It is a working reference for an automated development system, not just a plugin to install.
+- ✅ **Parallel multi-requirement development** — a three-layer trunk / feature / worktree topology; a reconciliation algorithm automatically assigns every worktree, so multiple features and worktrees proceed in parallel without interfering with each other.
+- ✅ **In-repo document hosting** — spec documents (`speccode/changes → spec/ → archive/`) are tracked on every branch and committed on save, riding the PR chain up to trunk.
+- ✅ **Standardized workflow** — 23 commands + hooks (14 lifecycle events) + cross-session memory turn team conventions into executable primitives.
+- ✅ **Self-hosting automated development** — this repo develops itself with speccode (dogfood): every change walks the full SDD chain, the spec master and archive live in-repo, and development-workflow skills automate the repo's own process. A working reference for an automated development system, not just a plugin to install.
 
 ## See It in Action
 
@@ -30,7 +30,13 @@ $ /speccode:finishing-feature
 ✓ single PR merged to trunk, back on main
 ```
 
-## Quickstart(5-Minute Minimal Loop)
+## Prerequisites
+
+- **Node.js ≥ 24** — the engine runs on Node (pure ESM, zero third-party deps)
+- `git`
+- `gh` CLI (GitHub) or `glab` CLI (GitLab) — optional; when absent, `pr_tool` auto-degrades to `none` and commands print the equivalent command for you to run manually
+
+## Quickstart (5-Minute Minimal Loop)
 
 1. Install the plugin:
 
@@ -68,9 +74,16 @@ See [plugin README §3](./plugins/speccode/README.md) for the full topology and 
 
 ## How We Compare
 
-- **vs [superpowers](https://github.com/obra/superpowers)**: the methodology commands are a self-contained port from superpowers, adding branch topology with a reconciliation algorithm, in-repo spec document hosting, hooks / memory, and a standardized PR/MR flow on top.
-- **vs [spec-kit](https://github.com/github/spec-kit)**: spec-kit is a cross-agent CLI toolchain; speccode is a native Claude Code plugin — worktree-level parallel development and automated reconciliation are its signature capabilities.
-- **vs ad-hoc conventions**: where to put documents, which branch to cut from, who opens the PR — speccode turns these three recurring dilemmas into a default path, no human memory required.
+| Capability | speccode | [superpowers](https://github.com/obra/superpowers) | [spec-kit](https://github.com/github/spec-kit) | ad-hoc |
+|---|---|---|---|---|
+| Three-layer branch topology + reconciliation | ✅ | — | — | — |
+| In-repo spec document hosting (tracked on all branches) | ✅ | — | partial | — |
+| Native Claude Code plugin | ✅ | ✅ | — (cross-agent CLI) | — |
+| SDD methodology (explore / document / plan / execute / review) | ✅ (self-contained port) | ✅ (source) | — | — |
+| Lifecycle hooks + cross-session memory | ✅ | — | — | — |
+| Standardized PR/MR flow | ✅ | — | — | — |
+
+Where ad-hoc conventions leave "where do docs go / which branch to cut / who opens the PR" to human memory, speccode turns all three into a default path.
 
 ## Philosophy
 
@@ -88,7 +101,7 @@ Test-driven · systematic over improvisation · reduce complexity · evidence ov
 
 ## Contributing
 
-This repo is dogfooded by speccode itself — spec changes go through the `speccode/changes/` workflow, so contributing means walking the same workflow (exploring → creating-feature → … → finishing-feature). PRs to speccode, written with speccode, are welcome.
+This repo is dogfooded by speccode itself — see [CONTRIBUTING.md](./CONTRIBUTING.md) for the full workflow. Spec changes go through the `speccode/changes/` workflow, so contributing means walking the same workflow (exploring → creating-feature → … → finishing-feature). PRs to speccode, written with speccode, are welcome.
 
 After cloning, run `bash scripts/install-skills.sh` to install this repo's development-workflow skill into `.claude/skills/` (keeps the `speccode-workflow` skill — the v2 native chain, dogfood conventions, and release discipline — available to Claude Code sessions in this repo).
 

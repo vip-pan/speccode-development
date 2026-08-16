@@ -4,14 +4,14 @@
 
 [English](README.md) | [简体中文](README_CN.md)
 
-[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![platform: macOS/Linux](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)]() [![GitHub stars](https://img.shields.io/github/stars/vip-pan/speccode-development)]()
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![platform: macOS/Linux](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)]() [![version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/vip-pan/speccode-development/main/plugins/speccode/.claude-plugin/plugin.json&query=$.version&label=version&color=blue)](https://github.com/vip-pan/speccode-development/releases) [![tests](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml/badge.svg)](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml) [![GitHub stars](https://img.shields.io/github/stars/vip-pan/speccode-development)]()
 
 ## 为什么用 speccode
 
-- **多需求并行**:trunk / feature / worktree 三层拓扑,对账算法自动归属每个 worktree,多 feature、多 worktree 并行施工互不干扰。
-- **文档仓内托管**:spec 文档(`speccode/changes → spec/ → archive/`)所有分支 tracked、落盘即提交,随 PR 链路上 trunk。
-- **流程标准化**:23 命令 + hooks(14 个生命周期事件)+ 跨会话 memory,团队约定变成可执行原语。
-- **自托管自动化开发**:本仓库用 speccode 开发自身(dogfood)——每次变更走完整 SDD 链路,规格主档与归档仓内托管,开发工作流 skills 自动化仓库自身流程。它是一个可运行的自动化开发体系样板,而不只是一个待安装的插件。
+- ✅ **多需求并行** —— trunk / feature / worktree 三层拓扑,对账算法自动归属每个 worktree,多 feature、多 worktree 并行施工互不干扰。
+- ✅ **文档仓内托管** —— spec 文档(`speccode/changes → spec/ → archive/`)所有分支 tracked、落盘即提交,随 PR 链路上 trunk。
+- ✅ **流程标准化** —— 23 命令 + hooks(14 个生命周期事件)+ 跨会话 memory,团队约定变成可执行原语。
+- ✅ **自托管自动化开发** —— 本仓库用 speccode 开发自身(dogfood):每次变更走完整 SDD 链路,规格主档与归档仓内托管,开发工作流 skills 自动化仓库自身流程。一个可运行的自动化开发体系样板,而不只是一个待安装的插件。
 
 ## 看它干活
 
@@ -30,7 +30,13 @@ $ /speccode:finishing-feature
 ✓ 单 PR → trunk 已合并,回到 main
 ```
 
-## Quickstart(5 分钟最小闭环)
+## 前置依赖
+
+- **Node.js ≥ 24** —— 引擎运行于 Node(纯 ESM、零第三方依赖)
+- `git`
+- `gh` CLI(GitHub)或 `glab` CLI(GitLab)—— 可选;未安装时 `pr_tool` 自动降级为 `none`,命令会打印等价命令供你手动执行
+
+## Quickstart (5 分钟最小闭环)
 
 1. 安装插件:
 
@@ -68,9 +74,16 @@ spec 文档在所有分支 tracked,随 PR 链路上 trunk
 
 ## 和谁比
 
-- **vs [superpowers](https://github.com/obra/superpowers)**:方法论命令自包含移植自 superpowers,并在此基础上多了分支拓扑与对账算法、spec 文档仓内托管、hooks / memory、PR/MR 流程标准化。
-- **vs [spec-kit](https://github.com/github/spec-kit)**:spec-kit 是跨 agent 的 CLI 工具链;speccode 是 Claude Code 原生插件,worktree 级并行开发与自动化对账是独门能力。
-- **vs 手工约定**:文档放哪、从哪个分支切、PR 谁来开——speccode 把这三类反复纠结的问题固化为默认路径,不靠人脑。
+| 能力 | speccode | [superpowers](https://github.com/obra/superpowers) | [spec-kit](https://github.com/github/spec-kit) | 手工约定 |
+|---|---|---|---|---|
+| 三层分支拓扑 + 对账 | ✅ | — | — | — |
+| spec 文档仓内托管(全分支 tracked) | ✅ | — | 部分 | — |
+| Claude Code 原生插件 | ✅ | ✅ | —(跨 agent CLI) | — |
+| SDD 方法论(探索/文档/计划/执行/评审) | ✅(自包含移植) | ✅(来源) | — | — |
+| 生命周期 hooks + 跨会话 memory | ✅ | — | — | — |
+| PR/MR 流程标准化 | ✅ | — | — | — |
+
+手工约定把「文档放哪 / 从哪个分支切 / PR 谁开」留给人脑,speccode 把三者固化为默认路径。
 
 ## 理念
 
@@ -88,7 +101,7 @@ spec 文档在所有分支 tracked,随 PR 链路上 trunk
 
 ## 贡献
 
-本仓库由 speccode 自托管开发——spec 变更走 `speccode/changes/` 工作流,贡献即走同一条 workflow(exploring → creating-feature → … → finishing-feature)。欢迎用 speccode 给 speccode 提 PR。
+本仓库由 speccode 自托管开发——完整流程见 [CONTRIBUTING.md](./CONTRIBUTING.md)。spec 变更走 `speccode/changes/` 工作流,贡献即走同一条 workflow(exploring → creating-feature → … → finishing-feature)。欢迎用 speccode 给 speccode 提 PR。
 
 clone 后运行 `bash scripts/install-skills.sh`,把本仓库的开发工作流 skill 安装到 `.claude/skills/`(让 `speccode-workflow` skill——v2 原生链路、dogfood 约定、发布纪律——对本仓库的 Claude Code 会话可用)。
 
