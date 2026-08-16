@@ -47,8 +47,8 @@ speccode 是一个 Claude Code 流程编排插件,用 23 个 `/speccode:*` slash
 
 | 命令 | 作用 | 前置(运行分支) |
 |---|---|---|
-| `/speccode:distilling-knowledge` | 从 spec/(全量)+ archive/(**增量**:只读未消费归档包,经 `knowledge/_distilled.meta.json` 追踪;已消费包整包跳过、其蒸馏块原样 carry forward 不重蒸)蒸馏 knowledge/ 各 topic 的 distilled 段;闸门区分 stale(包已删)与 superseded(被新包取代);只蒸 SDD 过程知识,范围外 topic 经闸门日落;删 sidecar 即强制全量重蒸(不设 `--full`);人工闸门后落盘,落盘即提交 | worktree-* 分支 |
-| `/speccode:recording-knowledge` | 知识直接记录进 hand-written 段(适配判断:过程知识收录,业务知识建议进外部 RAG;草稿 → 人工闸门 → 原子写),落盘即提交 | worktree-* 分支 |
+| `/speccode:distilling-knowledge` | 从 spec/(全量)+ archive/(**增量**:只读未消费归档包,经 `knowledge/_distilled.meta.json` 追踪;已消费包整包跳过、其蒸馏块原样 carry forward 不重蒸)蒸馏 knowledge/ 各 topic 的 distilled 段;闸门区分 stale(包已删)与 superseded(被新包取代);只蒸 SDD 过程知识,范围外 topic 经闸门日落;删 sidecar 即强制全量重蒸(不设 `--full`);人工闸门后落盘,落盘即提交 | trunk 分支 |
+| `/speccode:recording-knowledge` | 知识直接记录进 hand-written 段(适配判断:过程知识收录,业务知识建议进外部 RAG;草稿 → 人工闸门 → 原子写),落盘即提交 | trunk 分支 |
 
 方法论:
 
@@ -141,7 +141,7 @@ speccode/
 ├── config.json                          # 静态配置(config 0.2),init / reset 整体写入;creating-worktree 可回写 worktree_dir
 ├── config.json.bak.<timestamp>          # init 幂等 / reset 流程改写 config 前的显式备份(backup-config verb)
 ├── state/features/<type>__<slug>.json   # 动态状态,按 feature 维度隔离
-├── memory/                              # feature 级记忆 + _exploring.md(自忽略 .gitignore)
+├── memory/                              # feature 级记忆 + _exploring.md / _knowledge.md(自忽略 .gitignore)
 └── sdd/                                 # SDD 执行工件:task brief / review 包 / ledger(自忽略 .gitignore)
 ```
 
@@ -179,7 +179,7 @@ config 的 `hooks` 字段把固定的生命周期事件映射到 shell 命令,�
 speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>__<slug>.md`。
 
 - **untracked,多 worktree 共享**:memory 路径解析自**主仓根**的 `.speccode/`(与 config/state 一致),同一 feature 的多个 worktree 读写同一份文件;目录由插件自写 `.gitignore` 自忽略,不污染 `git status`。
-- **`_exploring.md` 是 trunk 级例外**:exploring 在 trunk 上进行、不属于任何 feature,其结论写入 `memory/_exploring.md`。
+- **`_exploring.md` 与 `_knowledge.md` 是 trunk 级例外**:exploring 在 trunk 上进行、不属于任何 feature,其结论写入 `memory/_exploring.md`;knowledge 系列命令同样从 trunk 跑,其维护摘要写入 `memory/_knowledge.md`。
 - **命令入口读、出口写**:SDD 各命令开始时读本 feature 的 memory 恢复上下文,结束时把结论/决定/待办写回。
 - **长会话主动书写三判据**:① 一个阶段完成(如 propose 落盘、计划评审通过);② 上下文显著增长(关键决策增多);③ 经历 compact / 会话恢复后——命中任一即应主动写 memory,而不是等命令出口。
 

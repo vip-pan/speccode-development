@@ -591,6 +591,25 @@ test('write-memory accepts the _exploring sentinel branch', () => {
   rmSync(repo, { recursive: true, force: true });
 });
 
+test('write-memory accepts the _knowledge sentinel branch', () => {
+  const repo = makeRepo();
+  const w = spawnSync('node', [BIN, 'write-memory', '--cwd', repo, '--branch', '_knowledge', '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ mode: 'replace', content: 'distilled\n' }), encoding: 'utf8' });
+  assert.equal(w.status, 0);
+  assert.ok(JSON.parse(w.stdout.trim()).ok);
+  const r = runCli(repo, 'read-memory', '--cwd', repo, '--branch', '_knowledge');
+  assert.equal(r.json.memory, 'distilled\n');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('read-memory accepts the _knowledge sentinel branch (returns null when absent)', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'read-memory', '--cwd', repo, '--branch', '_knowledge');
+  assert.equal(code, 0);
+  assert.deepEqual(json, { ok: true, memory: null });
+  rmSync(repo, { recursive: true, force: true });
+});
+
 // Form anchor for the command prose: multi-line JSON with \n escapes arrives via
 // stdin exactly like a quoted heredoc (echo '<json>' would mangle it under zsh).
 test('write-memory round-trips multi-line content byte-for-byte via stdin (heredoc form)', () => {

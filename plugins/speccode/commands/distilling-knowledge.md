@@ -5,19 +5,24 @@ category: Workflow
 tags: [speccode, workflow, knowledge]
 ---
 
-从 `speccode/spec/` 与 `speccode/archive/` 蒸馏知识集,全量重蒸 `speccode/knowledge/` 各 topic 文件的蒸馏段,经人工闸门落盘。全程中文交互。**应在 worktree-* 分支上运行**。
+从 `speccode/spec/` 与 `speccode/archive/` 蒸馏知识集,全量重蒸 `speccode/knowledge/` 各 topic 文件的蒸馏段,经人工闸门落盘。全程中文交互。**应在 trunk 分支上运行**(`git rev-parse --abbrev-ref HEAD` 校验等于 `config.trunk`)。
 
 ## 前置
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
-2. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix`(默认 `worktree-`)开头;否则退出并提示"请在 worktree 分支上运行本命令"(防止直提 trunk)。
-3. **绑定功能分支**:运行 `speccode.mjs reconcile --cwd .`,用返回的 features 找到当前 worktree 所属的功能分支 F;找不到 → 报错"当前 worktree 无法关联任何 active feature",退出。
-4. 运行 `speccode.mjs read-memory --cwd . --branch <F>` 读取本 feature 记忆作为既有上下文参考。
-5. 运行 `speccode.mjs read-knowledge --cwd .`(无 flag)获取现状:`files`(topic 清单)与 `index`(`_index.md` 内容,可能为 null)。
-6. `speccode/knowledge/` 不存在 → 本命令创建骨架:6 个初始 topic 空文件(development/architecture.md、development/standards.md、development/environment.md、development/integrations.md、development/pitfalls.md、development/security.md)+ `_index.md`,不创建 business/ 目录(知识集只策展 SDD 过程知识,业务知识归外部 RAG)。创建机制:对 6 个文件逐个执行 `write-knowledge --rel <file> --json-stdin`(mode=replace,content 为空串)创建空文件,再执行 `write-knowledge --rel _index.md --json-stdin`(mode=index,entries 为 development 一个空清单 section)创建索引——绝不 mkdir/touch/手写文件(命令层绝不手写 knowledge/,一律经 verb)。
-7. 读 `speccode/spec/`(各 capability 主规格,**全量**)。archive 改**增量读**:运行 `speccode.mjs read-consumed-archives --cwd .` 得 `{consumed, present, unconsumed, bootstrap}`——`bootstrap=true`(sidecar `_distilled.meta.json` 缺失)则首次引导,本次全量读 archive 全部归档包;否则只读 `unconsumed` 列出的归档包,`consumed` 包整包跳过(含其 propose/design/brainstorm 子文档)。`present` 是盘上归档包全集,留给闸门做 stale 判定。
-8. 删 `_distilled.meta.json` 再跑即强制全量重读 + 全块重蒸 + 重种子,为蒸馏判据变更后的官方逃生口,不另设 `--full` flag。
-9. 若 `code_intel_tools`(config)非空且其能力在会话中可用,读 spec/archive 时优先参考;不可用回退直接读文件,不报错。
+2. **trunk 入口校验**:`git rev-parse --abbrev-ref HEAD` MUST 等于 `config.trunk`,或为 `chore/knowledge-*` 维护分支(续跑,见 §3)。HEAD 为 `worktree-` 前缀分支,或 `feature/`/`bugfix/`/`refactor/` 功能分支,或**不匹配 `chore/knowledge-` 的** `chore/` 功能分支 → 退出并提示「请在 trunk 上运行本命令(knowledge 维护从 trunk 跑,不经 worktree/feature)」。
+3. **bootstrap 维护分支**:
+   - 若 HEAD 已是 `chore/knowledge-*` 分支(续跑)→ 先跑下面的**登记校验**;通过则跳过本步,直接进入 §4。
+   - 否则(在 trunk)检测本地**未完成**的 `chore/knowledge-*` 分支:`git branch --list 'chore/knowledge-*' --no-merged <config.trunk> || true`(`--no-merged` 排除已合入 trunk 的历史维护分支;`|| true` 保证无命中的非零退出码不被当作失败;输出逐行去掉前导 `*`/空格才是分支名)。有命中 → AskUserQuestion 询问「续跑(checkout 既有)/新建」;续跑 → 对选中分支先跑**登记校验**,通过后 `git checkout <既有分支>` 并进入 §4。
+   - **登记校验**(上面两条续跑路径 MUST 各跑一次):`speccode.mjs feature-progress --cwd . --branch <该分支>`——返回 `{"ok":false,"error":"no state for <分支>"}`(无 state,注意此时 verb 退出码为 1,属预期——判据以 JSON 的 `ok` 字段为准,不要当成命令失败)说明是纯维护分支 → 放行;返回 `ok:true`(带 `total`/`completed`/`worktrees`)说明该分支是**已登记的功能分支**(名字恰好撞上 `chore/knowledge-` 前缀)→ 退出并提示「这是已登记的功能分支(<分支>),knowledge 维护请回 trunk 新建 chore/knowledge-* 分支」,不做任何写入。
+   - 无命中 → AskUserQuestion 确认新分支名(默认 `chore/knowledge-distill`);slug 须匹配 `^[a-z0-9-]+$`,组合为 `chore/knowledge-<slug>`。
+   - `git checkout -b chore/knowledge-<slug>` + `git push -u origin chore/knowledge-<slug>`。
+   - **不创建 speccode state、不运行 reconcile、不开 git worktree。**
+4. 运行 `speccode.mjs read-knowledge --cwd .`(无 flag)获取现状:`files`(topic 清单)与 `index`(`_index.md` 内容,可能为 null)。
+5. `speccode/knowledge/` 不存在 → 创建骨架:6 个初始 topic 空文件(development/architecture.md、development/standards.md、development/environment.md、development/integrations.md、development/pitfalls.md、development/security.md)+ `_index.md`,不创建 business/ 目录。机制:对 6 个文件逐个执行 `write-knowledge --rel <file> --json-stdin`(mode=replace,content 为空串),再执行 `write-knowledge --rel _index.md --json-stdin`(mode=index,entries 为 development 一个空清单 section)创建索引——绝不 mkdir/touch/手写文件。
+6. 读 `speccode/spec/`(各 capability 主规格,**全量**)。archive 改**增量读**:运行 `speccode.mjs read-consumed-archives --cwd .` 得 `{consumed, present, unconsumed, bootstrap}`——`bootstrap=true`(sidecar `_distilled.meta.json` 缺失)则首次引导,本次全量读 archive 全部归档包;否则只读 `unconsumed` 列出的归档包,`consumed` 包整包跳过(含其 propose/design/brainstorm 子文档)。`present` 是盘上归档包全集,留给闸门做 stale 判定。
+7. 删 `_distilled.meta.json` 再跑即强制全量重读 + 全块重蒸 + 重种子,为蒸馏判据变更后的官方逃生口,不另设 `--full` flag。
+8. 若 `code_intel_tools`(config)非空且其能力在会话中可用,读 spec/archive 时优先参考;不可用回退直接读文件,不报错。
 
 ## 蒸馏
 
@@ -39,25 +44,32 @@ tags: [speccode, workflow, knowledge]
 - 日落块确认移除 → 该 topic 经 `write-knowledge --rel <topic路径> --json-stdin`(mode=replace-distilled,blocks=[])写入(删除全部蒸馏块,hand-written 段字节保留);用户拒绝 → 块保留原样;
 - 拒绝/修改 → 按用户反馈调整后重展示。
 
-source 指向的 archive 或 spec capability 已不存在 → 该块标 **stale**(自动检测),选项:删除该块 / 改 source 后保留。archive 来源的 stale 判定 MUST 基于前置 §7 `read-consumed-archives` 返回的 `present`(盘上归档包名):把块 source 的 `archive/<name>/` 剥成 `<name>` 与 `present` 比对,不在其中即 stale——**carry-forward 的已消费包块同样要过这一关**(其包已被删时,`consumed` 里的残留条目不代表包还在)。source 包仍在但其知识被新归档包取代 → 该块标 **superseded by <新包名>**(非 stale;distiller 提议、用户确认),选项:删除该块 / 更新 body / 改 source。两种"块被移除"语义 MUST 区分标注。
+source 指向的 archive 或 spec capability 已不存在 → 该块标 **stale**(自动检测),选项:删除该块 / 改 source 后保留。archive 来源的 stale 判定 MUST 基于前置 §6 `read-consumed-archives` 返回的 `present`(盘上归档包名):把块 source 的 `archive/<name>/` 剥成 `<name>` 与 `present` 比对,不在其中即 stale——**carry-forward 的已消费包块同样要过这一关**(其包已被删时,`consumed` 里的残留条目不代表包还在)。source 包仍在但其知识被新归档包取代 → 该块标 **superseded by <新包名>**(非 stale;distiller 提议、用户确认),选项:删除该块 / 更新 body / 改 source。两种"块被移除"语义 MUST 区分标注。
 
 ## 落盘
 
-1. 各 topic 写入完成后更新 `_index.md`:为每个 topic 文件生成一行摘要(标题 + 文件 + 一句话摘要),组装 entries(实扫现有 topic 文件(跳过内容为空的 topic 文件——日落后被清空的存量文件不再收录),按顶层目录名分组为 sections,如 development;不硬编码固定 section 清单),经 `write-knowledge --rel _index.md --json-stdin`(mode=index,entries=...)写入。
-2. (新)登记消费:把本次读过的归档包目录名(含读了无产出的;首次引导时 = 本次全量读的全部归档包,即种子),经 `speccode.mjs write-consumed-archives --cwd . --json-stdin` 原子追记进 `_distilled.meta.json`(verb 内部读旧∪新去重):
+1. 各 topic 写入完成后更新 `_index.md`:为每个 topic 文件生成一行摘要(标题 + 文件 + 一句话摘要),组装 entries(实扫现有 topic 文件(跳过内容为空的 topic 文件),按顶层目录名分组为 sections,不硬编码固定 section 清单),经 `write-knowledge --rel _index.md --json-stdin`(mode=index,entries=...)写入。
+2. (新)登记消费:把本次读过的归档包目录名(含读了无产出的;首次引导时 = 本次全量读的全部归档包,即种子),经 `speccode.mjs write-consumed-archives --cwd . --json-stdin` 原子追记进 `_distilled.meta.json`:
    ```bash
    speccode.mjs write-consumed-archives --cwd . --json-stdin <<'EOF'
    {"add":["<归档目录名>",...]}
    EOF
    ```
-   即使本次全部 topic 无变化(跳过 topic 写),本步骤仍 MUST 执行——首次引导尤其:sidecar 未建则下次仍全量读(增量永不生效,legacy marker 迁移也被挡住);读过无产出的归档包也须登记。
-3. 经 `speccode.mjs write-memory --cwd . --branch <F> --json-stdin`(mode=append)追加本次蒸馏摘要(哪些 topic 变化/无变化/新增)。
-4. 全部写入完成后 MUST 立即提交:
+   即使本次全部 topic 无变化(跳过 topic 写),本步骤仍 MUST 执行。
+3. 全部写入完成后 MUST 立即提交:
    ```bash
    git add speccode/knowledge/
    git commit -m "docs(knowledge): distill knowledge set"
    ```
-5. 报告:哪些 topic 变化/无变化/新增。
+4. **直通 PR**:先 `git push origin <维护分支>`(把 item 3 的提交推到远端,PR 创建前置;镜像 finishing-feature §2)。创建前 MUST **查重**——查该维护分支上是否已有 open PR(`pr_tool=github`:`gh pr list --head <维护分支> --state open --json url --jq '.[0].url'`;`pr_tool=gitlab`:`glab mr list --source-branch <维护分支> --state opened`);**已有 open PR → 跳过创建**,直接复用既有 PR url(续跑场景常见,重复 create 会报错)。无 open PR 才用 `pr_tool` 创建 PR(参数同 `createPrArgs`,base=`config.trunk`,head=当前 `chore/knowledge-*` 维护分支,title=`docs(knowledge): distill knowledge set`,body=topic 变化摘要)。`pr_tool=none` → 打印等效命令(如 `gh pr create --base <trunk> --head <维护分支> --title "docs(knowledge): distill knowledge set"`)、跳过查重与创建(仅中止 PR 创建,item 5/6 照常执行),且 MUST NOT 创建 speccode state 或经 finishing-feature。**不阻塞等待合并、不调用 finishing-feature/finishing-worktree。**
+5. **memory(trunk 级)**:PR 创建/复用(或 `pr_tool=none` 打印等效命令)**之后**,经 `speccode.mjs write-memory --cwd . --branch _knowledge --json-stdin`(mode=append)追加本次蒸馏摘要(哪些 topic 变化/无变化/新增)**+ PR url**(`pr_tool=none` 时记等效命令与维护分支名):
+   ```bash
+   speccode.mjs write-memory --cwd . --branch _knowledge --json-stdin <<'EOF'
+   {"mode":"append","content":"<摘要 + PR url>"}
+   EOF
+   ```
+   顺序不可调换:摘要必须含 PR url,所以只能在 PR 之后写。`.speccode/memory/` 自忽略,在 item 3 的 `git add speccode/knowledge/` 之后写不会影响提交内容。
+6. 报告:哪些 topic 变化/无变化/新增 + PR url(或等效命令)。
 
 ## 约束
 

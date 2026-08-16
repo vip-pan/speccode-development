@@ -47,8 +47,8 @@ Knowledge:
 
 | Command | Purpose | Prerequisite (branch to run on) |
 |---|---|---|
-| `/speccode:distilling-knowledge` | Distill the `speccode/knowledge/` topic files from `spec/` (full) + `archive/` (**incremental**: only unconsumed archive bundles, tracked via `knowledge/_distilled.meta.json`; consumed bundles skipped and their blocks carried forward, no re-distill); stale (bundle deleted) vs superseded (replaced by a newer bundle) gate distinction; SDD process knowledge only, out-of-scope topics sunset via the gate; delete the sidecar to force a full re-distill (no `--full` flag); human gate before write; commits on save | worktree-* branch |
-| `/speccode:recording-knowledge` | Record knowledge directly into hand-written sections (fit check: process knowledge stays, business knowledge is pointed to external RAG; draft → human gate → atomic write); commits on save | worktree-* branch |
+| `/speccode:distilling-knowledge` | Distill the `speccode/knowledge/` topic files from `spec/` (full) + `archive/` (**incremental**: only unconsumed archive bundles, tracked via `knowledge/_distilled.meta.json`; consumed bundles skipped and their blocks carried forward, no re-distill); stale (bundle deleted) vs superseded (replaced by a newer bundle) gate distinction; SDD process knowledge only, out-of-scope topics sunset via the gate; delete the sidecar to force a full re-distill (no `--full` flag); human gate before write; commits on save | trunk branch |
+| `/speccode:recording-knowledge` | Record knowledge directly into hand-written sections (fit check: process knowledge stays, business knowledge is pointed to external RAG; draft → human gate → atomic write); commits on save | trunk branch |
 
 Methodology:
 
@@ -141,7 +141,7 @@ Conventions:
 ├── config.json                          # static config (config 0.2), written wholesale by init / reset; creating-worktree can write back worktree_dir
 ├── config.json.bak.<timestamp>          # explicit backup before init-idempotent / reset flows rewrite config (backup-config verb)
 ├── state/features/<type>__<slug>.json   # dynamic state, isolated per feature
-├── memory/                              # feature-level memory + _exploring.md (self-ignored via .gitignore)
+├── memory/                              # feature-level memory + _exploring.md / _knowledge.md (self-ignored via .gitignore)
 └── sdd/                                 # SDD execution artifacts: task briefs / review packages / ledger (self-ignored via .gitignore)
 ```
 
@@ -179,7 +179,7 @@ The config's `hooks` field maps fixed lifecycle events to shell commands, trigge
 speccode maintains one cross-session memory per feature: `.speccode/memory/<type>__<slug>.md`.
 
 - **Untracked, shared across worktrees**: the memory path resolves from the **main repo root**'s `.speccode/` (same as config/state), so multiple worktrees of the same feature read and write the same file; the directory is self-ignored by the plugin's own `.gitignore` and never pollutes `git status`.
-- **`_exploring.md` is the trunk-level exception**: exploring happens on trunk and belongs to no feature, so its conclusions go into `memory/_exploring.md`.
+- **`_exploring.md` and `_knowledge.md` are the trunk-level exceptions**: exploring happens on trunk and belongs to no feature, so its conclusions go into `memory/_exploring.md`; the knowledge commands also run from trunk, so their maintenance summaries go into `memory/_knowledge.md`.
 - **Commands read on entry, write on exit**: SDD commands read this feature's memory at the start to restore context, and write conclusions / decisions / remaining tasks back on exit.
 - **Proactive writing during long sessions — three triggers**: ① a stage completes (e.g. propose lands, the plan passes review); ② context has grown significantly (more key decisions accumulating); ③ after a compact / session restore — hit any one of these and write memory proactively, rather than waiting for a command exit.
 
