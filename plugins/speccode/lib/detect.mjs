@@ -4,10 +4,10 @@ import { join, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { git } from './git.mjs';
 
-// Knowledge-base tool detection for /speccode:init. Every environment access
+// Code-intel tool detection for /speccode:init. Every environment access
 // (fs read, command -v, homeDir) is injectable via opts so unit tests never
 // touch the real machine.
-export const KNOWLEDGE_TOOL_DETECTORS = [
+export const CODE_INTEL_TOOL_DETECTORS = [
   // no `bin` for understand-anything: the generic name `understand` would
   // false-positive on unrelated binaries, so it only gets plugin/mcp/dir probes.
   // dirs: 探测目录候选列表,按序 probe,第一个命中的目录即证据(first-existing wins)。
@@ -24,7 +24,7 @@ function defaultReadJson(path) {
   try { return JSON.parse(readFileSync(path, 'utf8')); } catch { return null; }
 }
 
-export function detectKnowledgeTools(cwd, opts = {}) {
+export function detectCodeIntelTools(cwd, opts = {}) {
   const homeDir = opts.homeDir ?? homedir();
   const readJson = opts.readJson ?? defaultReadJson;
   const commandV = opts.commandV
@@ -52,7 +52,7 @@ export function detectKnowledgeTools(cwd, opts = {}) {
   ];
 
   const tools = [];
-  for (const t of KNOWLEDGE_TOOL_DETECTORS) {
+  for (const t of CODE_INTEL_TOOL_DETECTORS) {
     const needle = t.match.toLowerCase();
 
     const pluginHit = pluginKeys.find((k) => k.toLowerCase().includes(needle));

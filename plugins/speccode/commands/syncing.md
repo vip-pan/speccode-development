@@ -23,6 +23,20 @@ tags: [speccode, workflow, sync, specs]
 - `propose/` 存在但 `propose/specs/` 为空或不存在 → 报告"无 delta 可同步"并停止,不从其他工件臆测。
 - `propose/` 不存在(纯 brainstorming 路径)时:若 `brainstorm/` 存在,以 brainstorm/ 文档提炼 delta 进行合并;若两者都不存在,报告无 delta 并停止。
 
+## capability RENAME 处理
+
+合并前扫描每个 delta 文件的**顶部**——「顶部」严格指该文件的**首个非空行**,只检查这一行,MUST NOT 扫描全文(否则正文中对元数据格式的引用会被误命中)。若首个非空行是 HTML 注释元数据 `<!-- speccode:rename-from: <旧capability名> -->`,则本 delta 表示 capability 目录由 `<旧>` 改名为 `<新>`(`<新>` = 该 delta 所在的目录名)。
+
+**冲突护栏(先查后做)**:同一 slug 的 `propose/specs/` 内 MUST NOT 同时存在 `rename-from` 指向的旧名 capability 目录(即 `propose/specs/<旧>/`)。检测到二者并存 → **报错退出**,提示用户先删除该旧名 delta 目录后重跑(`rename-from` 元数据已完整表达「旧目录消失」的语义,旧名 delta 冗余且与改名冲突);MUST NOT 猜测两者的处理顺序,MUST NOT 自行删除任一方。
+
+护栏通过后,按 `speccode/spec/` 下旧/新目录的存在情况分支处理:
+
+- **旧目录存在 + 新目录不存在** → `git mv speccode/spec/<旧>/ speccode/spec/<新>/`,再把 delta 按下方合并语义常规合并进新目录(ADDED/MODIFIED/REMOVED/RENAMED)。旧目录随 `git mv` 消失,无空壳。
+- **新目录已存在**(重复 syncing / 此前已改名)→ 跳过 `git mv`,直接把 delta 合并进新目录;合并幂等,重跑无 diff。若此时旧目录竟仍存在,MUST 报告给用户并请其确认如何处置,MUST NOT 自动删除。
+- **旧目录与新目录都不存在**(旧名主规格从未建过)→ 跳过 `git mv`,对 `<新>` 走下方「新建主规格」路径,不报错。
+
+**改名后交叉引用检查**:MUST 全仓 grep 旧 capability 名(至少覆盖 `speccode/spec/`、`plugins/speccode/commands/`、README 与 CLAUDE.md),确认无遗留引用。若其他 capability 的主规格引用了旧名,该引用 MUST 由一份独立的 MODIFIED delta 修正后再经本命令合并,MUST NOT 在 syncing 中顺手直改未被 delta 覆盖的主规格内容。
+
 ## 合并语义(对每个 capability delta)
 
 读 delta 文件与对应主规格 `speccode/spec/<capability>/spec.md`(可能尚不存在),然后:

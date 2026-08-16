@@ -24,8 +24,8 @@ speccode 是一个 Claude Code 流程编排插件,用 23 个 `/speccode:*` slash
 
 | 命令 | 作用 | 前置(运行分支) |
 |---|---|---|
-| `/speccode:init` | 初始化/更新:探测远端、主干、知识库工具,配置 worktree 目录与 hooks,写 `.speccode/config.json`(config 0.2) | 任意分支(首次通常在 trunk) |
-| `/speccode:exploring` | 探索需求(不产文档,结论在会话上下文;知识库工具优先) | trunk |
+| `/speccode:init` | 初始化/更新:探测远端、主干、代码智能工具,配置 worktree 目录与 hooks,写 `.speccode/config.json`(config 0.2) | 任意分支(首次通常在 trunk) |
+| `/speccode:exploring` | 探索需求(不产文档,结论在会话上下文;代码智能工具优先) | trunk |
 | `/speccode:creating-feature` | 从 trunk 切出功能分支并推送,登记 state,建 memory 骨架 | trunk |
 | `/speccode:creating-worktree` | 从功能分支切出 worktree(worktree_dir 可配置、check-ignore 校验、项目 setup、基线测试) | feature/bugfix/refactor/chore 分支 |
 | `/speccode:finishing-worktree` | 合并 worktree 成果回功能分支(测试门禁;PR 等待/PR 不等待/本地 squash/保留;丢弃需逐字 discard) | worktree-* 分支 |
@@ -145,7 +145,7 @@ speccode/
 └── sdd/                                 # SDD 执行工件:task brief / review 包 / ledger(自忽略 .gitignore)
 ```
 
-- **`config.json`**:全局静态配置,config 0.2 字段集:`version`(=2)、`initialized_at`、`trunk`、`remote`、`pr_tool`、`worktree_prefix`、`worktree_dir`、`knowledge_tools`;`hooks` 仅在用户配置时存在。整体写入只发生在 `/speccode:init`(全新或幂等)与 `/speccode:reset`;此外 `/speccode:creating-worktree` 在 config 缺少 `worktree_dir` 时会询问存放目录,并经 `write-config` 把该字段回写进 config(读当前 config → 加字段 → 整体写回)。**备份不是 `write-config` 的自动行为**:`config.json.bak.<timestamp>` 由 init 幂等流程与 reset 流程在改写前显式调用 `backup-config` 生成,creating-worktree 的单字段回写不产生备份。
+- **`config.json`**:全局静态配置,config 0.2 字段集:`version`(=2)、`initialized_at`、`trunk`、`remote`、`pr_tool`、`worktree_prefix`、`worktree_dir`、`code_intel_tools`;`hooks` 仅在用户配置时存在。整体写入只发生在 `/speccode:init`(全新或幂等)与 `/speccode:reset`;此外 `/speccode:creating-worktree` 在 config 缺少 `worktree_dir` 时会询问存放目录,并经 `write-config` 把该字段回写进 config(读当前 config → 加字段 → 整体写回)。**备份不是 `write-config` 的自动行为**:`config.json.bak.<timestamp>` 由 init 幂等流程与 reset 流程在改写前显式调用 `backup-config` 生成,creating-worktree 的单字段回写不产生备份。
 - **`state/features/`**:每个 active feature 一个独立文件(`<type>__<slug>.json`,双下划线分隔 type 与 slug),记录 worktree 进度(`pending | in_progress | pr_open | completed`)与挂起的 `pending_operation`(供 `--resume` 续跑)。多 feature 并行各写各的文件,无需加锁。
 - **`memory/`**:feature 级会话记忆(见第 8 节),插件自写 `.gitignore`(内容 `*`)使其对 `git status` 隐身、免于 `git clean -fd`。
 - **`sdd/`**:SDD 执行工件,归属**当前 worktree 根**(而非主仓根),随 `git worktree remove` 一并清理;同样自忽略。
@@ -183,18 +183,18 @@ speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>_
 - **命令入口读、出口写**:SDD 各命令开始时读本 feature 的 memory 恢复上下文,结束时把结论/决定/待办写回。
 - **长会话主动书写三判据**:① 一个阶段完成(如 propose 落盘、计划评审通过);② 上下文显著增长(关键决策增多);③ 经历 compact / 会话恢复后——命中任一即应主动写 memory,而不是等命令出口。
 
-## 9. 知识库工具
+## 9. 代码智能工具
 
-`/speccode:init` 探测五类知识库工具:**understand-anything / CodeGraph / Graphify / CodeMap / GitNexus**,覆盖四类来源:
+`/speccode:init` 探测五类代码智能工具:**understand-anything / CodeGraph / Graphify / CodeMap / GitNexus**,覆盖四类来源:
 
 1. **插件**:`~/.claude/plugins/installed_plugins.json`
 2. **MCP**:项目 `.mcp.json`、`~/.claude.json`(含项目 local scope)
 3. **CLI**:`command -v <bin>`
 4. **项目目录**:如 `.ua/`、`.codegraph/` 等
 
-探测结果区分「可用 available」与「集成 integrated」两个维度;仅 `available` 与 `integrated` 都为 true 的工具才逐项用 AskUserQuestion 展示,经用户确认后登记进 config 的 `knowledge_tools`;可用但未集成的工具 MUST NOT 登记;一个都未确认则写空数组。
+探测结果区分「可用 available」与「集成 integrated」两个维度;仅 `available` 与 `integrated` 都为 true 的工具才逐项用 AskUserQuestion 展示,经用户确认后登记进 config 的 `code_intel_tools`;可用但未集成的工具 MUST NOT 登记;一个都未确认则写空数组。
 
-使用约定:`/speccode:exploring`、`/speccode:proposing`、`/speccode:brainstorming` 优先咨询已登记的知识库工具;工具缺失或调用失败时**回退到常规代码阅读,永不报错**——知识库是增强,不是依赖。
+使用约定:`/speccode:exploring`、`/speccode:proposing`、`/speccode:brainstorming` 优先咨询已登记的代码智能工具;工具缺失或调用失败时**回退到常规代码阅读,永不报错**——代码智能工具是增强,不是依赖。
 
 ## 10. 风险与缓解(R1–R13)
 

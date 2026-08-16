@@ -1,12 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  KNOWLEDGE_TOOL_DETECTORS, detectKnowledgeTools, resolveWorktreeDir,
+  CODE_INTEL_TOOL_DETECTORS, detectCodeIntelTools, resolveWorktreeDir,
   isPathInside, worktreeDirIgnoreState,
 } from '../lib/detect.mjs';
 
-test('KNOWLEDGE_TOOL_DETECTORS covers the five required tools', () => {
-  const ids = KNOWLEDGE_TOOL_DETECTORS.map((t) => t.id);
+test('CODE_INTEL_TOOL_DETECTORS covers the five required tools', () => {
+  const ids = CODE_INTEL_TOOL_DETECTORS.map((t) => t.id);
   assert.deepEqual(ids, ['understand-anything', 'codegraph', 'graphify', 'codemap', 'gitnexus']);
 });
 
@@ -15,7 +15,7 @@ test('plugin hit short-circuits commandV probe for tools with a bin', () => {
     ? { version: 2, plugins: { 'codegraph@codegraph': [{ version: '1.0.0' }] } }
     : null);
   const probedBins = [];
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson,
     commandV: (bin) => { probedBins.push(bin); return true; },
     exists: () => false,
@@ -30,7 +30,7 @@ test('plugin installed but no project integration → available-only', () => {
   const readJson = (p) => (p.endsWith('installed_plugins.json')
     ? { version: 2, plugins: { 'understand-anything@understand-anything': [{ version: '2.9.4' }] } }
     : null);
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson, commandV: () => false, exists: () => false,
   });
   const ua = tools.find((t) => t.id === 'understand-anything');
@@ -40,7 +40,7 @@ test('plugin installed but no project integration → available-only', () => {
 
 test('project .mcp.json → both available and integrated', () => {
   const readJson = (p) => (p.endsWith('/repo/.mcp.json') ? { mcpServers: { CodeGraph: {} } } : null);
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson, commandV: () => false, exists: () => false,
   });
   const cg = tools.find((t) => t.id === 'codegraph');
@@ -50,7 +50,7 @@ test('project .mcp.json → both available and integrated', () => {
 
 test('user ~/.claude.json mcp → available-only (not integrated)', () => {
   const readJson = (p) => (p.endsWith('/home/u/.claude.json') ? { mcpServers: { 'gitnexus-mcp': {} } } : null);
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson, commandV: () => false, exists: () => false,
   });
   const gn = tools.find((t) => t.id === 'gitnexus');
@@ -61,7 +61,7 @@ test('user ~/.claude.json mcp → available-only (not integrated)', () => {
 test('projects[cwd].mcpServers → both available and integrated', () => {
   const readJson = (p) => (p.endsWith('/home/u/.claude.json')
     ? { projects: { '/repo': { mcpServers: { graphify: {} } } } } : null);
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson, commandV: () => false, exists: () => false,
   });
   const gf = tools.find((t) => t.id === 'graphify');
@@ -70,7 +70,7 @@ test('projects[cwd].mcpServers → both available and integrated', () => {
 });
 
 test('project dir → integrated only (legacy .codemaker/codemap, real .codemaker/codeindex absent)', () => {
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson: () => null, commandV: () => false,
     exists: (p) => p === '/repo/.codemaker/codemap',
   });
@@ -80,7 +80,7 @@ test('project dir → integrated only (legacy .codemaker/codemap, real .codemake
 });
 
 test('.codemaker/codeindex present → codemap integrated (real project index dir)', () => {
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson: () => null, commandV: () => false,
     exists: (p) => p === '/repo/.codemaker/codeindex',
   });
@@ -89,7 +89,7 @@ test('.codemaker/codeindex present → codemap integrated (real project index di
 });
 
 test('.codemaker/codeindex wins over .codemaker/codemap when both present (first-existing wins)', () => {
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson: () => null, commandV: () => false,
     exists: (p) => p === '/repo/.codemaker/codeindex' || p === '/repo/.codemaker/codemap',
   });
@@ -98,7 +98,7 @@ test('.codemaker/codeindex wins over .codemaker/codemap when both present (first
 });
 
 test('.gitnexus dir present → gitnexus integrated', () => {
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson: () => null, commandV: () => false,
     exists: (p) => p === '/repo/.gitnexus',
   });
@@ -108,7 +108,7 @@ test('.gitnexus dir present → gitnexus integrated', () => {
 });
 
 test('gitnexus cli → available-only', () => {
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson: () => null,
     commandV: (bin) => bin === 'gitnexus', exists: () => false,
   });
@@ -118,7 +118,7 @@ test('gitnexus cli → available-only', () => {
 });
 
 test('.understand-anything (legacy dir) present → understand-anything integrated', () => {
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson: () => null, commandV: () => false,
     exists: (p) => p === '/repo/.understand-anything',
   });
@@ -127,7 +127,7 @@ test('.understand-anything (legacy dir) present → understand-anything integrat
 });
 
 test('cli → available-only', () => {
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson: () => null,
     commandV: (bin) => bin === 'graphify', exists: () => false,
   });
@@ -137,7 +137,7 @@ test('cli → available-only', () => {
 });
 
 test('no hits → all five tools have available=false and integrated=false', () => {
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson: () => null, commandV: () => false, exists: () => false,
   });
   assert.equal(tools.length, 5);
@@ -151,10 +151,10 @@ test('understand-anything has no cli probe (generic `understand` binary must not
   // understand-anything's old bin name `understand` collides with unrelated
   // binaries, so it must not carry a cli probe — only plugin/mcp/dir probes.
   assert.equal(
-    KNOWLEDGE_TOOL_DETECTORS.find((t) => t.id === 'understand-anything').bin,
+    CODE_INTEL_TOOL_DETECTORS.find((t) => t.id === 'understand-anything').bin,
     undefined,
   );
-  const tools = detectKnowledgeTools('/repo', {
+  const tools = detectCodeIntelTools('/repo', {
     homeDir: '/home/u', readJson: () => null, commandV: () => true, exists: () => false,
   });
   const ua = tools.find((t) => t.id === 'understand-anything');

@@ -24,8 +24,8 @@ Lifecycle:
 
 | Command | Purpose | Prerequisite (branch to run on) |
 |---|---|---|
-| `/speccode:init` | Initialize/update: probe the remote, trunk, and knowledge-base tools; configure the worktree directory and hooks; write `.speccode/config.json` (config 0.2) | Any branch (first run usually on trunk) |
-| `/speccode:exploring` | Explore a requirement (produces no documents; conclusions live in the session context; knowledge-base tools preferred) | trunk |
+| `/speccode:init` | Initialize/update: probe the remote, trunk, and code intelligence tools; configure the worktree directory and hooks; write `.speccode/config.json` (config 0.2) | Any branch (first run usually on trunk) |
+| `/speccode:exploring` | Explore a requirement (produces no documents; conclusions live in the session context; code intelligence tools preferred) | trunk |
 | `/speccode:creating-feature` | Cut a feature branch from trunk and push it; register state; create the memory skeleton | trunk |
 | `/speccode:creating-worktree` | Cut a worktree from the feature branch (worktree_dir configurable, check-ignore validation, project setup, baseline tests) | feature/bugfix/refactor/chore branch |
 | `/speccode:finishing-worktree` | Merge worktree results back into the feature branch (test gate; wait for PR / don't wait for PR / local squash / keep; discarding requires the literal word `discard`) | worktree-* branch |
@@ -145,7 +145,7 @@ Conventions:
 └── sdd/                                 # SDD execution artifacts: task briefs / review packages / ledger (self-ignored via .gitignore)
 ```
 
-- **`config.json`**: the global static config; the config 0.2 field set: `version` (=2), `initialized_at`, `trunk`, `remote`, `pr_tool`, `worktree_prefix`, `worktree_dir`, `knowledge_tools`; `hooks` only exists when the user configured it. Wholesale writes happen only in `/speccode:init` (fresh or idempotent) and `/speccode:reset`; additionally, `/speccode:creating-worktree` asks for a directory when config lacks `worktree_dir`, then writes the field back into config via `write-config` (read current config → add field → write back wholesale). **Backups are not an automatic behavior of `write-config`**: `config.json.bak.<timestamp>` is produced by the init-idempotent flow and the reset flow explicitly calling `backup-config` before rewriting; creating-worktree's single-field write-back creates no backup.
+- **`config.json`**: the global static config; the config 0.2 field set: `version` (=2), `initialized_at`, `trunk`, `remote`, `pr_tool`, `worktree_prefix`, `worktree_dir`, `code_intel_tools`; `hooks` only exists when the user configured it. Wholesale writes happen only in `/speccode:init` (fresh or idempotent) and `/speccode:reset`; additionally, `/speccode:creating-worktree` asks for a directory when config lacks `worktree_dir`, then writes the field back into config via `write-config` (read current config → add field → write back wholesale). **Backups are not an automatic behavior of `write-config`**: `config.json.bak.<timestamp>` is produced by the init-idempotent flow and the reset flow explicitly calling `backup-config` before rewriting; creating-worktree's single-field write-back creates no backup.
 - **`state/features/`**: one file per active feature (`<type>__<slug>.json`, double underscore separating type and slug), recording worktree progress (`pending | in_progress | pr_open | completed`) and any suspended `pending_operation` (for `--resume`). Multiple features each write their own files in parallel, no locks needed.
 - **`memory/`**: feature-level session memory (see Section 8); the plugin writes its own `.gitignore` (content `*`) so it stays invisible to `git status` and is spared by `git clean -fd`.
 - **`sdd/`**: SDD execution artifacts, belonging to the **current worktree root** (not the main repo root), cleaned up together with `git worktree remove`; self-ignored as well.
@@ -183,18 +183,18 @@ speccode maintains one cross-session memory per feature: `.speccode/memory/<type
 - **Commands read on entry, write on exit**: SDD commands read this feature's memory at the start to restore context, and write conclusions / decisions / remaining tasks back on exit.
 - **Proactive writing during long sessions — three triggers**: ① a stage completes (e.g. propose lands, the plan passes review); ② context has grown significantly (more key decisions accumulating); ③ after a compact / session restore — hit any one of these and write memory proactively, rather than waiting for a command exit.
 
-## 9. Knowledge Base Tools
+## 9. Code Intelligence Tools
 
-`/speccode:init` probes five knowledge-base tools: **understand-anything / CodeGraph / Graphify / CodeMap / GitNexus**, covering four kinds of sources:
+`/speccode:init` probes five code intelligence tools: **understand-anything / CodeGraph / Graphify / CodeMap / GitNexus**, covering four kinds of sources:
 
 1. **Plugins**: `~/.claude/plugins/installed_plugins.json`
 2. **MCP**: project `.mcp.json`, `~/.claude.json` (including the project's local scope)
 3. **CLI**: `command -v <bin>`
 4. **Project directories**: e.g. `.ua/`, `.codegraph/`, etc.
 
-Probe results distinguish two dimensions — **available** and **integrated**; only tools where both `available` and `integrated` are true are presented item by item via AskUserQuestion and, upon user confirmation, registered into the config's `knowledge_tools`; tools that are available but not integrated MUST NOT be registered; if none are confirmed, an empty array is written.
+Probe results distinguish two dimensions — **available** and **integrated**; only tools where both `available` and `integrated` are true are presented item by item via AskUserQuestion and, upon user confirmation, registered into the config's `code_intel_tools`; tools that are available but not integrated MUST NOT be registered; if none are confirmed, an empty array is written.
 
-Usage convention: `/speccode:exploring`, `/speccode:proposing`, and `/speccode:brainstorming` consult the registered knowledge-base tools first; when a tool is missing or a call fails, they **fall back to plain code reading and never error out** — the knowledge base is an enhancement, not a dependency.
+Usage convention: `/speccode:exploring`, `/speccode:proposing`, and `/speccode:brainstorming` consult the registered code intelligence tools first; when a tool is missing or a call fails, they **fall back to plain code reading and never error out** — code intelligence is an enhancement, not a dependency.
 
 ## 10. Risks & Mitigations (R1–R13)
 

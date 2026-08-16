@@ -245,9 +245,9 @@ test('reconcile treats empty-string worktree_prefix as the default prefix', () =
   rmSync(repo, { recursive: true, force: true });
 });
 
-test('detect-knowledge-tools returns a tools array', () => {
+test('detect-code-intel-tools returns a tools array', () => {
   const repo = makeRepo();
-  const { code, json } = runCli(repo, 'detect-knowledge-tools', '--cwd', repo);
+  const { code, json } = runCli(repo, 'detect-code-intel-tools', '--cwd', repo);
   assert.equal(code, 0);
   assert.ok(json.ok);
   assert.ok(Array.isArray(json.tools));
@@ -259,19 +259,19 @@ test('detect-knowledge-tools returns a tools array', () => {
   rmSync(repo, { recursive: true, force: true });
 });
 
-test('detect-knowledge-tools from a subdirectory resolves against the main repo root', () => {
+test('detect-code-intel-tools from a subdirectory resolves against the main repo root', () => {
   const repo = makeRepo();
   const subdir = join(repo, 'sub', 'dir');
   mkdirSync(subdir, { recursive: true });
 
-  const first = runCli(subdir, 'detect-knowledge-tools', '--cwd', subdir);
+  const first = runCli(subdir, 'detect-code-intel-tools', '--cwd', subdir);
   assert.equal(first.code, 0);
   assert.ok(first.json.ok);
   assert.ok(Array.isArray(first.json.tools));
 
   // .mcp.json lives at the repo ROOT; running from a subdir must still see it
   writeFileSync(join(repo, '.mcp.json'), JSON.stringify({ mcpServers: { codegraph: {} } }));
-  const second = runCli(subdir, 'detect-knowledge-tools', '--cwd', subdir);
+  const second = runCli(subdir, 'detect-code-intel-tools', '--cwd', subdir);
   assert.equal(second.code, 0);
   assert.ok(second.json.ok);
   assert.ok(second.json.tools.some((t) => t.id === 'codegraph'
@@ -921,6 +921,55 @@ test('subagent-driven-development.md documents the tick-task completion step', (
   assert.ok(/`ticked`[^\n]*为空[\s\S]{0,120}跳过 commit/.test(md), 'must skip the commit when ticked is empty');
 });
 
+test('init.md writes the code_intel_tools config field (renamed from knowledge_tools)', () => {
+  const md = readFileSync(join(__dirname, '..', 'commands', 'init.md'), 'utf8');
+  assert.ok(md.includes('"code_intel_tools": []'), 'init.md must write the empty code_intel_tools default with the new field name');
+  assert.ok(md.includes('code_intel_tools'), 'init.md must document code_intel_tools in the config v2 field set');
+  assert.ok(!md.includes('knowledge_tools'), 'init.md must not retain the old knowledge_tools field name');
+});
+
+test('init.md calls the renamed detect-code-intel-tools verb', () => {
+  const md = readFileSync(join(__dirname, '..', 'commands', 'init.md'), 'utf8');
+  assert.ok(md.includes('detect-code-intel-tools'), 'init.md must call detect-code-intel-tools');
+  assert.ok(!md.includes('detect-knowledge-tools'), 'init.md must not retain the old detect-knowledge-tools verb call');
+});
+
+test('code_intel_tools 6 命令 prose: 每命令用 code_intel_tools/代码智能工具 措辞,不留 知识库工具咨询 措辞', () => {
+  const files = ['exploring.md', 'proposing.md', 'brainstorming.md', 'distilling-knowledge.md', 'init.md', 'reset.md'];
+  for (const f of files) {
+    const md = readFileSync(join(__dirname, '..', 'commands', f), 'utf8');
+    assert.ok(
+      md.includes('code_intel_tools') || md.includes('代码智能工具'),
+      `${f} 必须含 code_intel_tools 字段引用或"代码智能工具"措辞`
+    );
+    assert.ok(!md.includes('知识库工具咨询'), `${f} 不得残留"知识库工具咨询"措辞`);
+  }
+});
+
+test('README.md / README_CN.md 字段集 + 探测描述用 code_intel_tools,不残留 knowledge_tools 字段名', () => {
+  for (const f of ['README.md', 'README_CN.md']) {
+    const md = readFileSync(join(__dirname, '..', f), 'utf8');
+    assert.ok(md.includes('code_intel_tools'), `${f} 必须含 code_intel_tools`);
+    assert.ok(!md.includes('knowledge_tools'), `${f} 不得残留 knowledge_tools 字段名`);
+    // 措辞(非字段名):代码工具一律叫 code intelligence / 代码智能工具
+    assert.ok(!md.includes('knowledge-base'), `${f} 不得残留 "knowledge-base" 措辞`);
+    assert.ok(!md.includes('知识库工具'), `${f} 不得残留"知识库工具"措辞`);
+  }
+});
+
+test('根 README.md / README_CN.md 用 code intelligence / 代码智能工具 措辞,不残留 knowledge-base / 知识库工具', () => {
+  const repoRoot = join(__dirname, '..', '..', '..');
+  const en = readFileSync(join(repoRoot, 'README.md'), 'utf8');
+  assert.ok(en.includes('code intelligence'), '根 README.md 必须含 "code intelligence" 措辞');
+  assert.ok(!en.includes('knowledge-base'), '根 README.md 不得残留 "knowledge-base" 措辞');
+  assert.ok(!en.includes('knowledge_tools'), '根 README.md 不得残留 knowledge_tools 字段名');
+
+  const cn = readFileSync(join(repoRoot, 'README_CN.md'), 'utf8');
+  assert.ok(cn.includes('代码智能工具'), '根 README_CN.md 必须含"代码智能工具"措辞');
+  assert.ok(!cn.includes('知识库工具'), '根 README_CN.md 不得残留"知识库工具"措辞');
+  assert.ok(!cn.includes('knowledge_tools'), '根 README_CN.md 不得残留 knowledge_tools 字段名');
+});
+
 test('tick-task verb is idempotent and leaves the plan byte-identical on re-run', () => {
   const repo = makeRepo();
   const plan = join(repo, 'plan.md');
@@ -935,4 +984,23 @@ test('tick-task verb is idempotent and leaves the plan byte-identical on re-run'
   assert.equal(json.already.length, 1);
   assert.equal(readFileSync(plan, 'utf8'), afterFirst);
   rmSync(repo, { recursive: true, force: true });
+});
+
+test('syncing.md documents capability RENAME handling via rename-from metadata', () => {
+  const md = readFileSync(join(__dirname, '..', 'commands', 'syncing.md'), 'utf8');
+  assert.ok(md.includes('capability RENAME'), 'syncing.md must document capability RENAME handling');
+  assert.ok(md.includes('rename-from'), 'syncing.md must document the rename-from delta metadata convention');
+  // 具体动作与幂等语义:必须给出 git mv 与重复 syncing 的幂等保证
+  assert.ok(md.includes('git mv'), 'syncing.md must spell out the git mv rename action');
+  assert.ok(/幂等/.test(md), 'syncing.md must state the RENAME/merge idempotency guarantee');
+  // 「顶部」范围必须收敛到首个非空行,避免扫全文误命中正文引用
+  assert.ok(md.includes('首个非空行'), 'syncing.md must scope "顶部" to the first non-empty line');
+  // 冲突护栏:新旧名 delta 目录并存 MUST 报错,不猜测处理顺序
+  assert.ok(/MUST NOT 同时存在[\s\S]{0,400}报错/.test(md),
+    'syncing.md must forbid old+new capability delta dirs coexisting and error out');
+  // 旧目录不存在的两个分支必须写明
+  assert.ok(md.includes('新目录已存在'), 'syncing.md must cover the "new dir already exists → skip mv" branch');
+  assert.ok(md.includes('都不存在'), 'syncing.md must cover the "neither dir exists → new main spec" branch');
+  // 改名后交叉引用另出 delta
+  assert.ok(/grep 旧 capability 名/.test(md), 'syncing.md must require a repo-wide grep for the old capability name');
 });

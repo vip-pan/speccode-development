@@ -16,7 +16,7 @@ An end-to-end SDD (Spec-Driven Development) and automated development system bui
 ## See It in Action
 
 ```console
-$ /speccode:init                      # probe remote/trunk/knowledge-base tooling, write .speccode/config.json
+$ /speccode:init                      # probe remote/trunk/code intelligence tooling, write .speccode/config.json
 ✓ config ready: trunk=main, remote=origin, pr_tool=gh
 $ /speccode:creating-feature chore/payment-api
 ✓ feature branch created and pushed, state registered

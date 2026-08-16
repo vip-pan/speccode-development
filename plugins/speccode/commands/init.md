@@ -1,6 +1,6 @@
 ---
 name: "SpecCode: Init"
-description: "初始化/更新 speccode 开发环境:探测远端、主干、知识库工具,配置 worktree 目录与 hooks,写 .speccode/config.json(config v2)"
+description: "初始化/更新 speccode 开发环境:探测远端、主干、代码智能工具,配置 worktree 目录与 hooks,写 .speccode/config.json(config v2)"
 category: Workflow
 tags: [speccode, workflow, init]
 ---
@@ -22,18 +22,18 @@ tags: [speccode, workflow, init]
 2. **探测主干分支**:运行 `git symbolic-ref refs/remotes/origin/HEAD`(失败则回退询问);默认填 `trunk`,请用户确认。
 3. **确认 worktree_prefix**:默认 `worktree-`,请用户确认(一般直接采用默认)。
 4. **询问 worktree_dir**:worktree 存放的基础目录,默认 `.claude/worktrees`,请用户确认或自定义(相对项目根的路径)。
-5. **探测知识库工具**:运行 `speccode.mjs detect-knowledge-tools --cwd .`。
+5. **探测代码智能工具**:运行 `speccode.mjs detect-code-intel-tools --cwd .`。
    - 对返回的每个 `{id, available: {value, evidence}, integrated: {value, evidence}}`:
      - 仅当 `available.value && integrated.value` 时才登记该工具,展示「探测到 <id>(可用: <available.evidence>, 已集成: <integrated.evidence>),是否登记?」经确认写入。
      - `available.value === true && integrated.value === false`(可用但项目未集成)→ 展示为「<id> 本机可用但本项目未集成」,MUST NOT 登记,不询问登记。
      - `integrated.value === true && available.value === false`(项目有集成痕迹但工具不可用)→ 展示告警,不登记。
      - `available.value === false && integrated.value === false`(两者皆 false,常态)→ 不展示、不询问、不登记(静默跳过)。
-   - 一个都未确认则写 `"knowledge_tools": []`。
+   - 一个都未确认则写 `"code_intel_tools": []`。
 6. **询问 hooks(可选)**:告知用户可在 SDD 各节点挂 shell 命令(如 IM 通知),事件名固定 14 个:onExplored / onFeatureCreated / onWorktreeCreated / onProposed / onBrainstormed / onPlanned / onTaskCompleted / onCodeReviewRequested / onCodeReviewCompleted / onWorktreeFinished / onFeatureFinished / onPrOpened / onSynced / onArchived。
    - 用户选择配置 → 逐项询问「事件名 + shell 命令」,组装为 `hooks` 对象。
    - 用户跳过 → **不写入 `hooks` 字段**(缺失即无 hook)。
 7. **组装 config v2** 并通过 `echo '<json>' | speccode.mjs write-config --cwd . --json-stdin` 写入:
-   - `version: 2`、`initialized_at`(ISO 8601 UTC)、`trunk`、`remote`、`pr_tool`、`worktree_prefix`、`worktree_dir`、`knowledge_tools`;`hooks` 仅在用户配置时存在。
+   - `version: 2`、`initialized_at`(ISO 8601 UTC)、`trunk`、`remote`、`pr_tool`、`worktree_prefix`、`worktree_dir`、`code_intel_tools`;`hooks` 仅在用户配置时存在。
    - **不得**包含任何 v1 遗留字段。
 8. 打印 config 摘要 + 下一步指引(`/speccode:exploring` 探索需求,或直接 `/speccode:creating-feature`)。
 
@@ -55,4 +55,4 @@ tags: [speccode, workflow, init]
 ## 约束
 - 全程不修改 `.gitignore`,不删除任何本地文件。
 - 写 config 一律通过 `write-config --json-stdin` verb(内部原子写),不由 AI 手写文件。
-- 探测类结果(知识工具、pr_tool 猜测)一律经用户确认后才落盘——不确定就先询问,不猜测。
+- 探测类结果(代码智能工具、pr_tool 猜测)一律经用户确认后才落盘——不确定就先询问,不猜测。
