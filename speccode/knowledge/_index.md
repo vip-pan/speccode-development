@@ -1,14 +1,9 @@
 # 知识索引
 
-## 业务方向
-- 领域知识 → business/domain.md:业务领域术语与核心概念
-- 业务流程 → business/workflows.md:关键业务逻辑与流程
-- 历史路线 → business/lineage.md:业务演进的历史路线与决策背景
-
 ## 开发方向
-- 架构 → development/architecture.md:架构决策与设计模式
-- 准则 → development/standards.md:开发规范与代码准则
-- 环境 → development/environment.md:依赖配置、工具集与部署拓扑
-- 对接 → development/integrations.md:第三方对接与数据模型
-- 坑 → development/pitfalls.md:踩过的坑、异常与已知限制
-- 安全 → development/security.md:安全漏洞教训与合规
+- 架构 → development/architecture.md:三层分支拓扑、引擎/CLI/命令分层、对账算法、worktree 状态机与 hooks/syncing/knowledge 架构决策
+- 准则 → development/standards.md:原子写、--json-stdin、命名规则、裸调、版本发布纪律、TDD、多语言维护、marker 纪律
+- 环境 → development/environment.md:Node≥24 纯 ESM、marketplace 布局、config v2 字段、worktree_dir、探测依赖注入、tmprepo
+- 对接 → development/integrations.md:gh/glab 封装、query-pr、git check-ignore 三态、代码智能工具四类探测、PR 工具集成
+- 坑 → development/pitfalls.md:orphan 虚警、信号源时序、兄弟前缀、版本漂移、fence 误勾、stale vs superseded 等踩坑教训
+- 安全 → development/security.md:worktree 清理来源限定、pr_tool=none 降级、hooks warn-only 威胁模型、路径遍历防护

@@ -1,0 +1,30 @@
+{
+  "consumed_archives": [
+    "2026-07-13-add-speccode-plugin",
+    "2026-08-07-restructure-as-claude-code-plugin",
+    "2026-08-09-plugin-release-process",
+    "2026-08-09-speccode-v2-sdd-flow",
+    "2026-08-10-rebrand-visual-companion",
+    "2026-08-10-release-0-2-1",
+    "2026-08-10-self-host-speccode",
+    "2026-08-11-memory-append-newline",
+    "2026-08-11-orphan-false-alarm",
+    "2026-08-11-release-0-2-2",
+    "2026-08-11-type-inference-source",
+    "2026-08-11-visual-companion-cleanup",
+    "2026-08-12-check-ignore-outside-repo",
+    "2026-08-12-finish-routing-sync-archive",
+    "2026-08-12-readme-docs-overhaul",
+    "2026-08-12-readme-english",
+    "2026-08-13-knowledge-tools-detection",
+    "2026-08-13-remove-superpowers-traces",
+    "2026-08-14-knowledge-set",
+    "2026-08-15-gitnexus-detector",
+    "2026-08-15-knowledge-command-rename",
+    "2026-08-15-knowledge-set-refocus",
+    "2026-08-16-code-intel-rename",
+    "2026-08-16-distill-incremental-archive",
+    "2026-08-16-knowledge-trunk-bootstrap",
+    "2026-08-16-plan-progress-tick"
+  ]
+}
