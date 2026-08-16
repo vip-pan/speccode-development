@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-08-16
+
 ### BREAKING
 - `distilling-knowledge` / `recording-knowledge`:改为从 trunk 运行(不再要求 worktree 分支);trunk 上 bootstrap `chore/knowledge-*` 维护分支 + 直通 PR 回 trunk,不再绑 feature/worktree state;维护摘要改写 trunk 级 `.speccode/memory/_knowledge.md`。在 worktree/feature 分支运行会被拒(提示回 trunk)。
 
@@ -141,6 +143,8 @@ v2 全量迭代:四层拓扑收敛为三层、SDD 方法论与文档生命周期
 - 「文档剥离四步走」与 finish 阶段 `commit --amend` 折叠:保证 trunk 上功能提交为单一语义 commit,display reset 不误删文档。
 - GitHub / GitLab remote 探测,自动选择 `gh` / `glab` CLI,无 CLI 时降级为打印等效命令。
 
+[Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/vip-pan/speccode-development/compare/v0.2.4...v0.2.5
 [0.2.3]: https://github.com/vip-pan/speccode-development/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/vip-pan/speccode-development/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/vip-pan/speccode-development/compare/v0.2.0...v0.2.1
