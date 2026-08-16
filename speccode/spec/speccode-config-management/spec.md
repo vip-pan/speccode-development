@@ -14,7 +14,7 @@
 - `pr_tool`: `"gh" | "glab" | "none"`
 - `worktree_prefix`: 默认 `"worktree-"`
 - `worktree_dir`: worktree 基础目录,默认 `".claude/worktrees"`
-- `knowledge_tools`: 数组,init 探测并经用户确认登记的代码知识库工具(可为空数组)
+- `code_intel_tools`: 数组,init 探测并经用户确认登记的代码智能工具(可为空数组)
 
 可选字段:`hooks`(事件名 → shell 命令字符串;缺失视为全部事件无 hook,见 hook-event-integration)。
 

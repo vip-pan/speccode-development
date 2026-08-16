@@ -7,7 +7,7 @@ import { detectPrToolFromUrl, isInstalled, queryPrState } from '../lib/prtool.mj
 import { reconcile } from '../lib/reconcile.mjs';
 import { loadConfig, saveConfig, backupConfig } from '../lib/config.mjs';
 import { readState, writeState, deleteState, WORKTREE_STATUS } from '../lib/state.mjs';
-import { detectKnowledgeTools, resolveWorktreeDir, worktreeDirIgnoreState } from '../lib/detect.mjs';
+import { detectCodeIntelTools, resolveWorktreeDir, worktreeDirIgnoreState } from '../lib/detect.mjs';
 import { sddWorkspace, taskBrief, reviewPackage, tickTask } from '../lib/sdd.mjs';
 import { buildHookPayload, runHook } from '../lib/hooks.mjs';
 import { readMemory, writeMemory } from '../lib/memory.mjs';
@@ -115,7 +115,7 @@ const VERBS = {
   // Resolve against the main repo root (same --git-common-dir invariant as the
   // other verbs) so .mcp.json / project dirs are found from subdirs and
   // linked worktrees too.
-  'detect-knowledge-tools': ({ cwd }) => ({ ok: true, tools: detectKnowledgeTools(repoRoot(cwd)) }),
+  'detect-code-intel-tools': ({ cwd }) => ({ ok: true, tools: detectCodeIntelTools(repoRoot(cwd)) }),
 
   'resolve-worktree-dir': ({ cwd }) => {
     const cfg = loadConfig(speccodeDirOf(cwd));

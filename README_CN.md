@@ -16,7 +16,7 @@
 ## 看它干活
 
 ```console
-$ /speccode:init                      # 探测远端/主干/知识库工具,写 .speccode/config.json
+$ /speccode:init                      # 探测远端/主干/代码智能工具,写 .speccode/config.json
 ✓ config 就绪: trunk=main, remote=origin, pr_tool=gh
 $ /speccode:creating-feature chore/payment-api
 ✓ 功能分支已建并推送,state 已登记

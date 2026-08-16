@@ -13,7 +13,7 @@ tags: [speccode, workflow, propose, specs]
 2. 运行 `speccode.mjs reconcile --cwd . --advance-pr`,用返回的 features 找到当前 worktree 所属的功能分支 F;找不到 → 报错"当前 worktree 无法关联任何 active feature",退出。
 3. 计算 slug = F 的 slug 段(`feature/payment-api` → `payment-api`)。
 4. **冲突检查**:若 `speccode/changes/<slug>/` 已存在且未归档 → 用 AskUserQuestion 询问:「续写补充 / 先 archiving 再重建 / 取消」。取消 → 退出;先归档 → 引导用户先执行 `/speccode:archiving` 后重跑本命令;续写 → 在既有内容上增量修改。
-5. **知识库工具咨询**:若 `knowledge_tools` 非空且其能力在会话中可用,参考代码时优先使用;不可用回退 Grep/Glob/Read,不报错。
+5. **代码智能工具咨询**:若 `code_intel_tools` 非空且其能力在会话中可用,参考代码时优先使用;不可用回退 Grep/Glob/Read,不报错。
 6. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ## 知识库入口

@@ -29,11 +29,11 @@ tags: [speccode, workflow, explore, thinking]
 **对比选项**:头脑风暴多个方案、建对比表、勾勒权衡、(被问到时)推荐路径
 **暴露风险与未知**:什么地方可能出错、理解上有什么缺口、建议做哪些刺探
 
-## 知识库工具咨询
+## 代码智能工具咨询
 
 开头运行 `speccode.mjs read-config --cwd .` 读取 config:
-- 若 `knowledge_tools` 非空:逐项判断其能力在当前会话是否可用(对应 MCP server/agent/CLI 是否在场);可用 → 参考代码时 MUST 优先用它(减少代码索引的 token 消耗、更好理解项目);不可用 → 回退 Grep/Glob/Read。
-- 若 `knowledge_tools` 为空或 config 缺失:静默使用基础工具。
+- 若 `code_intel_tools` 非空:逐项判断其能力在当前会话是否可用(对应 MCP server/agent/CLI 是否在场);可用 → 参考代码时 MUST 优先用它(减少代码索引的 token 消耗、更好理解项目);不可用 → 回退 Grep/Glob/Read。
+- 若 `code_intel_tools` 为空或 config 缺失:静默使用基础工具。
 - 任何情况下工具缺失或不可用 MUST NOT 导致报错。
 
 ## 知识库入口

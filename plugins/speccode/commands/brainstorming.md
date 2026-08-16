@@ -20,7 +20,7 @@ tags: [speccode, workflow, brainstorm, design]
 1. **分支校验**:`git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix`(默认 `worktree-`)开头;否则退出(`read-config` 先跑,为 null → 提示先 `/speccode:init` 并退出)。
 2. 运行 `speccode.mjs reconcile --cwd .`,用返回的 features 找到当前 worktree 所属的功能分支 F;找不到 → 报错退出。计算 slug = F 的 slug 段。
 3. **读既有文档**:若 `speccode/changes/<slug>/propose/` 存在,读其中的 proposal/design/specs/tasks 作为脑暴起点;不存在 → 本命令将从零产出设计(简单场景可不经 proposing 直接使用本命令)。
-4. **知识库工具咨询**:若 `knowledge_tools` 非空且其能力在会话中可用,参考代码时优先使用;不可用回退 Grep/Glob/Read,不报错。
+4. **代码智能工具咨询**:若 `code_intel_tools` 非空且其能力在会话中可用,参考代码时优先使用;不可用回退 Grep/Glob/Read,不报错。
 5. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ## 知识库入口
