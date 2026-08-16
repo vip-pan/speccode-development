@@ -4,12 +4,14 @@
 
 纪律:bump `plugin.json` version 的提交必须同步更新本文件对应版本小节(见 `speccode/spec/plugin-packaging/spec.md`「版本发布纪律」)。
 
-## [Unreleased]
+## [0.2.4] - 2026-08-16
 
 ### Added
 
 - **plan 进度勾选**:新增 `tick-task --plan <P> --task <N>` verb 与引擎函数 `sdd.tickTask(planFile, n)`——把 plan 文档中 Task N 区段内 fence 外的 `- [ ]` step checkbox 勾选为 `- [x]`,`atomic.writeTextAtomic` 原子落盘,输出 `ticked`(本次勾选行)/ `already`(此前已勾选行);幂等(本次无勾选则不改写文件),Task N 不存在时 `{ok:false,error}` + exit 1 且不动 plan。
 - `sdd`:导出 `scanPlan(lines)`——plan 区段扫描的单一真源(每行标注 `{inFence, taskNo}`),由 `extractTaskBrief` 与 `tickTask` 共用,保证抽取与勾选看到同一套区段。
+- **code-intel-rename(代码智能工具命名调整)**:`config` 字段 `knowledge_tools` → `code_intel_tools`;`detect.mjs` 导出 `detectCodeIntelTools` / `CODE_INTEL_TOOL_DETECTORS`(原 `detectKnowledgeTools` / `KNOWLEDGE_TOOL_DETECTORS`);CLI verb `detect-knowledge-tools` → `detect-code-intel-tools`。`knowledge` 词根回归 SDD 知识集(`knowledge-set` / `recording-knowledge` / `distilling-knowledge` / `read-knowledge` 不变)。
+- `syncing`:新增「capability RENAME 处理」段——delta 顶部 `<!-- speccode:rename-from: <旧cap> -->` 元数据 → `git mv speccode/spec/<旧>/ <新>/`(新目录已存在则跳过,幂等;旧新都不存在走新建主规格路径)→ 继续常规合并;旧目录随 mv 消失无空壳。含 capability 并存护栏、顶部范围(首个非空行)、旧目录不存在分支、交叉引用提示。
 
 ### Changed
 
@@ -19,12 +21,17 @@
 - **BREAKING(marker 写侧格式)**:蒸馏块 marker 写侧改为 `<!-- distilled-from: <source> --> … <!-- /distilled -->`;读侧永久兼容旧 `<!-- promoted-from: -->`/`<!-- /promoted -->`。存量 knowledge 文件无需手动迁移——首次运行 distilling-knowledge 经全量重建自动重写为新格式,hand-written 段逐字节保留。
 - **BREAKING(内部契约)**:`write-knowledge` verb 的 mode `replace-promoted` → `replace-distilled`;lib 导出 `parsePromotedBlocks`/`replacePromotedBlocks` → `parseDistilledBlocks`/`replaceDistilledBlocks`。
 - **distilling-knowledge 增量读 archive**:archive/ 读取从全量改为增量——只读"尚未消费"的归档包(经新增 sidecar `speccode/knowledge/_distilled.meta.json` 的 `consumed_archives` 追踪);已消费包整包跳过、其蒸馏块原样 carry forward(归档包不可变,无信息损失)。新增 `read-consumed-archives`/`write-consumed-archives` 两 verb 与 lib helper(`distilledMetaPath`/`readConsumedArchives`/`writeConsumedArchives`/`addConsumedArchives`/`archiveRoot`/`unconsumedArchives`/`listArchiveBundles`)。首次运行(sidecar 缺失)一次性全量读+种子;删 sidecar 即强制全量重蒸作官方逃生口(不设 `--full`)。闸门区分 stale(归档包已删)与 superseded(被新包取代)。非 BREAKING:既有 knowledge 集/旧 marker 格式/`replaceDistilledBlocks` 重建语义不变。
+- 6 命令(`exploring`/`proposing`/`brainstorming`/`distilling-knowledge`/`init`/`reset`)prose:「知识库工具咨询」→「代码智能工具咨询」;`knowledge_tools` 字段引用 → `code_intel_tools`;`detect-knowledge-tools` verb 调用 → `detect-code-intel-tools`。`README.md`/`README_CN.md`(中英)字段集 + §9 标题 + 探测描述 + 命令表同步;根 `README.md`/`README_CN.md` quickstart 同步;`CLAUDE.md` Codemap MCP 段无 `knowledge_tools` 措辞,未动。
+- **BREAKING(字段 + capability RENAME)**:`config.knowledge_tools` → `config.code_intel_tools`(不兼容,用户重新 `/speccode:init`);spec capability 目录 `speccode/spec/knowledge-tool-integration/` → `code-intel-tool-integration/`(经 syncing `rename-from` 机制执行);`sdd-document-lifecycle`(exploring requirement)与 `speccode-config-management`(字段集)MODIFIED 同步 `knowledge_tools`→`code_intel_tools`。
 
 ### 内部规格演进
 
 - `knowledge-set`:晋升命令 → 蒸馏命令、直写命令 → 记录命令(RENAMED),来源标记改「写侧新格式 + 读侧双格式」;`plugin-packaging`:命令命名空间枚举 21 → 23(补录知识两条命令)。
 - `knowledge-set`:蒸馏命令 archive 读取改增量(sidecar `_distilled.meta.json` 追踪 `consumed_archives`、已消费包块 carry-forward、stale/superseded 闸门区分);新增「蒸馏消费追踪」requirement。
 - `sdd-document-lifecycle`:新增「plan 执行进度勾选」requirement(完成点勾选 + `ticked` 空则跳过 commit + 勾选不进审查 diff + ledger 恢复权威);「SDD 工件生成 verb」由三 verb 改为四 verb(补 `tick-task` 契约),并钉入 `task-brief`/`tick-task` 共用区段扫描、CommonMark fence 长度闭合、任务区段止于同级或更高级标题(MODIFIED)。
+- `code-intel-tool-integration`(RENAMED from `knowledge-tool-integration`):字段 `knowledge_tools`→`code_intel_tools`、verb `detect-knowledge-tools`→`detect-code-intel-tools`、Purpose/requirement 名/措辞改;新增 syncing「capability RENAME 处理」requirement(delta `rename-from` 元数据 + git mv + 幂等 + 并存护栏 + 交叉引用)。
+- `sdd-document-lifecycle`:MODIFIED exploring requirement(`config.knowledge_tools`→`config.code_intel_tools` 措辞随迁)。
+- `speccode-config-management`:MODIFIED config 字段集(`knowledge_tools`→`code_intel_tools`)。
 
 ## [0.2.3] - 2026-08-13
 
