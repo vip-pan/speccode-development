@@ -75,3 +75,11 @@ Tech Stack:Node ≥ 24,纯 ESM、零第三方依赖(仅 `node:` 内置);无 `pac
 <!-- distilled-from: archive/2026-08-16-plan-progress-tick/ -->
 Tech Stack:纯 ESM、零第三方依赖(仅 `node:` 内置)、Node ≥ 24。plan 文档(`speccode/changes/<slug>/plan/*.md`)是 tracked 设计文档,随 PR 上 trunk;ledger(`.speccode/sdd/<plan>/progress.md`)是 untracked 草稿,恢复用。原子写经 `atomic.writeTextAtomic`(临时文件 + rename)。
 <!-- /distilled -->
+
+<!-- distilled-from: archive/2026-08-16-readme-optimization/ -->
+文档与 CI 基础设施:根/.github/workflows/test.yml 为 test-only GitHub Action(命令 node --test ./plugins/speccode/tests/*.test.mjs,glob 形式避 Node v24 MODULE_NOT_FOUND,pull_request+push 触发);新增 CONTRIBUTING.md 与 .github/ Issue/PR 模板;插件 README(275 行 14 段)加 ToC,根 README 短不加;版本徽章与 CI 徽章并列于根 README 徽章段。
+<!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-02-askuserquestion-cr-sanitizer/ -->
+插件 hooks 层环境:plugins/speccode/hooks/ 下 hooks.json(注册)+ sanitize-ask.mjs(壳);测试新增 sanitize(纯函数)与 sanitize-hook(spawnSync 子进程测 fail-open 与输出契约)两文件;开发期真机验证方式:临时在目标项目 .claude/settings.local.json 注册 PreToolUse hook——中途注册即生效无需重启会话,验证后删除该块恢复现场。
+<!-- /distilled -->

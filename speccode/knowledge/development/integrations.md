@@ -52,3 +52,7 @@ GitNexus 探测签名:`{id:'gitnexus', match:'gitnexus', bin:'gitnexus', dirs:['
 <!-- distilled-from: archive/2026-08-16-knowledge-trunk-bootstrap/ -->
 PR 工具集成:`pr_tool` ∈ {gh, glab, none}。命令层 shell out `gh`/`glab` 创建 PR,经 `prtool.createPrArgs` 拼参数(base, head, title, body)。`pr_tool=none`→打印等效命令(如 `gh pr create --base <trunk> --head <分支> --title ...`)并中止,分支已 commit。PR 创建前先查该维护分支上是否已有 open PR,已有则跳过创建、复用并报告既有 PR url。memory 数据模型:feature 级 memory 为 `.speccode/memory/<type>__<slug>.md`(双下划线规则,复用 state 文件命名);trunk 级例外 `.speccode/memory/_exploring.md` 与 `.speccode/memory/_knowledge.md`(无斜杠 trunk 键直通)。memory 保持 untracked(与 `.speccode/` 其他运行时数据一致);主仓定位使同一 feature 的多个 worktree 共享同一份 memory。
 <!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-02-askuserquestion-cr-sanitizer/ -->
+Claude Code PreToolUse updatedInput 机制(spike 实证):hook 输出 {hookSpecificOutput:{hookEventName:'PreToolUse',permissionDecision:'allow',updatedInput:<完整替换的 tool_input>}} 即可在工具执行前改写输入;updatedInput 会被目标工具的 schema 完整校验(不合法则整次调用报 schema 错);hook 匹配经 hooks.json 的 matcher 字段;hook 载荷经 stdin 单行 JSON 含 tool_name/tool_input/tool_use_id/session_id 等;插件级 hooks/hooks.json 随插件启用自动生效,不写目标项目 settings,卸载无残留。
+<!-- /distilled -->

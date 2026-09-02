@@ -148,3 +148,16 @@ BREAKING config:既有 config.json `knowledge_tools` 失效,不兼容历史。�
 <!-- distilled-from: archive/2026-08-16-plan-progress-tick/ -->
 plan checkbox 从不被回写:writing-plans 在 plan 文档用 `- [ ]` checkbox 声明「执行时的跟踪机制」,但 executing-plans 与 subagent-driven-development 在执行时只更新会话 todo(易失)与 untracked ledger,plan 文档始终停留在「全未完成」的僵尸状态。fence 误勾风险:若不复用 fence 状态机会把代码块里 `- [ ]` 误勾;缓解——复用 `extractTaskBrief` 的 fence 状态机 + 单测覆盖 fence 内代码行。`Task 1` 误配 `Task 10`:标题匹配必须用数字边界(`Task N` 后跟非数字/EOL),否则 `Task 1` 会匹配到 `Task 10` 的前缀。嵌套 fence 不翻转状态:4反引号 markdown 块内含 3反引号 bash 内层 fence 时,内层 fence MUST NOT 闭合外层块;CommonMark 长度规则:开栏的 K 个反引号只能被 ≥ K 个反引号且其后无内容的行闭合。任务区段蔓延:Task N 区段 MUST 止于下一个同级或更高级标题(下一个 `### Task M`,或 `## 收尾`/`## Self-Review` 等尾部章节),MUST NOT 蔓延到尾部非 Task 章节。双源不一致:plan `[x]` 与 ledger 不一致;缓解——ledger 为唯一恢复权威,checkbox 不入恢复;勾选顺序为「先 ledger 后 tick」。幂等:崩溃恢复重跑同一 task;只改 `[ ]`→`[x]`,已勾不动,重跑安全。commit 噪音:每个 task 多一个 tick commit;缓解——折进现有簿记点,commit message 统一;这些 commit 在 PR diff 里是进度可视化,reviewer 能看到推进轨迹,非纯噪音。
 <!-- /distilled -->
+
+<!-- distilled-from: archive/2026-08-16-readme-optimization/ -->
+遗留的 spec 内在矛盾:「命令命名空间」requirement 逐字列举 23 个命令名,与「文档版本信息不漂移」的『命令总数 MUST NOT 写死字面量』纪律相互抵触;readme-optimization 仅修正 21→23 stale,矛盾本身留待后续单独 spec 演进,新增命令时两个 requirement 会再撞。
+<!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-02-askuserquestion-cr-sanitizer/ -->
+GLM 系模型后端在 tool_use 参数发射路径随机注入 CR(U+000D):实证 29/259 次 AskUserQuestion 参数含 CR,散布于中英/ASCII 边界(
+ 至 
+
+
+
+ 个数不定),其他工具参数与模型 text 输出零污染——诊断法:扫描 transcript JSONL 里 AskUserQuestion tool_use 的 input。坑:updatedInput 改写输入会被 schema 校验(如 options 数组最少 2 项),构造替换输入必须合法,否则整次工具调用报错而非静默忽略。
+<!-- /distilled -->

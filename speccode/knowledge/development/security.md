@@ -33,3 +33,7 @@ write-knowledge 路径遍历防护:`assertSafeRel(rel)` 校验相对路径——
 
 trunk 防护:知识集写入命令(recording-knowledge/distilling-knowledge)入口检查 `git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix`(默认 worktree-)开头,防止直提 trunk。绑定功能分支:运行 reconcile 找当前 worktree 所属 feature,找不到则报错退出。
 <!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-02-askuserquestion-cr-sanitizer/ -->
+清洗 hook 威胁模型:fail-open 语义保证 hook 自身故障(非法 stdin、抛错、超时)退化为「不清洗」,绝不升级为阻断或拒绝用户交互;清洗范围限定单一控制字符(U+000D),最小打击面,不碰其他字节;插件级 hooks.json 不写目标项目 settings,零污染、卸载无残留;import 失败(文件缺失)是唯一 fail-closed 例外,由同插件包原子性保证,可接受。
+<!-- /distilled -->
