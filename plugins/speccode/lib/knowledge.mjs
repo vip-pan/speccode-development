@@ -218,7 +218,7 @@ export function addConsumedArchives(root, bundles) {
 }
 
 // Path to the worktree's speccode/archive/ (tracked, per-worktree, peer of
-// speccode/knowledge/). Uses --show-toplevel deliberately — same worktree-root
+// speccode/knowledge/). Uses --show-toplevel deliberately — same worktree root
 // resolution as knowledgeRoot (NOT the main-repo --git-common-dir used for
 // .speccode/ runtime state). See CLAUDE.md "SDD 工作区 show-toplevel(有意差异)".
 export function archiveRoot(cwd) {

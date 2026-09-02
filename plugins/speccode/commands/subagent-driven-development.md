@@ -314,7 +314,7 @@ EOF
 **长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①每个 task 完成时;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。
 
 **收尾路由**:
-- 若 `speccode/changes/<slug>/` 存在(有落地文档):手动模式 → 用 AskUserQuestion 询问是否执行 `/speccode:syncing`;auto 模式 → 自动衔接执行 `/speccode:syncing`。判断依据不充分时 MUST 默认询问而非自动衔接。随后依次执行 `/speccode:archiving` → `/speccode:finishing-worktree`(顺序硬约束:syncing/archiving 需在 worktree-* 分支上运行,而 finishing-worktree 会移除 worktree)。
+- 若 `speccode/changes/<slug>/` 存在(有落地文档):手动模式 → 用 AskUserQuestion 询问是否执行 `/speccode:syncing`;auto 模式 → 自动衔接执行 `/speccode:syncing`。判断依据不充分时 MUST 默认询问而非自动衔接。随后依次执行 `/speccode:archiving` → `/speccode:finishing-worktree`(顺序硬约束:syncing/archiving 需在开发分支(`<type>/<slug>`、非 trunk)上运行,而 finishing-worktree 会移除 worktree)。
 - 若 `speccode/changes/<slug>/` 不存在(未落地文档):直接执行 `/speccode:finishing-worktree`,不引导 syncing/archiving。
 
 ## 常见合理化借口(Common Rationalizations)

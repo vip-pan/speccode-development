@@ -69,3 +69,30 @@ export function queryPrState(tool, ref, opts = {}) {
   if (code !== 0) return 'UNKNOWN';
   return parsePrState(tool, stdout);
 }
+
+// Repo merge-settings probe for the trunk-protection squash check. Only gh
+// exposes the fields we need; glab/none and any failure return null — the
+// caller treats null as "cannot verify" and stays warn-only.
+export function repoMergeConfig(tool, opts = {}) {
+  if (tool !== 'gh') return null;
+  const run = opts.run ?? ((cmd, args) => {
+    const r = spawnSync(cmd, args, { encoding: 'utf8', cwd: opts.cwd });
+    return { code: r.status, stdout: r.stdout ?? '' };
+  });
+  const r = run('gh', ['api', 'repos/{owner}/{repo}']);
+  if (!r || r.code !== 0) return null;
+  try {
+    const o = JSON.parse(r.stdout);
+    return {
+      allowSquash: o.allow_squash_merge === true,
+      allowMerge: o.allow_merge_commit === true,
+      allowRebase: o.allow_rebase_merge === true,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function isSquashOnly(cfg) {
+  return cfg !== null && cfg.allowSquash === true && cfg.allowMerge === false && cfg.allowRebase === false;
+}

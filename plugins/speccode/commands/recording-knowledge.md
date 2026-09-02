@@ -10,11 +10,11 @@ tags: [speccode, workflow, knowledge]
 ## 前置
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
-2. **trunk 入口校验**:`git rev-parse --abbrev-ref HEAD` MUST 等于 `config.trunk`,或为 `chore/knowledge-*` 维护分支(续跑,见 §3)。HEAD 为 `worktree-` 前缀分支,或 `feature/`/`bugfix/`/`refactor/` 功能分支,或**不匹配 `chore/knowledge-` 的** `chore/` 功能分支 → 退出并提示「请在 trunk 上运行本命令(knowledge 维护从 trunk 跑,不经 worktree/feature)」。
+2. **trunk 入口校验**:`git rev-parse --abbrev-ref HEAD` MUST 等于 `config.trunk`,或为 `chore/knowledge-*` 维护分支(续跑,见 §3)。HEAD 为非 trunk 的 `<type>/<slug>` 开发分支,或**不匹配 `chore/knowledge-` 的** `chore/` 分支 → 退出并提示「请在 trunk 上运行本命令(knowledge 维护从 trunk 跑,不经开发分支)」。
 3. **bootstrap 维护分支**:
    - 若 HEAD 已是 `chore/knowledge-*` 分支(续跑)→ 先跑下面的**登记校验**;通过则跳过本步,直接进入 §4。
    - 否则(在 trunk)检测本地**未完成**的 `chore/knowledge-*` 分支:`git branch --list 'chore/knowledge-*' --no-merged <config.trunk> || true`(`--no-merged` 排除已合入 trunk 的历史维护分支;`|| true` 保证无命中的非零退出码不被当作失败;输出逐行去掉前导 `*`/空格才是分支名)。有命中 → AskUserQuestion 询问「续跑(checkout 既有)/新建」;续跑 → 对选中分支先跑**登记校验**,通过后 `git checkout <既有分支>` 并进入 §4。
-   - **登记校验**(上面两条续跑路径 MUST 各跑一次):`speccode.mjs feature-progress --cwd . --branch <该分支>`——返回 `{"ok":false,"error":"no state for <分支>"}`(无 state,注意此时 verb 退出码为 1,属预期——判据以 JSON 的 `ok` 字段为准,不要当成命令失败)说明是纯维护分支 → 放行;返回 `ok:true`(带 `total`/`completed`/`worktrees`)说明该分支是**已登记的功能分支**(名字恰好撞上 `chore/knowledge-` 前缀)→ 退出并提示「这是已登记的功能分支(<分支>),knowledge 维护请回 trunk 新建 chore/knowledge-* 分支」,不做任何写入。
+   - **登记校验**(上面两条续跑路径 MUST 各跑一次):`speccode.mjs feature-progress --cwd . --branch <该分支>`——返回 `{"ok":false,"error":"no state for <分支>"}`(无 state,注意此时 verb 退出码为 1,属预期——判据以 JSON 的 `ok` 字段为准,不要当成命令失败)说明是纯维护分支 → 放行;返回 `ok:true`(带 `total`/`completed`)说明该分支是**已登记的功能分支**(名字恰好撞上 `chore/knowledge-` 前缀)→ 退出并提示「这是已登记的功能分支(<分支>),knowledge 维护请回 trunk 新建 chore/knowledge-* 分支」,不做任何写入。
    - 无命中 → AskUserQuestion 确认新分支名(默认 `chore/knowledge-<topic>`;topic 取自待记录内容的主题,无主题则 `chore/knowledge-record`);slug 须匹配 `^[a-z0-9-]+$`,组合为 `chore/knowledge-<slug>`。
    - `git checkout -b chore/knowledge-<slug>` + `git push -u origin chore/knowledge-<slug>`。
    - **不创建 speccode state、不运行 reconcile、不开 git worktree。**

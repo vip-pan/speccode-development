@@ -5,12 +5,12 @@ category: Workflow
 tags: [speccode, workflow, sync, specs]
 ---
 
-把本次变更的增量规格合并进主规格。这是 **agent 驱动的智能合并**——你直接读 delta 并编辑主规格(允许部分更新,如只加一个 scenario)。全程中文交互。**应在 worktree-* 分支上运行**。
+把本次变更的增量规格合并进主规格。这是 **agent 驱动的智能合并**——你直接读 delta 并编辑主规格(允许部分更新,如只加一个 scenario)。全程中文交互。**应在开发分支(`<type>/<slug>`、非 trunk)上运行**。
 
 ## 前置
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
-2. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix`(默认 `worktree-`)开头;否则退出并提示"请在 worktree 分支上运行本命令"(防止直提 trunk)。
+2. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须为非 trunk 的 `<type>/<slug>` 形态分支;否则退出并提示「请在开发分支上运行本命令」(防止直提 trunk)。
 3. 确定 slug:从当前 worktree 所属 feature 分支取 slug 段(可用 `speccode.mjs reconcile --cwd .` 的 features 判定归属);`speccode/changes/<slug>/` 不存在 → 报错"未找到需求目录,请先 /speccode:proposing",退出。
 4. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 

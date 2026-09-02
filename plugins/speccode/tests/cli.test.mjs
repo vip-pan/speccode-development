@@ -6,6 +6,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
 import { makeRepo, commitFile } from './helpers/tmprepo.mjs';
+import { writeJsonAtomic } from '../lib/atomic.mjs';
 import { parseArgs } from '../bin/speccode.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -193,41 +194,33 @@ test('write-state without --json-stdin returns ok:false and exit 1', () => {
   rmSync(repo, { recursive: true, force: true });
 });
 
-test('reconcile uses config worktree_prefix when present', () => {
-  const repo = makeRepo();
-  mkdirSync(join(repo, '.speccode', 'state', 'features'), { recursive: true });
+test('reconcile treats unregistered worktrees under config worktree_dir as orphans', () => {
+  const repo = realpathSync(makeRepo());
+  const wtdir = join(repo, 'wts');
+  mkdirSync(wtdir, { recursive: true });
   spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
-    { cwd: repo, input: JSON.stringify({ version: 1, worktree_prefix: 'wt-' }), encoding: 'utf8' });
-  // real branches: feature/p with a commit, then wt-p on top of it
-  const co1 = spawnSync('git', ['checkout', '-b', 'feature/p'], { cwd: repo, encoding: 'utf8' });
-  assert.equal(co1.status, 0, co1.stderr);
-  commitFile(repo, 'p.txt', 'p\n', 'feature p commit');
-  const state = JSON.stringify({ feature_branch: 'feature/p', status: 'in_progress', worktrees: {} });
-  spawnSync('node', [BIN, 'write-state', '--cwd', repo, '--branch', 'feature/p', '--json-stdin'],
-    { cwd: repo, input: state, encoding: 'utf8' });
-  const co2 = spawnSync('git', ['checkout', '-b', 'wt-p'], { cwd: repo, encoding: 'utf8' });
-  assert.equal(co2.status, 0, co2.stderr);
-  commitFile(repo, 'wt.txt', 'wt\n', 'wt-p commit');
+    { cwd: repo, input: JSON.stringify({ version: 2, worktree_dir: wtdir }), encoding: 'utf8' });
+  // unregistered (no state entry): half-created worktrees are reconcile's own problem
+  const add = spawnSync('git', ['worktree', 'add', join(wtdir, 'stray'), '-b', 'feature/stray'],
+    { cwd: repo, encoding: 'utf8' });
+  assert.equal(add.status, 0, add.stderr);
 
   const { code, json } = runCli(repo, 'reconcile', '--cwd', repo);
   assert.equal(code, 0);
   assert.ok(json.ok);
   assert.deepEqual(json.conflicts, []);
-  assert.deepEqual(json.orphans, []);
-  // wt-p only matches prefix 'wt-'; with the default 'worktree-' it would be ignored
-  const after = runCli(repo, 'feature-progress', '--cwd', repo, '--branch', 'feature/p');
-  assert.equal(after.json.worktrees['wt-p'].status, 'in_progress');
+  assert.ok(json.orphans.length === 1 && json.orphans[0].includes('stray'),
+    `expected the stray worktree as orphan, got ${JSON.stringify(json.orphans)}`);
   rmSync(repo, { recursive: true, force: true });
 });
 
-test('reconcile treats empty-string worktree_prefix as the default prefix', () => {
+test('reconcile ignores legacy config worktree_prefix', () => {
   const repo = makeRepo();
   mkdirSync(join(repo, '.speccode', 'state', 'features'), { recursive: true });
   spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
     { cwd: repo, input: JSON.stringify({ version: 1, worktree_prefix: '' }), encoding: 'utf8' });
-  // HEAD on a non-worktree branch: with prefix '' every branch matches startsWith(''),
-  // so feature/p would be bogusly self-registered as its own worktree; the default
-  // 'worktree-' fallback must filter it out instead.
+  // v3 reconcile ignores the legacy worktree_prefix field entirely; HEAD on a
+  // non-worktree branch must not be bogusly self-registered as its own worktree.
   const co = spawnSync('git', ['checkout', '-b', 'feature/p'], { cwd: repo, encoding: 'utf8' });
   assert.equal(co.status, 0, co.stderr);
   commitFile(repo, 'p.txt', 'p\n', 'feature p commit');
@@ -1083,4 +1076,60 @@ test('syncing.md documents capability RENAME handling via rename-from metadata',
   assert.ok(md.includes('都不存在'), 'syncing.md must cover the "neither dir exists → new main spec" branch');
   // 改名后交叉引用另出 delta
   assert.ok(/grep 旧 capability 名/.test(md), 'syncing.md must require a repo-wide grep for the old capability name');
+});
+
+test('write-state lands in state/branches and feature-progress reads it back', () => {
+  const repo = makeRepo();
+  const w = spawnSync('node', [BIN, 'write-state', '--cwd', repo, '--branch', 'feature/x', '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ branch: 'feature/x', type: 'feature', worktree: null,
+      status: 'pending', created_at: '2026-09-02T00:00:00.000Z', initial_branch: 'main' }), encoding: 'utf8' });
+  assert.equal(w.status, 0);
+  assert.ok(existsSync(join(repo, '.speccode', 'state', 'branches', 'feature__x.json')));
+  const p = spawnSync('node', [BIN, 'feature-progress', '--cwd', repo, '--branch', 'feature/x'], { cwd: repo, encoding: 'utf8' });
+  assert.equal(p.status, 0);
+  assert.equal(JSON.parse(p.stdout.trim()).total, 1);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('migrate-state converts a v2 file end to end', () => {
+  const repo = makeRepo();
+  const v2 = join(repo, '.speccode', 'state', 'features');
+  mkdirSync(v2, { recursive: true });
+  writeJsonAtomic(join(v2, 'feature__old.json'), {
+    feature_branch: 'feature/old', created_at: '2026-09-01T00:00:00.000Z',
+    initial_branch: 'main', status: 'pending', worktrees: {},
+  });
+  const r = spawnSync('node', [BIN, 'migrate-state', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: '{}', encoding: 'utf8' });
+  assert.equal(r.status, 0);
+  const json = JSON.parse(r.stdout.trim());
+  assert.deepEqual(json.migrated, ['feature__old.json']);
+  assert.ok(existsSync(join(repo, '.speccode', 'state', 'branches', 'feature__old.json')));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('reconcile resolves a relative config worktree_dir against the repo root, not process cwd', () => {
+  const repo = realpathSync(makeRepo());
+  const wtdir = join(repo, 'wts');
+  mkdirSync(wtdir, { recursive: true });
+  spawnSync('node', [BIN, 'write-config', '--cwd', repo, '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ version: 2, worktree_dir: 'wts' }), encoding: 'utf8' });
+  // unregistered (no state entry): half-created worktrees are reconcile's own problem
+  const add = spawnSync('git', ['worktree', 'add', join(wtdir, 'stray'), '-b', 'feature/stray'],
+    { cwd: repo, encoding: 'utf8' });
+  assert.equal(add.status, 0, add.stderr);
+
+  // Process cwd deliberately NOT the repo: the stray only counts as a managed
+  // orphan if the relative worktree_dir resolves against the repo root (which
+  // the verb derives from --cwd). Resolve-against-process-cwd would look for
+  // <elsewhere>/wts and silently report zero orphans.
+  const elsewhere = mkdtempSync(join(tmpdir(), 'speccode-probe-'));
+  const r = spawnSync('node', [BIN, 'reconcile', '--cwd', repo], { cwd: elsewhere, encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  const json = JSON.parse(r.stdout.trim());
+  assert.ok(json.ok);
+  assert.ok(json.orphans.length === 1 && json.orphans[0].includes('stray'),
+    `expected the stray worktree as orphan, got ${JSON.stringify(json.orphans)}`);
+  rmSync(elsewhere, { recursive: true, force: true });
+  rmSync(repo, { recursive: true, force: true });
 });

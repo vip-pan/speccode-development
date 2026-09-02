@@ -5,13 +5,19 @@ category: Workflow
 tags: [speccode, workflow, explore, thinking]
 ---
 
-进入探索模式。深入思考,自由可视化,跟随对话的方向。**应在 trunk 分支上运行**(`git rev-parse --abbrev-ref HEAD` 校验,不符则提示切回)。
+进入探索模式。深入思考,自由可视化,跟随对话的方向。**应在 trunk 分支上运行**(校验见「前置」:不符仅警告,MUST NOT 硬阻断)。
 
-**重要:探索模式是用来思考的,不是用来实现的。** 你可以读文件、搜代码、调查代码库,但 MUST NOT 写代码或实现功能,也 MUST NOT 写任何文档文件——探索结论只存在于会话上下文(`.speccode/memory/` 运行时记忆不属于文档,其书写由「完成后的衔接」段的统一接线负责)。如果用户让你直接实现,提醒他们先结束探索、走 creating-feature → creating-worktree → proposing 流程。
+**重要:探索模式是用来思考的,不是用来实现的。** 你可以读文件、搜代码、调查代码库,但 MUST NOT 写代码或实现功能,也 MUST NOT 写任何文档文件——探索结论只存在于会话上下文(`.speccode/memory/` 运行时记忆不属于文档,其书写由「完成后的衔接」段的统一接线负责)。如果用户让你直接实现,提醒他们先结束探索、按形态确认衔接(普通需求 `/speccode:creating-worktree`,大需求 `/speccode:creating-feature`,随后 proposing 流程)。
 
 **这是一种姿态,不是一套流程。** 没有固定步骤、没有必需顺序、没有强制产出。你是帮助用户探索的思考伙伴。
 
 **输入**:`/speccode:exploring` 之后的内容就是用户想思考的东西。可能是:一个模糊的想法、一个具体的问题、一个对比选型、或者什么都没说(只是进入探索模式)。
+
+## 前置
+
+1. `read-config` 加载 config;为空或缺失不报错(读取方式与处理规则见「代码智能工具咨询」)。
+1b. 前置动作:先执行 `git fetch origin && git pull`(以 config.trunk 为当前分支时);失败(如离线)仅打印警告,MUST NOT 阻断。
+2. 检查 HEAD:若不在 `config.trunk` 上,打印警告「exploring 应在 trunk 执行,当前在 <branch>,建议切回」——警告 MUST NOT 硬阻断(用户可能有意在分支上查看)。
 
 ## 姿态
 
@@ -60,6 +66,16 @@ echo '{"command":"exploring"}' | speccode.mjs run-hook --cwd . --event onExplore
 
 输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
 
+### 需求形态确认(出口,三岔)
+
+探索结论成形后、写记忆之前,MUST 做形态确认并经用户选择:
+
+1. agent 从探索内容找信号形成建议——**决定性信号**:「要么整体上线要么全不上线」的交付约束;辅助:工作可分解为多个子需求且共享同一次上线、子需求间依赖/共享基础设施、并行开发意图;**反例信号**:各部分可独立上线。
+2. AskUserQuestion 三岔:**单普通需求**(引导 `/speccode:creating-worktree`)/ **多个独立普通需求**(逐个走普通流程,不建集成)/ **大需求(整体上线)**(引导 `/speccode:creating-feature`)。
+3. 大需求确认后:父 slug 与子需求清单(语义化 slug)MUST 写入本探索 topic 的记忆内容;记忆写入的分支键:大需求 → `_exploring/<父 slug>`;各子需求如有独立探索 → 各自 topic。
+
+形态判断 MUST NOT 静默生效;误判无破坏性(误建集成可留用,漏判可手动补建),但确认一步 MUST 不省。
+
 **写记忆(按归属)**:先把探索结论摘要交给用户确认,再按归属写入 memory。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,摘要含单引号也会破壳):
 - 归属既有 feature → 追加到该 feature 的 memory:
   ```bash
@@ -76,8 +92,8 @@ echo '{"command":"exploring"}' | speccode.mjs run-hook --cwd . --event onExplore
 
 **长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①一个开发阶段/任务完成且距上次写入已隔多个阶段;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。探索会话中该键为当前(或拟新建的)topic 键 `_exploring/<topic>`;topic 尚未确定时先经用户确认再写,MUST NOT 写无斜杠 `_exploring` 键。
 
-- **手动模式**:用 AskUserQuestion 询问是否执行 `/speccode:creating-feature` 创建功能分支,以及随后 `/speccode:creating-worktree` 创建开发分支。
-- **auto 模式**(当前会话处于 Claude Code 自动接受/bypass、Codex auto 等自主执行模式):自动衔接执行 creating-feature 与 creating-worktree。判断依据不充分时 MUST 默认询问而非自动衔接。
+- **手动模式**:按形态确认结果引导——单普通需求 → `/speccode:creating-worktree`;多个独立普通需求 → 逐个走普通流程,不建集成;大需求(整体上线)→ `/speccode:creating-feature`。
+- **auto 模式**(当前会话处于 Claude Code 自动接受/bypass、Codex auto 等自主执行模式):按形态确认结果自动衔接对应命令。判断依据不充分时 MUST 默认询问而非自动衔接。
 
 ## 护栏
 

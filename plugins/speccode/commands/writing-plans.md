@@ -11,7 +11,7 @@ tags: [speccode, workflow, plan]
 
 ## 前置
 
-1. **分支校验**:`git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix` 开头;否则退出(`read-config` 先跑,为 null → 提示先 `/speccode:init` 并退出)。
+1. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须为非 trunk 的 `<type>/<slug>` 形态分支;否则退出并提示「请在开发分支上运行本命令」(防止直提 trunk)。(`read-config` 先跑,为 null → 提示先 `/speccode:init` 并退出)。
 2. 运行 `speccode.mjs reconcile --cwd .` 找到所属功能分支 F,计算 slug。
 3. **读输入文档(优先级固定)**:先读 `speccode/changes/<slug>/brainstorm/`(存在则以其为输入);不存在 → 回退读 `speccode/changes/<slug>/propose/`;两者都不存在 → 报错"未找到设计或需求文档,请先 `/speccode:proposing` 或 `/speccode:brainstorming`",退出。
 4. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
