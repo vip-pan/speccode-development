@@ -112,7 +112,7 @@ origin/<trunk>  (功能落地,feature 分支保留作历史)
 
 从需求到归档的 12 步默认路径:
 
-1. `/speccode:exploring` —— 在 trunk 上探索需求,结论留在会话上下文(写 `_exploring` memory)。
+1. `/speccode:exploring` —— 在 trunk 上探索需求,结论留在会话上下文(写按 topic 分文件的 `_exploring/<topic>` memory)。
 2. `/speccode:creating-feature` —— 从 trunk 切功能分支,登记 state,建 memory 骨架。
 3. `/speccode:creating-worktree` —— 从 feature 切 worktree,跑基线测试。
 4. `/speccode:proposing` —— 落地 proposal/design/specs/tasks 四类文档。
@@ -158,7 +158,7 @@ speccode/
 ├── config.json                          # 静态配置(config 0.2),init / reset 整体写入;creating-worktree 可回写 worktree_dir
 ├── config.json.bak.<timestamp>          # init 幂等 / reset 流程改写 config 前的显式备份(backup-config verb)
 ├── state/features/<type>__<slug>.json   # 动态状态,按 feature 维度隔离
-├── memory/                              # feature 级记忆 + _exploring.md / _knowledge.md(自忽略 .gitignore)
+├── memory/                              # feature 级记忆 + 按 topic 分文件的 _exploring__<topic>.md / _knowledge.md(自忽略 .gitignore)
 └── sdd/                                 # SDD 执行工件:task brief / review 包 / ledger(自忽略 .gitignore)
 ```
 
@@ -201,7 +201,7 @@ CR 导致提问乱码。清洗逻辑位于 `lib/sanitize.mjs`(纯函数、有单
 speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>__<slug>.md`。
 
 - **untracked,多 worktree 共享**:memory 路径解析自**主仓根**的 `.speccode/`(与 config/state 一致),同一 feature 的多个 worktree 读写同一份文件;目录由插件自写 `.gitignore` 自忽略,不污染 `git status`。
-- **`_exploring.md` 与 `_knowledge.md` 是 trunk 级例外**:exploring 在 trunk 上进行、不属于任何 feature,其结论写入 `memory/_exploring.md`;knowledge 系列命令同样从 trunk 跑,其维护摘要写入 `memory/_knowledge.md`。
+- **按 topic 分文件的探索记忆与 `_knowledge.md` 是 trunk 级例外**:exploring 在 trunk 上进行、不属于任何 feature,其结论写入 `memory/_exploring__<topic>.md`(每个 topic 一个文件;分期需求用 `<主题>-p1` 这类共同前缀);creating-feature 以原子 rename 按 slug=topic 约定承接同名 topic 文件。knowledge 系列命令同样从 trunk 跑,其维护摘要写入 `memory/_knowledge.md`。
 - **命令入口读、出口写**:SDD 各命令开始时读本 feature 的 memory 恢复上下文,结束时把结论/决定/待办写回。
 - **长会话主动书写三判据**:① 一个阶段完成(如 propose 落盘、计划评审通过);② 上下文显著增长(关键决策增多);③ 经历 compact / 会话恢复后——命中任一即应主动写 memory,而不是等命令出口。
 

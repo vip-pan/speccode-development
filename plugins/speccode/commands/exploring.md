@@ -67,14 +67,14 @@ echo '{"command":"exploring"}' | speccode.mjs run-hook --cwd . --event onExplore
   {"mode":"append","content":"<摘要>"}
   EOF
   ```
-- 无归属(尚无 feature)→ 追加到 trunk 级 `.speccode/memory/_exploring.md`,供后续 creating-feature 承接:
+- 无归属(尚无 feature)→ **先列 topic 再写入**:运行 `speccode.mjs list-memory --cwd .` 取既有探索 topic 清单(返回 `topics` 数组,形如 `["_exploring/payment-rework", ...]`;仅在返回 `ok:true` 时读取 `topics`);用 AskUserQuestion 让用户**选既有 topic 或新建**(topic 匹配 `^[a-z0-9-]+$`;清单为空则新建)。大需求的分期探索用共同前缀约定命名 topic(如 `<主题>-p1`、`<主题>-p2`)——各期承接互不携带他期内容,跨期进度与设计结论查 state、git history 与 spec 主规格,不进 memory。同名需求跨 session MUST 优先选既有 topic 追加,防碎片化。选定后追加到该 topic 文件,供后续 creating-feature 按 slug=topic 约定承接:
   ```bash
-  speccode.mjs write-memory --cwd . --branch _exploring --json-stdin <<'EOF'
+  speccode.mjs write-memory --cwd . --branch _exploring/<topic> --json-stdin <<'EOF'
   {"mode":"append","content":"<摘要>"}
   EOF
   ```
 
-**长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①一个开发阶段/任务完成且距上次写入已隔多个阶段;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。
+**长会话主动记忆**:在以下时机 MUST 主动执行 write-memory(append),不等命令出入口:①一个开发阶段/任务完成且距上次写入已隔多个阶段;②会话上下文显著增长(接近 compact 风险);③compact 恢复后继续工作的首个阶段完成时。写入内容 MUST 是关键决策/进度/待办的摘要,并经用户确认或遵循本命令内置判据。探索会话中该键为当前(或拟新建的)topic 键 `_exploring/<topic>`;topic 尚未确定时先经用户确认再写,MUST NOT 写无斜杠 `_exploring` 键。
 
 - **手动模式**:用 AskUserQuestion 询问是否执行 `/speccode:creating-feature` 创建功能分支,以及随后 `/speccode:creating-worktree` 创建开发分支。
 - **auto 模式**(当前会话处于 Claude Code 自动接受/bypass、Codex auto 等自主执行模式):自动衔接执行 creating-feature 与 creating-worktree。判断依据不充分时 MUST 默认询问而非自动衔接。
