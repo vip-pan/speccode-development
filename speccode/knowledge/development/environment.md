@@ -17,11 +17,11 @@
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-09-speccode-v2-sdd-flow/ -->
-**config v2 字段集**：version:2、initialized_at、trunk、remote、pr_tool、worktree_prefix、worktree_dir、knowledge_tools；hooks 为可选字段（缺失=无 hook）。v1 三字段（display/spec_tools/untracked_permanent）MUST NOT 出现在 version:2 的 config 中。v1→v2 迁移时若用户接受升级则三字段 MUST 被移除，不存在混合态；若拒绝则整体保持 v1。
+**config 字段集(v3)**:version:3、initialized_at、trunk、remote、pr_tool、worktree_dir、code_intel_tools;hooks 为可选字段(缺失=无 hook)。v1 三字段(display/spec_tools/untracked_permanent)与 v2 的 `worktree_prefix` MUST NOT 出现在 version:3 的 config 中;v2 读兼容,init 升级按字段 diff 移除(沿用 v1→v2 同款机制:接受升级则移除死字段,拒绝则整体保持旧版,不存在混合态)。
 
-**worktree_dir 配置化**：config 增加 worktree_dir 字段（默认 .claude/worktrees）。resolve-worktree-dir verb 输出 {dir, source:'config'|'default'} 两态（无 'missing'）。source=default（config 缺少该键，含被用户手动删除）时命令层重问并 write-config 写回。creating-worktree 创建前 `git check-ignore -q <dir>` warn-only 校验（未被忽略则警告，不硬阻断）。
+**worktree_dir 配置化**:config 增加 worktree_dir 字段(默认 .claude/worktrees)。resolve-worktree-dir verb 输出 {dir, source:'config'|'default'} 两态(无 'missing')。source=default(config 缺少该键,含被用户手动删除)时命令层重问并 write-config 写回。creating-worktree 创建前 `git check-ignore -q <dir>` warn-only 校验(未被忽略则警告,不硬阻断)。
 
-**speccode 文档目录布局（目标项目）**：speccode/changes/<slug>/{propose,brainstorm,plan}/（活跃变更）、speccode/spec/（syncing 合并后的主规格）、speccode/archive/<YYYY-MM-DD>-<slug>/（归档）。刻意不与 openspec 默认目录（openspec/）同名：目标项目若已用 openspec 可并存不冲突。slug = 所属 feature 分支的 slug 段。同 feature 多轮开发时每轮重建 changes/（前一轮已 archiving 移走，不冲突）。
+**speccode 文档目录布局(目标项目)**:speccode/changes/<slug>/{propose,brainstorm,plan}/(活跃变更)、speccode/spec/(syncing 合并后的主规格)、speccode/archive/<YYYY-MM-DD>-<slug>/(归档)。刻意不与 openspec 默认目录(openspec/)同名:目标项目若已用 openspec 可并存不冲突。slug = 所属 feature 分支的 slug 段。同 feature 多轮开发时每轮重建 changes/(前一轮已 archiving 移走,不冲突)。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-10-self-host-speccode/ -->
@@ -82,4 +82,8 @@ Tech Stack:纯 ESM、零第三方依赖(仅 `node:` 内置)、Node ≥ 24。plan
 
 <!-- distilled-from: archive/2026-09-02-askuserquestion-cr-sanitizer/ -->
 插件 hooks 层环境:plugins/speccode/hooks/ 下 hooks.json(注册)+ sanitize-ask.mjs(壳);测试新增 sanitize(纯函数)与 sanitize-hook(spawnSync 子进程测 fail-open 与输出契约)两文件;开发期真机验证方式:临时在目标项目 .claude/settings.local.json 注册 PreToolUse hook——中途注册即生效无需重启会话,验证后删除该块恢复现场。
+<!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-03-remove-feature-layer/ -->
+**config v2→3 与 state 目录更名**:config version 3,`worktree_prefix` 字段退役(v2 读兼容,init 按字段 diff 升级,接受升级则移除该字段、拒绝则整体保持 v2);state 统一 `state/branches/<type>__<slug>.json`(v2 遗留 `state/features/` 双格式原样运行,格式跟随既有文件,不做内存翻译);v3 普通分支 schema `{branch, type, worktree, merge_target(恒写), status, created_at, initial_branch}`(迁移产物 worktree 允许 null),父实体 `{branch, kind:"integration", children:[{slug}], status, created_at, initial_branch}` 无 worktree 字段;状态枚举 `{pending, in_progress, pr_open, completed}` 不变。
 <!-- /distilled -->

@@ -1,9 +1,9 @@
 <!-- distilled-from: archive/2026-07-13-add-speccode-plugin/ -->
-**worktree 清理来源限定**：reset/finishing-worktree 清理 worktree 时仅处理满足来源判据的 worktree，不清理宿主环境创建的 worktree。v0.1 判据为过滤 worktree- 前缀 + git worktree remove --force + git branch -D。v2 强化为「分支带配置前缀 且（路径位于 resolve-worktree-dir 解析结果之下 或 在 state 中有登记）」，防止误删用户自建 worktree。不满足时原样保留并打印原因。
+**worktree 清理来源限定**:reset/finishing-worktree 清理 worktree 时仅处理满足来源判据的 worktree,不清理宿主环境创建的 worktree。判据演进:v0.1 过滤 worktree- 前缀;v2 强化为「分支带配置前缀 且(路径位于 resolve-worktree-dir 解析结果之下 或 在 state 中有登记)」;v3 起前缀条件废除,最终判据 =「路径位于 `resolve-worktree-dir` 解析结果之下 或 在 state 中有登记」(state 登记项覆盖 worktree_dir 配置变更前创建的旧目录 worktree)。不满足时原样保留并打印原因。
 
-**pr_tool=none 降级语义**：config.pr_tool = "none" 时 finish/develop-complete MUST 不实际创建 PR，而是打印等效的 gh/glab 命令让用户手动执行，并中止流程。避免功能硬性要求外部 CLI，也避免在无授权环境下自动创建 PR。无 config（未 init）时 query-pr 返回 {ok:false} 并提示先执行 /speccode:init。
+**pr_tool=none 降级语义**:config.pr_tool = "none" 时 finish/develop-complete MUST 不实际创建 PR,而是打印等效的 gh/glab 命令让用户手动执行,并中止流程。避免功能硬性要求外部 CLI,也避免在无授权环境下自动创建 PR。无 config(未 init)时 query-pr 返回 {ok:false} 并提示先执行 /speccode:init。
 
-**丢弃路径需逐字输入 discard**：finishing-worktree 的丢弃（discard）不在菜单中，仅当用户显式要求时进入。进入后 MUST 先展示分支名、完整 commit 列表（git log --oneline <F>..<worktree>）、worktree 路径，再要求用户逐字输入 `discard`。任何其他输入（包括"确认/删除/是的"）→ 取消，不删任何东西。这防止误操作丢弃工作成果。
+**丢弃路径需逐字输入 discard**:finishing-worktree 的丢弃(discard)不在菜单中,仅当用户显式要求时进入。进入后 MUST 先展示分支名、完整 commit 列表(git log --oneline <F>..<worktree>)、worktree 路径,再要求用户逐字输入 `discard`。任何其他输入(包括"确认/删除/是的")→ 取消,不删任何东西。这防止误操作丢弃工作成果。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-09-speccode-v2-sdd-flow/ -->

@@ -4,13 +4,9 @@
 2. 写 verb 的 --json-stdin 是布尔 flag(parseArgs 置 true),payload 必须从 stdin 读(JSON.parse(readStdin())),绝不能 JSON.parse(jsonStdin)。
 
 <!-- distilled-from: archive/2026-07-13-add-speccode-plugin/ -->
-**ancestor 判定在 cherry-pick 跨 feature 时误判**：worktree 分支从 feature 切出，默认是 feature 的后代，`git merge-base --is-ancestor` 是天然的归属判定。但 cherry-pick 跨 feature、worktree 改名等边缘 case 会让 ancestor 判定不准；worktree_overrides 字段给用户显式修正能力。同一 worktree 同时是多个 feature 的祖先时对账报错退出，让用户手选（不自动决断，避免误关联）。
+**归属判定与 display/amend 时代的坑(已随机制退役)**:v0.1-v2 的 ancestor 归属判定在 cherry-pick 跨 feature、worktree 改名等边缘 case 误判,`worktree_overrides` 曾为此给用户显式修正能力,同一 worktree 同时是多个 feature 的祖先时对账报错退出——v3 改路径识别(路径 ∪ state 登记)把整类启发式归属问题根治;display-reset「备份 + untrack commit + reset --hard + retrack commit」四步走与 amend 折叠剥离的坑随 display 层与 `-complete` 分支删除而消亡。教训保留:识别要用无歧义锚点(路径/state 登记),不要从分支名或 ancestry 推断。
 
-**display-reset 必须「备份 + untrack commit + reset --hard + retrack commit」四步走**：直接 `git reset --hard origin/<trunk>` 会连同 tracked 文档一起删掉（可能丢失几个月生成的 spec 历史）。必须先 `git rm -r --cached` untrack（不删本地文件），reset 后不影响本地文件，再 retrack 恢复。即使做了 untrack，极端情况（用户在 reset 之间手动 rm -rf）仍可能丢，故本地 .speccode/backup/ 作为最后一层兜底。不用 /tmp（可能被系统清理）。
-
-**amend 折叠剥离 commit 改写 -complete commit hash**：`git commit --amend` 把「untrack 文档」折叠进最近的功能 commit，trunk 上看到的是单一语义 commit。风险：amend 改写 commit hash 可能触发 PR review 工具的 force-push 警告。可接受，因为 -complete 是临时分支只在 finish 阶段存在，display PR 仍基于 feature 原 commit 不受影响。
-
-**.speccode/ 不在 .gitignore，`git clean -fdx` 会丢配置**：R4 设计决策——插件与 git 原生机制解耦，不在 .gitignore 中加入任何 speccode 路径。后果：`git clean -fdx` 会摧毁 config/state。文档化警告，不在命令层面强制保护。v2 后 memory/ 与 sdd/ 自写目录内 .gitignore（内容 `*`）自忽略，`git clean -fd` 不伤两者，但 `git clean -fdx` 仍会摧毁 config/state。
+**.speccode/ 不在 .gitignore,`git clean -fdx` 会丢配置**:R4 设计决策——插件与 git 原生机制解耦,不在 .gitignore 中加入任何 speccode 路径。后果:`git clean -fdx` 会摧毁 config/state。文档化警告,不在命令层面强制保护。v2 后 memory/ 与 sdd/ 自写目录内 .gitignore(内容 `*`)自忽略,`git clean -fd` 不伤两者,但 `git clean -fdx` 仍会摧毁 config/state。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-07-restructure-as-claude-code-plugin/ -->
@@ -142,7 +138,7 @@ BREAKING config:既有 config.json `knowledge_tools` 失效,不兼容历史。�
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-knowledge-trunk-bootstrap/ -->
-三层拓扑例外:lite 流程绕过 feature/worktree state,是对三层分支拓扑不变量的例外;需在 knowledge-set 新增 requirement 显式编码此例外,使不变量「所有 tracked 改动经 feature→trunk PR」的豁免对象明确为 knowledge 维护。半成品分支堆积:续跑检测降低但未消除(用户总选新建);缓解——bootstrap 前检测未完成 `chore/knowledge-*` 并优先建议续跑;PR 合并后分支可手动删。行为 BREAKING:存量用户若依赖在 worktree 内跑 knowledge 命令,升级后需改流程;CHANGELOG 标 BREAKING。pr_tool=none 中止语义:打印等效命令中止后,用户需手动开 PR;分支已 commit;缓解——打印完整等效命令 + 分支名。命令层 prose 行为(bootstrap/PR 创建/入口拒绝)无单元测试:均为 agent+shell 层,无 verb 可注入,刻意不伪造测试。distilling/recording 的 trunk-bootstrap + pr_tool=none 行为加依赖注入单测被 descoped(终审确认:prose 命令行为无单元测试,与仓库一致;bootstrap/PR 创建/入口拒绝均 agent+shell 层,无 verb 可测,无 verb 可注入,plan 刻意不伪造)。
+双层拓扑例外(v2 时代为三层):lite 流程绕过开发分支 state,是对「所有 tracked 改动经开发分支→trunk PR」不变量的显式编码豁免,豁免对象明确为 knowledge 维护。半成品分支堆积:续跑检测降低但未消除(用户总选新建);缓解——bootstrap 前检测未完成 `chore/knowledge-*` 并优先建议续跑;PR 合并后分支可手动删。行为 BREAKING:存量用户若依赖在 worktree 内跑 knowledge 命令,升级后需改流程;CHANGELOG 标 BREAKING。pr_tool=none 中止语义:打印等效命令中止后,用户需手动开 PR;分支已 commit;缓解——打印完整等效命令 + 分支名。命令层 prose 行为(bootstrap/PR 创建/入口拒绝)无单元测试:均为 agent+shell 层,无 verb 可注入,刻意不伪造测试。distilling/recording 的 trunk-bootstrap + pr_tool=none 行为加依赖注入单测被 descoped(终审确认:prose 命令行为无单元测试,与仓库一致;bootstrap/PR 创建/入口拒绝均 agent+shell 层,无 verb 可测,无 verb 可注入,plan 刻意不伪造)。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-plan-progress-tick/ -->
@@ -160,4 +156,12 @@ GLM 系模型后端在 tool_use 参数发射路径随机注入 CR(U+000D):实证
 
 
  个数不定),其他工具参数与模型 text 输出零污染——诊断法:扫描 transcript JSONL 里 AskUserQuestion tool_use 的 input。坑:updatedInput 改写输入会被 schema 校验(如 options 数组最少 2 项),构造替换输入必须合法,否则整次工具调用报错而非静默忽略。
+<!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-03-remove-feature-layer/ -->
+**children 状态存储的读-改-写竞态**:propose 原设计 `children:[{slug,status}]` 由 finishing-worktree(子路径)写父实体——两个子 worktree 并行收尾互踩父 state;`writeJsonAtomic` 防单写损坏、防不了互踩(memory O_APPEND 改造的同款教训)。裁决:children 仅存 `{slug}`,子 state 是状态唯一真源,渲染/门禁实时派生,子收尾永不碰父实体——竞态与双真源漂移连根消失。**v2→v3 迁移不能靠条目提升**:v2 worktrees 条目名 `worktree-xxx` 无 `<type>/<slug>`,提升为独立分支视角后连 state 文件名都产不出;迁移 = 双格式运行 + 仅 init 显式迁移(多 worktree/在途/畸形/目标已存在跳过并报告),绝不静默挪用户数据。**多父实体基点歧义**:两个大需求可同时 in-flight,creating-worktree 隐式基点判定会歧义;裁决 = 不限单父,0 父→trunk 切、1 父→打印确认、≥2 父→AskUserQuestion 供选(直给完整分支名可跳过)。**spec 残留 v2 表述的内在矛盾**:remove-feature-layer 的 delta 只覆盖 git-workflow-lifecycle/speccode-config-management/session-memory 三 capability,sdd-document-lifecycle(proposing/syncing/archiving scenario 仍写 `worktree-*` 分支)与 plugin-packaging(三层拓扑图、「用户文档与 v2 一致」scenario)未同步,与双层表述形成 spec 内在矛盾——选 delta 能力面时需全仓 grep 检查跨 capability 概念触点,与「命令数字字面量矛盾」同款坑。
+<!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-02-exploring-topic-split/ -->
+**探索 topic 命名碎片化**:同一需求在不同 session 被起不同 topic 名,各持一半结论;缓解 = exploring 出口 append 前必经 `list-memory` 列既有 topic 选既有或新建,分期用共同前缀约定(`<主题>-p1/-p2`)。**type 推断信号变小**:单堆文件切成单 topic 后,推断信号从「整堆」变「单 topic 文件」,小样本推断质量可能下降;既有护栏(推断 MUST 经用户确认,不静默生效)覆盖。
 <!-- /distilled -->
