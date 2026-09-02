@@ -31,7 +31,7 @@
 - Consumes: 既有命令 `/speccode:creating-worktree`、`/speccode:finishing-worktree`;既有 verb `reconcile`(输出 `features[]`,字段 `branch/worktree/status`)、`write-memory`(`_knowledge` 保留键)。
 - Produces: distilling-knowledge 命令的新前置(§2-3)与新收尾(§落盘 4-5)文本;Task 2 按同构语义独立重写(不共享文本)。
 
-- [ ] **Step 1: 重写首行运行位置声明**
+- [x] **Step 1: 重写首行运行位置声明**
 
 将首段末尾的:
 
@@ -45,7 +45,7 @@
 **应在 state 登记的 `chore/knowledge-*` worktree 分支上运行**(trunk 上运行时由本命令引导建分支,见 §3)。
 ```
 
-- [ ] **Step 2: 重写前置 §2-3(删除特权 bootstrap,改为 state 引导)**
+- [x] **Step 2: 重写前置 §2-3(删除特权 bootstrap,改为 state 引导)**
 
 将前置 §2(trunk 入口校验,锚点「`git rev-parse --abbrev-ref HEAD` MUST 等于 `config.trunk`」)与 §3(bootstrap 维护分支,锚点「`git branch --list 'chore/knowledge-*' --no-merged`」)两段整体替换为:
 
@@ -62,7 +62,7 @@
 
 删除原 §3 中的全部特权机制语句,包括但不限于:`git checkout -b` 裸建分支、`push -u`、「**不创建 speccode state、不运行 reconcile、不开 git worktree**」、`feature-progress` 登记校验整段。原前置 §4-§8(read-knowledge / 骨架创建 / 读 spec/archive / sidecar / code-intel)内容不变,仅编号随段落合并顺延。
 
-- [ ] **Step 3: 重写落盘段(直通 PR → finishing-worktree 引导)**
+- [x] **Step 3: 重写落盘段(直通 PR → finishing-worktree 引导)**
 
 将落盘段 item 4(**直通 PR**,锚点「创建前 MUST **查重**」)整段替换为:
 
@@ -72,12 +72,12 @@
 
 将原 item 5(memory)中的触发条件句「PR 创建/复用(或 `pr_tool=none` 打印等效命令)**之后**」改为「finishing-worktree 收尾取得 PR url(或等效命令)**之后**」,其余(_knowledge 追加、顺序不可调换)不变。原 item 6(报告)中「PR url(或等效命令)」来源同步改为 finishing-worktree 输出。
 
-- [ ] **Step 4: 校验特权条款零残留**
+- [x] **Step 4: 校验特权条款零残留**
 
 Run: `grep -n "no-merged\|不阻塞\|MUST NOT 创建\|checkout -b\|不运行 reconcile\|不开 git worktree\|不调用 finishing" plugins/speccode/commands/distilling-knowledge.md`
 Expected: 零命中(exit 1)
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add plugins/speccode/commands/distilling-knowledge.md
