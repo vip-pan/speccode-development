@@ -159,3 +159,11 @@ trunk 入口校验:`git rev-parse --abbrev-ref HEAD` MUST 等于 `config.trunk`,
 <!-- distilled-from: archive/2026-08-16-plan-progress-tick/ -->
 勾选逻辑经引擎 verb 下沉,命令层 MUST NOT 用 sed/awk 在 prose 内直接改 plan(铁律:确定性逻辑绝不写进命令 markdown)。verb 输出 `ticked` 非空时命令 MUST 随同簿记点 commit;`ticked` 为空(幂等重跑,plan 未被改写)时 MUST 跳过 commit,MUST NOT 硬跑 `git commit` 让「nothing to commit」以非零退出误报失败。勾选 commit MUST 落在审查通过之后,不进入 `review-package` 的 base..head diff。ledger(`progress.md`)MUST 保持为崩溃恢复的唯一权威,plan checkbox 仅作完成态的派生视图,MUST NOT 参与恢复判断。checkbox 格式匹配 `^(\s*)- \[ \](.+)$`→替换为 `$1- [x]$2`,保留前导缩进;只勾 `[ ]`→`[x]`,不动其他状态(如 `[x]` 不回退)。幂等:已勾的不动,重跑安全。禁止占位符自检:所有 step 含可执行代码/命令/断言,无 TBD/TODO。测试用 tmprepo helpers 建真实临时 git 仓库。TDD:先写失败测试,运行确认失败,写最小实现,运行确认通过,提交。
 <!-- /distilled -->
+
+<!-- distilled-from: archive/2026-08-16-readme-optimization/ -->
+README 成熟度信号与双语控成本准则:版本徽章用 shields dynamic/json 从 raw plugin.json 读 $.version,绝不硬编码;CHANGELOG 每版本小节顶部加一句英文 highlights(非全量双语翻译,控成本);CI 仅 test-only 不引 build/lint(测试 ≠ build,守「无 lint/build 步骤」纪律);双语改动按文件分组先 EN 后 zh 镜像;spec 数字 stale(21→23)经 syncing 的 MODIFIED 修正,不绕过规格流程。
+<!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-02-askuserquestion-cr-sanitizer/ -->
+清洗类 hook 的工程准则:fail-open——hook 任何异常(stdin 非法、载荷缺字段、清洗抛错)一律 exit 0 且无输出,放行原输入,清洗是增强不是门禁,绝不阻断用户交互;清洗范围最小化,第一版只清 U+000D 不扩控制字符;stripCR 无 CR 时返回原引用,hook 壳用引用比较(cleaned !== tool_input)判变化,无变化零输出,避免无谓 updatedInput 与 schema 校验开销。
+<!-- /distilled -->

@@ -143,3 +143,7 @@ knowledge 命令 trunk 化架构:distilling/recording 改为从 trunk 运行,轻
 <!-- distilled-from: archive/2026-08-16-plan-progress-tick/ -->
 plan 执行进度勾选架构:plan 文档(`speccode/changes/<slug>/plan/*.md`)是 tracked 设计文档,随 PR 上 trunk;每个 Task N 下含多个 `- [ ]` step checkbox。引入 plan checkbox 勾选补 tracked 层的高层进度可视化,不取代 ledger。勾选粒度 = task 级(plan checkbox 是 step 级,但所有现有进度机制 todo/ledger/onTaskCompleted payload 是 task 级;无 step 级事件锚点,step 级收益不抵复杂度)。主从关系:ledger(`progress.md`)是崩溃恢复唯一权威,plan checkbox 仅作完成态的派生视图,不参与恢复判断——避免「勾了 [x] 但 ledger 未写就崩溃」的双源不一致窗口。勾选 commit 须在审查通过后(完成点),永远在 review-package 的 base..head diff 之外,不污染任务审查者 diff。commit 策略:单独立 commit 折进现有簿记点(写 ledger complete 行 + onTaskCompleted),commit message 统一 `docs(speccode): tick task N`。谁改:控制器改(勾选 checkbox 是进度簿记,与写 ledger 同类同点,不违反「控制器不亲自改文件」铁律——该铁律针对代码实现会跳过审查、污染上下文)。勾选逻辑经引擎 verb 下沉(`tickTask` 复用 `extractTaskBrief` 的 fence 状态机),命令层纯 prose 调用——该逻辑 prose 写不了,必须下沉 lib。
 <!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-02-askuserquestion-cr-sanitizer/ -->
+第二 hook 家族:插件自带 hooks/ 目录(hooks.json 顶层 hooks.PreToolUse 数组声明、matcher 匹配工具名、命令经 ${CLAUDE_PLUGIN_ROOT} 引用脚本)是 Claude Code settings hook;与 lib/hooks.mjs 的 config 生命周期事件(run-hook verb、warn-only、固定事件枚举)机制不同族,别混淆。清洗/加工类 hook 的确定性逻辑仍下沉 lib 纯函数,hook 壳只做 stdin/stdout 编排。CLAUDE.md 架构节已列为第 5 层。
+<!-- /distilled -->
