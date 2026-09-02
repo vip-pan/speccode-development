@@ -1,35 +1,33 @@
 <!-- distilled-from: archive/2026-07-13-add-speccode-plugin/ -->
-**三层分支拓扑的原始四层设计**：speccode v0.1 定义 trunk / display / feature / worktree 四层分支。trunk 为不带 spec 文档的主干；display = 主干 + spec 文档 tracked（可选，作为 feature 开发的初始分支）；feature/<slug> 从 initial 分支切出；worktree-<suffix> 从 feature 切出（硬前缀 `worktree-`）。display 与 feature 上 spec 文档 tracked、trunk 上 untracked 是 v0.1 的核心机制，也是事故源（finish 双 PR 串行阻塞、`git rm --cached` + amend、display-reset 四步走）。
+**历史:分支拓扑的演进起点**:speccode v0.1 定义 trunk / display / feature / worktree 四层分支(display 与 feature 上 spec 文档 tracked、trunk 上 untracked 是 v0.1 的核心机制,也是事故源:finish 双 PR 串行阻塞、`git rm --cached` + amend、display-reset 四步走);v2 删除 display 与 `<feature>-complete`,四层收敛为 trunk/feature/worktree 三层;v3 再删 feature 中间层收敛为双层(现行拓扑,演进细节见 2026-08-09 与 2026-09-03 两块)。
 
-**引擎/CLI/命令三层分层架构**：所有确定性逻辑（config/state 读写、原子写、对账、文档剥离、PR 轮询）实现为 `lib/*.mjs` 下经单测的 Node.js ESM 模块；`bin/speccode.mjs` 把 lib 暴露为输出单行 JSON 的 CLI 子命令（verb）；命令 markdown 仅负责交互层（提问/确认/调 verb/解析 JSON/报告），不重复实现逻辑。确定性逻辑绝不写进命令 markdown，一律下沉到 lib。
+**引擎/CLI/命令三层分层架构**:所有确定性逻辑(config/state 读写、原子写、对账、PR 轮询)实现为 `lib/*.mjs` 下经单测的 Node.js ESM 模块;`bin/speccode.mjs` 把 lib 暴露为输出单行 JSON 的 CLI 子命令(verb);命令 markdown 仅负责交互层(提问/确认/调 verb/解析 JSON/报告),不重复实现逻辑。确定性逻辑绝不写进命令 markdown,一律下沉到 lib。
 
-**对账算法（reconcile）是核心安全保证**：每个涉及 worktree 的命令（creating-worktree/finishing-worktree/finishing-feature/status）入口都跑对账，扫 `git worktree list --porcelain` ↔ `state/features/*.json`。归属判定优先级：state 已登记 → worktree_overrides 显式覆盖 → `git merge-base --is-ancestor` ancestry 判定。同一 worktree 同时是 ≥2 feature 的祖先时记 conflicts 报错退出，绝不随意归属。带 `--advance-pr` 时查 PR 状态把 pr_open → completed。
+**对账算法(reconcile)是核心安全保证**:每个涉及 worktree 的命令(creating-worktree/finishing-worktree/finishing-feature/status)入口都跑对账,扫 `git worktree list --porcelain` ↔ state(v3 `state/branches/` + v2 遗留 `state/features/` 双格式原样)。管辖判定 = 路径识别(v3:路径位于 `config.worktree_dir` 之下;v2 的 worktree_overrides 显式覆盖与 ancestry 判定已随 v3 退役)。带 `--advance-pr` 时查 PR 状态把 pr_open → completed。
 
-**worktree 状态枚举**：`pending | in_progress | pr_open | completed`。pr_open 表示已创建 PR/MR 但尚未合并，此时条目 MUST 含 pr_number。对账遇到 pr_open 的 worktree 查询 PR：MERGED → 推进 completed + completed_at；CLOSED → 回退 in_progress；OPEN → 保持。
+**worktree 状态枚举**:`pending | in_progress | pr_open | completed`。pr_open 表示已创建 PR/MR 但尚未合并,此时条目 MUST 含 pr_number。对账遇到 pr_open 的 worktree 查询 PR:MERGED → 推进 completed + completed_at;CLOSED → 回退 in_progress;OPEN → 保持。
 
-**pending_operation 挂起态与 --resume 续跑**：长阻塞操作（wait_for_pr_merge，30s 轮询、30min 超时）超时或中断后，把挂起状态写入对应 feature state 文件的 `pending_operation` 字段（结构 `{command, phase, pr_number, complete_branch?, updated_at}`）。挂起态按 feature 维度隔离，--resume 从该字段按 phase 续跑，不重复已完成阶段。成功完成后 pending_operation 被清除（或随 state 文件删除）。
+**pending_operation 挂起态与 --resume 续跑**:长阻塞操作(PR 等待,30s 轮询、30min 超时)超时或中断后,把挂起状态写入对应分支 state 文件的 `pending_operation` 字段(结构 `{command, phase, pr_number, updated_at}`)。挂起态按分支维度隔离,--resume 从该字段按 phase 续跑,不重复已完成阶段。成功完成后 pending_operation 被清除(或随 state 文件删除)。
 
-**静态配置与动态状态分离、按 feature 拆分状态文件**：config.json 只在 init 改、变更频率低；state 在每次 develop-* 改、频率高，两者读写特性不同分开降低冲突。多 active feature 并行时各写各的 state 文件，无锁可写；写异常退出只影响那一个 feature 的 state，不影响其他 feature。
-
-**命令按职责分七组**：配置（init）/ 启动（start）/ 开发（develop-start/develop-complete）/ 收尾（finish）/ 总览（status）/ display 同步（display-merge/rebase/reset-to-trunk）/ 核弹（reset）。比把所有操作塞进单命令更确定、AI 实现复杂度更低、用户更易记忆。长阻塞操作无法用单命令表达分阶段恢复语义，故分命令。
+**静态配置与动态状态分离、按分支拆分状态文件**:config.json 只在 init 改、变更频率低;state 在每次开发命令改、频率高,两者读写特性不同分开降低冲突。多 active 分支并行时各写各的 state 文件,无锁可写;写异常退出只影响那一个分支的 state,不影响其他分支。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-09-speccode-v2-sdd-flow/ -->
-**v2 三层拓扑收敛**：删除 display 分支与 `<feature>-complete` 临时分支，四层收敛为 trunk/feature/worktree 三层。finishing-feature 简化为「单 PR → trunk」（阻塞等合并），不再双 PR 串行、不再 amend 改写、不再强推。Trade-off：失去「trunk 无文档」的物理隔离，换取单 PR 无 amend；trunk 携带 speccode/ 文档被接受为默认语义，其体积由 syncing 合并 + archiving 移动控制。
+**v2 三层拓扑收敛(v3 已再收敛为双层)**:删除 display 分支与 `<feature>-complete` 临时分支,四层收敛为 trunk/feature/worktree 三层。finishing-feature 简化为「单 PR → trunk」(阻塞等合并),不再双 PR 串行、不再 amend 改写、不再强推。Trade-off:失去「trunk 无文档」的物理隔离,换取单 PR 无 amend;trunk 携带 speccode/ 文档被接受为默认语义,其体积由 syncing 合并 + archiving 移动控制。(v3 起 feature 中间层退役为 opt-in 集成分支,见 2026-09-03 块。)
 
-**docstrip 机制整体退休**：文档（speccode/ 目录）在包括 trunk 在内所有分支一律 git tracked；`git rm --cached` 剥离、amend 折叠、display-reset 四步走全部删除；lib/docstrip.mjs + tests 物理删除。残余正面语义（文档永远 tracked）并入 sdd-document-lifecycle 的「文档全分支 tracked」requirement。该 capability 全部 6 条 requirement 都锚定在被删机制上，改写后只剩一句不如移除。
+**docstrip 机制整体退休**:文档(speccode/ 目录)在包括 trunk 在内所有分支一律 git tracked;`git rm --cached` 剥离、amend 折叠、display-reset 四步走全部删除;lib/docstrip.mjs + tests 物理删除。残余正面语义(文档永远 tracked)并入 sdd-document-lifecycle 的「文档全分支 tracked」requirement。该 capability 全部 6 条 requirement 都锚定在被删机制上,改写后只剩一句不如移除。
 
-**SDD 工作区定位与主仓定位的有意差异**：主仓根（state/config/memory 所在）统一用 `git rev-parse --path-format=absolute --git-common-dir` + dirname（让 linked worktree 内运行的命令也能解析到主仓的 .speccode/）；唯独 SDD 工作区（.speccode/sdd/<plan>/）归属当前 worktree 根，用 `git rev-parse --show-toplevel`——这样 SDD 工件（brief/report/diff/ledger）随 `git worktree remove` 一并清理。两处定位方式不同是刻意的，不可统一。
+**SDD 工作区定位与主仓定位的有意差异**:主仓根(state/config/memory 所在)统一用 `git rev-parse --path-format=absolute --git-common-dir` + dirname(让 linked worktree 内运行的命令也能解析到主仓的 .speccode/);唯独 SDD 工作区(.speccode/sdd/<plan>/)归属当前 worktree 根,用 `git rev-parse --show-toplevel`——这样 SDD 工件(brief/report/diff/ledger)随 `git worktree remove` 一并清理。两处定位方式不同是刻意的,不可统一。
 
-**hooks 设计：warn-only + 固定枚举 + 永远 exit 0**。14 个固定事件（onExplored/onFeatureCreated/...）。payload 分工：引擎只补 envelope 四字段（event/timestamp/repo_root/cwd，权威、片段不可覆盖）；command 与事件上下文字段（feature_branch/worktree_branch/pr_number/task）由调用方在 stdin 片段传入。未配置事件 → no-op；枚举外事件名 → 返回带 warning 的成功（防拼写静默失效）。hook 失败不改变主命令退出码，run-hook verb 是唯一永远 exit 0 的 verb。
+**hooks 设计:warn-only + 固定枚举 + 永远 exit 0**。14 个固定事件(onExplored/onFeatureCreated/...)。payload 分工:引擎只补 envelope 四字段(event/timestamp/repo_root/cwd,权威、片段不可覆盖);command 与事件上下文字段(feature_branch/worktree_branch/pr_number/task)由调用方在 stdin 片段传入。未配置事件 → no-op;枚举外事件名 → 返回带 warning 的成功(防拼写静默失效)。hook 失败不改变主命令退出码,run-hook verb 是唯一永远 exit 0 的 verb。
 
-**memory 位置：主仓 .speccode/memory/<type>__<slug>.md，untracked**。备选（speccode/changes/<slug>/memory.md tracked）被否：会把会话笔记带进功能 PR、跨 worktree 产生合并冲突、泄漏进 trunk 历史。untracked + 主仓定位使同 feature 多 worktree 共享一份 memory（跨会话连续性的核心诉求），与 state 哲学一致。命名复用 branchToStateName 双下划线规则。
+**memory 位置:主仓 .speccode/memory/<type>__<slug>.md,untracked**。备选(speccode/changes/<slug>/memory.md tracked)被否:会把会话笔记带进功能 PR、跨 worktree 产生合并冲突、泄漏进 trunk 历史。untracked + 主仓定位使同 feature 多 worktree 共享一份 memory(跨会话连续性的核心诉求),与 state 哲学一致。命名复用 branchToStateName 双下划线规则。
 
-**syncing 源契约刻意偏离 opsx 单源语义**：delta 源 = speccode/changes/<slug>/propose/ 四类文档；brainstorm 结论经两条路径进入——(a) brainstorming 命令完成时回写 propose/（默认权威路径）；(b) syncing 检测到 brainstorm/ 存在时先吸收其未回写残余（兜底）。双重路径不是冗余：(a) 是常态，(b) 处理用户跳过/中断回写。幂等判定按 requirement 标题存在性合并（ADDED 已存在即更新、MODIFIED 部分应用、REMOVED 删块、RENAMED 改标题）。
+**syncing 源契约刻意偏离 opsx 单源语义**:delta 源 = speccode/changes/<slug>/propose/ 四类文档;brainstorm 结论经两条路径进入——(a) brainstorming 命令完成时回写 propose/(默认权威路径);(b) syncing 检测到 brainstorm/ 存在时先吸收其未回写残余(兜底)。双重路径不是冗余:(a) 是常态,(b) 处理用户跳过/中断回写。幂等判定按 requirement 标题存在性合并(ADDED 已存在即更新、MODIFIED 部分应用、REMOVED 删块、RENAMED 改标题)。
 
-**finishing-worktree 测试门禁与四选项菜单**：任何合并路径前跑全量测试，失败即停不呈现菜单（A green run only proves the tree it ran on）。菜单恰好四项：PR+等待 / PR+不等待 / 本地squash / 保留。丢弃不进菜单，仅显式要求时进入且须逐字输入 `discard`。本地 squash 合并后 MUST 复跑全量测试，失败即停（未推送，现场可恢复）。
+**finishing-worktree 测试门禁与选项菜单**:任何合并路径前跑全量测试,失败即停不呈现菜单(A green run only proves the tree it ran on)。v3 菜单按 `merge_target` 路由:目标为集成分支 → 本地 squash 自动路径(合并 + 复测,不问 PR);目标为 trunk → 菜单恰好三项:PR+等待 / PR+不等待 / 保留(v2 的「本地 squash」菜单项对 trunk 死亡)。丢弃不进菜单,仅显式要求时进入且须逐字输入 `discard`。
 
-**命令衔接链（SDD 文档生命周期）**：exploring → creating-feature → creating-worktree → proposing → [brainstorming] → writing-plans → 执行（subagent-driven-development 或 executing-plans，内含 TDD/debugging/review/verification）→ requesting-code-review → syncing → archiving → finishing-worktree → finishing-feature。writing-plans 终态二选一（SDD 或 executing-plans）；SDD 整支审查走 requesting-code-review；debugging 联动 TDD + verification-before-completion。
+**命令衔接链(SDD 文档生命周期,双层版)**:exploring(形态确认)→ creating-worktree → proposing → [brainstorming] → writing-plans → 执行(subagent-driven-development 或 executing-plans,内含 TDD/debugging/review/verification)→ (syncing → archiving) → finishing-worktree;大需求 opt-in 时两端加 creating-feature(建集成分支 + 父实体)与 finishing-feature(children 全 completed 门禁 → 单 PR → trunk)。writing-plans 终态二选一(SDD 或 executing-plans);SDD 整支审查走 requesting-code-review;debugging 联动 TDD + verification-before-completion。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-11-memory-append-newline/ -->
@@ -75,7 +73,7 @@
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-12-finish-routing-sync-archive/ -->
-**开发完成收尾路由硬约束**:有落地文档(`speccode/changes/<slug>/` 存在)→ syncing → archiving → finishing-worktree;无 → 直接 finishing-worktree。顺序是硬约束:syncing/archiving 的 trunk 防护要求 worktree-* 分支,而 finishing-worktree 会 `git worktree remove` 移除 worktree,故 sync/archive 只能在 finishing-worktree 之前执行。
+**开发完成收尾路由硬约束**:有落地文档(`speccode/changes/<slug>/` 存在)→ syncing → archiving → finishing-worktree;无 → 直接 finishing-worktree。顺序是硬约束:syncing/archiving 的守卫要求当前为非 trunk 的 `<type>/<slug>` 分支,而 finishing-worktree 会 `git worktree remove` 移除 worktree,故 sync/archive 只能在 finishing-worktree 之前执行。
 
 **条件化路由基于目录是否存在**:而非一律走 syncing/archiving——后者在无需求目录时报错退出,"暂不落地文档"路径必须直接 finish。
 
@@ -137,7 +135,7 @@ verb mode 与 lib 函数硬切改名不留别名,避免双词表长期并存(消
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-knowledge-trunk-bootstrap/ -->
-knowledge 命令 trunk 化架构:distilling/recording 改为从 trunk 运行,轻量 bootstrap(`chore/knowledge-*` 分支 + `git checkout -b` + `push -u`),不创建 speccode state、不跑 reconcile、不开 git worktree。落盘 commit 后直通 PR(经 `prtool.createPrArgs`,base=trunk),不阻塞等合并、不跑 finishing-feature。docs-only 改动不再扛 worktree 仪式(构建/基线测试对编辑 markdown 毫无用处)。memory 改 trunk 级:维护摘要写 `.speccode/memory/_knowledge.md`(新增 trunk 级保留键,镜像 `_exploring.md`),不再绑 feature F——distilling 跨所有 feature 产物,没有任何 feature「拥有」一次跨 feature 蒸馏。CLI 校验例外从「仅 `_exploring`」扩到列表 `TRUNK_MEMORY_KEYS = ['_exploring','_knowledge']`。lite 而非 heavy:knowledge≠feature,不污染 feature 状态机,`/speccode:status` 不跟踪 knowledge PR(docs,非 feature)。三层拓扑例外:lite 流程绕过 feature/worktree state,是对三层分支拓扑不变量的例外;在 knowledge-set 新增 requirement 显式编码此例外,使不变量「所有 tracked 改动经 feature→trunk PR」的豁免对象明确为 knowledge 维护。续跑检测:trunk 上若已有未完成的 `chore/knowledge-*` 分支→AskUserQuestion 询问续跑/新建。PR 创建前先查该维护分支上是否已有 open PR,已有则跳过创建、复用并报告既有 PR url。
+knowledge 命令 trunk 化架构:distilling/recording 改为从 trunk 运行,轻量 bootstrap(`chore/knowledge-*` 分支 + `git checkout -b` + `push -u`),不创建 speccode state、不跑 reconcile、不开 git worktree。落盘 commit 后直通 PR(经 `prtool.createPrArgs`,base=trunk),不阻塞等合并、不跑 finishing-feature。docs-only 改动不再扛 worktree 仪式(构建/基线测试对编辑 markdown 毫无用处)。memory 改 trunk 级:维护摘要写 `.speccode/memory/_knowledge.md`(trunk 级保留键),不再绑 feature F——distilling 跨所有 feature 产物,没有任何 feature「拥有」一次跨 feature 蒸馏。trunk 级 memory 保留键 `_knowledge` 与探索 topic 键 `_exploring/<topic>` 的校验后收口为 lib `validateMemoryBranch`(2026-09-02 起;单堆 `_exploring` 保留读兼容)。lite 而非 heavy:knowledge≠feature,不污染 feature 状态机,`/speccode:status` 不跟踪 knowledge PR(docs,非 feature)。双层拓扑例外(v2 时代为三层):lite 流程绕过开发分支 state,是对分支拓扑不变量的例外;在 knowledge-set 新增 requirement 显式编码此例外,使不变量「所有 tracked 改动经开发分支→trunk PR」的豁免对象明确为 knowledge 维护。续跑检测:trunk 上若已有未完成的 `chore/knowledge-*` 分支→AskUserQuestion 询问续跑/新建。PR 创建前先查该维护分支上是否已有 open PR,已有则跳过创建、复用并报告既有 PR url。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-plan-progress-tick/ -->
@@ -146,4 +144,12 @@ plan 执行进度勾选架构:plan 文档(`speccode/changes/<slug>/plan/*.md`)�
 
 <!-- distilled-from: archive/2026-09-02-askuserquestion-cr-sanitizer/ -->
 第二 hook 家族:插件自带 hooks/ 目录(hooks.json 顶层 hooks.PreToolUse 数组声明、matcher 匹配工具名、命令经 ${CLAUDE_PLUGIN_ROOT} 引用脚本)是 Claude Code settings hook;与 lib/hooks.mjs 的 config 生命周期事件(run-hook verb、warn-only、固定事件枚举)机制不同族,别混淆。清洗/加工类 hook 的确定性逻辑仍下沉 lib 纯函数,hook 壳只做 stdin/stdout 编排。CLAUDE.md 架构节已列为第 5 层。
+<!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-03-remove-feature-layer/ -->
+**双层分支拓扑(v3)**:feature 中间层退役——普通需求 trunk → `<type>/<slug>` worktree 分支直达(worktree 建于 `config.worktree_dir` 之下,`worktree-` 硬前缀与 `config.worktree_prefix` 退役,config 2→3),收发两步:creating-worktree 开、finishing-worktree 收(PR squash → trunk)。大需求 opt-in 集成分支(同 `<type>/<slug>` 命名、无 worktree)+ 父实体 state(`kind:"integration"`);子分支从集成当前 head 切出,`merge_target` 写集成分支名,收尾走本地 squash 汇入集成,终局 finishing-feature 一次 PR(children 全 completed 硬门禁,派生读取)。**children 仅身份**:父实体 `children` 只登记 `{slug}`,状态唯一真源是各子分支 state,门禁与 status 渲染实时派生(有 slug 无子 state = 计划未开工,渲染 pending);任何命令 MUST NOT 写父实体。**reconcile C 路径识别**:管辖 = worktree 路径位于 `config.worktree_dir` 之下,与分支名/ancestry/`worktree_overrides` 无关(用户手工分支零误伤);orphan 三判定 = 登记非 completed 但 git 缺失 / worktree_dir 下未登记 worktree / `merge_target` 指向分支不存在;completed 豁免;`conflicts` 恒 `[]`(形状兼容)。**依赖 = 切点即依赖**:并行兄弟同 head,串行后序在前序合入后再切,零依赖机制,串并行由人依状态板决策。**squash 强制 = 平台设置 + 探测指路**:插件职责收缩为 `repo-merge-config` 探测 + 警告,否决插件代合并。
+<!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-02-exploring-topic-split/ -->
+**探索记忆按 topic 分文件**:`_exploring` 单堆文件在多需求交错探索时结论无归属,产生错误归属与静默丢失。改为键形式 `_exploring/<topic>`,落盘 `.speccode/memory/_exploring__<topic>.md`(复用 `branchToStateName` 编码,`memoryPath` 零改动);扁平命名,否决目录分层(各 topic 文件生命周期同构:append → rename 消亡,聚合视图属展示层)。**承接桥 = 原子 rename**:`renameMemory('_exploring/<topic>', '<type>/<slug>')` 同目录 renameSync;slug=topic 命名约定承接(否决独立 `--topic` 参数——与 slug 构成双源歧义);目标已存在拒绝并报告,不覆盖不合并(与 reconcile「绝不随意归属」同哲学);承接非强制,未承接 topic 原地保留由 reset 兜底。**校验收口 lib**:read/write-memory 的 branch 校验收口为 `validateMemoryBranch`(保留键 `_knowledge`、`_exploring` 遗留读兼容、`_exploring/<topic>` topic 经 validateSlug、回退 validateBranch);新增 `list-memory`/`rename-memory` verb,命令层不碰文件系统细节。
 <!-- /distilled -->

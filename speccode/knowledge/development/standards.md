@@ -1,19 +1,19 @@
 <!-- distilled-from: archive/2026-07-13-add-speccode-plugin/ -->
-**原子写**：所有 .speccode/config.json 和 state/features/*.json 写入必须走 `atomic.writeJsonAtomic`（临时文件 `${path}.${pid}.tmp` + `renameSync` 覆盖）。命令层通过 write-config / write-state verb 间接调用，绝不手写 JSON 文件。临时文件 PID 后缀防并发碰撞；mv 之前的 cp 阶段崩了留临时文件但 config.json 仍是旧的（可接受的「上一次正确状态」，比半写状态好得多）。
+**原子写**:所有 .speccode/config.json 和 state(v3 `state/branches/*.json`,v2 遗留 `state/features/*.json` 同策)写入必须走 `atomic.writeJsonAtomic`(临时文件 `${path}.${pid}.tmp` + `renameSync` 覆盖)。命令层通过 write-config / write-state verb 间接调用,绝不手写 JSON 文件。临时文件 PID 后缀防并发碰撞;mv 之前的 cp 阶段崩了留临时文件但 config.json 仍是旧的(可接受的「上一次正确状态」,比半写状态好得多)。
 
-**写 verb 必须 --json-stdin**：write-config / write-state 从 stdin 读 JSON 而非从 argv 读，避免超长/转义问题。命令层用 `echo '<json>' | speccode.mjs write-state --cwd . --branch <b> --json-stdin` 形态。所有时间字段用 ISO 8601 UTC（`new Date().toISOString()`），MUST 能被 Date.parse() 解析。
+**写 verb 必须 --json-stdin**:write-config / write-state 从 stdin 读 JSON 而非从 argv 读,避免超长/转义问题。命令层用 `echo '<json>' | speccode.mjs write-state --cwd . --branch <b> --json-stdin` 形态。所有时间字段用 ISO 8601 UTC(`new Date().toISOString()`),MUST 能被 Date.parse() 解析。
 
-**命名规则**：功能分支 `<type>/<slug>`，type ∈ {feature, bugfix, refactor, chore}，slug 匹配 `/^[a-z0-9-]+$/`。state 文件名 `<type>__<slug>.json`（双下划线分隔 type 与 slug）。双下划线因为 slug 不含下划线故 `__` 是无歧义分隔符，避免 `feature/pay-ment` 与假想的 `feature-pay/ment` 映射到同一文件名。文件名不需可逆（内容已有 feature_branch 全名字段），只需唯一 + 可读。
+**命名规则**:功能分支 `<type>/<slug>`,type ∈ {feature, bugfix, refactor, chore},slug 匹配 `/^[a-z0-9-]+$/`。state 文件名 `<type>__<slug>.json`(双下划线分隔 type 与 slug)。双下划线因为 slug 不含下划线故 `__` 是无歧义分隔符,避免 `feature/pay-ment` 与假想的 `feature-pay/ment` 映射到同一文件名。文件名不需可逆(内容已有 feature_branch 全名字段),只需唯一 + 可读。
 
-**worktree 分支硬前缀**：所有 speccode 管理的 worktree 分支 MUST 以 `worktree-` 开头（config.worktree_prefix，默认 "worktree-"）。develop-start 拒绝非法前缀；对账识别非标准 worktree 标为 orphan 不纳入任何 active feature。default 名 `worktree-` + feature slug 段。
+**分支命名与身份锚点(前缀退役)**:v2 曾要求所有 speccode 管理的 worktree 分支以 `worktree-` 开头(`config.worktree_prefix`);v3 起前缀退役,worktree 分支直接用 `<type>/<slug>`,身份锚点 = 路径位于 worktree_dir 之下 ∪ state 登记,而非分支名前缀——用户手工分支零误伤。
 
-**reset 拒绝有 active_features，不接受 --force**：任何 state 文件存在即拒绝执行。强制绕过会导致 worktree 残留、state 损坏，对账算法无法在下次恢复。有未完成功能时正确路径是 finishing-feature，不是 reset。
+**reset 拒绝有 active 分支,不接受 --force**:任何 state 文件存在即拒绝执行。强制绕过会导致 worktree 残留、state 损坏,对账算法无法在下次恢复。有未完成分支时正确路径是先收尾(finishing-worktree / finishing-feature),不是 reset。
 
-**speccode 不主动删 git 分支**：核心原则，与「插件与 git 解耦」一致。feature 分支作为历史保留；`<feature>-complete` 是 speccode 自己创建的临时分支，trunk PR 合并后由 speccode 删除（本地 + 远端），这不违反「不删用户分支」——D7 保护的是用户创建的 feature 分支。
+**speccode 不主动删 git 分支**:核心原则,与「插件与 git 解耦」一致。开发分支/集成分支/子分支合并后保留作历史(speccode 收尾只删父实体 state 文件);v0.1 的 `-complete` 临时分支机制已随 v2 删除。
 
-**init 字段级幂等**：二次 init 时按字段逐个询问 `[旧值]→[新值]` diff，而非整体覆盖。值未变跳过；值变化展示 diff 询问保持/改用新值/清除，确认后才写入。state/ 目录在二次 init 时 MUST 不被读、改、删。写前 MUST 备份 config.json.bak.<timestamp>。
+**init 字段级幂等**:二次 init 时按字段逐个询问 `[旧值]→[新值]` diff,而非整体覆盖。值未变跳过;值变化展示 diff 询问保持/改用新值/清除,确认后才写入。state/ 目录在二次 init 时 MUST 不被读、改、删。写前 MUST 备份 config.json.bak.<timestamp>。
 
-**命令 markdown 全程中文交互；frontmatter 四字段 name/description/category:Workflow/tags**。命令正文裸调 `speccode.mjs <verb> --cwd .`，stdin 管道用 `echo '<json>' | speccode.mjs <verb> --cwd . --json-stdin`。未知 verb 或抛错 → `{ok:false, error}` + exit 1。
+**命令 markdown 全程中文交互;frontmatter 四字段 name/description/category:Workflow/tags**。命令正文裸调 `speccode.mjs <verb> --cwd .`,stdin 管道用 `echo '<json>' | speccode.mjs <verb> --cwd . --json-stdin`。未知 verb 或抛错 → `{ok:false, error}` + exit 1。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-07-restructure-as-claude-code-plugin/ -->
@@ -153,7 +153,7 @@ marker 格式固定,promoted 块 body 不得包含 marker 字符串(开注释序
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-knowledge-trunk-bootstrap/ -->
-trunk 入口校验:`git rev-parse --abbrev-ref HEAD` MUST 等于 `config.trunk`,或为 `chore/knowledge-*` 维护分支(续跑)。HEAD 为 `worktree-` 前缀分支,或 `feature/`/`bugfix`/`refactor/` 功能分支,或不匹配 `chore/knowledge-` 的 `chore/` 功能分支→退出并提示回 trunk。bootstrap 前检测未完成 `chore/knowledge-*` 并优先建议续跑。任何续跑路径 MUST 先经 `feature-progress` 确认该分支未被登记为 speccode feature state;已登记(名字恰好撞上 `chore/knowledge-*` 的功能分支)→拒绝并提示回 trunk 另建维护分支。PR 创建前 MUST 先查该维护分支上是否已有 open PR,已有则跳过创建、复用并报告既有 PR url。`pr_tool=none`→打印等效命令并中止,且 MUST NOT 创建 speccode state 或经 finishing-feature。维护摘要 MUST 含 PR url(或等效命令),MUST NOT 写 feature 级 memory。trunk 级 memory 保留键 `_exploring` 与 `_knowledge` 免 `validateBranch` 的 `type/slug` 校验(无斜杠 trunk 键直通);其余 branch MUST 经 `validateBranch` 校验。memory 文件命名复用 state 文件的 `type__slug` 双下划线规则;主仓定位使同一 feature 的多个 worktree 共享同一份 memory。BREAKING 需在 CHANGELOG 标注。
+trunk 入口校验:`git rev-parse --abbrev-ref HEAD` MUST 等于 `config.trunk`,或为 `chore/knowledge-*` 维护分支(续跑)。HEAD 为非 trunk 的 `<type>/<slug>` 功能分支(v3 起 worktree 分支同用此命名,无 `worktree-` 前缀)→ 退出并提示回 trunk。bootstrap 前检测未完成 `chore/knowledge-*` 并优先建议续跑。任何续跑路径 MUST 先经 `feature-progress` 确认该分支未被登记为 speccode feature state;已登记(名字恰好撞上 `chore/knowledge-*` 的功能分支)→ 拒绝并提示回 trunk 另建维护分支。PR 创建前 MUST 先查该维护分支上是否已有 open PR,已有则跳过创建、复用并报告既有 PR url。`pr_tool=none`→打印等效命令并中止,且 MUST NOT 创建 speccode state 或经 finishing-feature。维护摘要 MUST 含 PR url(或等效命令),MUST NOT 写 feature 级 memory。trunk 级 memory 校验收口为 lib `validateMemoryBranch`(`_knowledge` 保留键;`_exploring` 遗留读兼容,新写入用 `_exploring/<topic>`;其余 branch 经 `validateBranch` 校验)。memory 文件命名复用 state 文件的 `type__slug` 双下划线规则;主仓定位使同一 feature 的多个 worktree 共享同一份 memory。BREAKING 需在 CHANGELOG 标注。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-plan-progress-tick/ -->
@@ -166,4 +166,12 @@ README 成熟度信号与双语控成本准则:版本徽章用 shields dynamic/j
 
 <!-- distilled-from: archive/2026-09-02-askuserquestion-cr-sanitizer/ -->
 清洗类 hook 的工程准则:fail-open——hook 任何异常(stdin 非法、载荷缺字段、清洗抛错)一律 exit 0 且无输出,放行原输入,清洗是增强不是门禁,绝不阻断用户交互;清洗范围最小化,第一版只清 U+000D 不扩控制字符;stripCR 无 CR 时返回原引用,hook 壳用引用比较(cleaned !== tool_input)判变化,无变化零输出,避免无谓 updatedInput 与 schema 校验开销。
+<!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-03-remove-feature-layer/ -->
+**状态派生不存储(单写者原则)**:父实体 children 仅身份登记,任何命令 MUST NOT 写父实体的 children 状态——子收尾只写自己的 state;并行写互踩的竞态在结构上消灭,而非用锁管理。**迁移不静默**:v2→v3 双格式运行(旧文件按旧语义原样读写,不做内存翻译),迁移仅 init 显式(预览→确认→转换→reconcile 验证),拒绝则保持旧版照常跑——绝不静默挪用户数据。**零机制偏好**:子分支依赖 = 切点即依赖(并行同 head、串行后序在前序合入后切),不建依赖图/自动阻塞;合并动作保持「人点合并」,否决插件代合并——平台设置(squash-only)+ 探测警告 + prose 兜底已覆盖。**守卫用形态判断**:trunk 防护从「worktree- 前缀」改为「非 trunk 的 `<type>/<slug>` 分支」(形态判断即可,不要求 state 命中)。**BREAKING 迁移窗口**:选 trunk 干净时做(v2→v3 在上一 PR 刚合并后启动),在途数据建议先收尾再升级。
+<!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-02-exploring-topic-split/ -->
+**承接零歧义**:slug=topic 命名约定(否决独立 `--topic` 参数——与 slug 构成双源,不一致时听谁的成为新歧义);rename 承接非强制,未承接 topic 原地保留;rename 目标已存在拒绝并报告,不覆盖不合并(重复创建时骨架应增量维护,而非静默吞掉既有 memory)。**校验内联逻辑收口 lib**:bin 内联白名单逻辑替换为 lib 纯函数 `validateMemoryBranch`,可单测——确定性逻辑下沉铁律的又一实例。**既有测试语义随契约演进**:契约变化时旧用例重构为新契约用例,不是回归而是契约演进。
 <!-- /distilled -->
