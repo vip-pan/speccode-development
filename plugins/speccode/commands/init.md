@@ -1,6 +1,6 @@
 ---
 name: "SpecCode: Init"
-description: "初始化/更新 speccode 开发环境:探测远端、主干、代码智能工具,配置 worktree 目录与 hooks,写 .speccode/config.json(config v2)"
+description: "初始化/更新 speccode 开发环境:探测远端、主干、代码智能工具,配置 worktree 目录与 hooks,写 .speccode/config.json(config v3)"
 category: Workflow
 tags: [speccode, workflow, init]
 ---
