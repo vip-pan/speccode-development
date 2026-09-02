@@ -98,7 +98,7 @@ node plugins/speccode/bin/speccode.mjs <verb> --cwd . [--flags]
 | `query_cypher` | Count/aggregate structural queries: "how many functions in X?", "which class has most methods?", duplicate names, cross-cutting analysis. |
 
 
-**Name resolution:** Pass `symbol_name` — simple name (`parse_config`) or qualified (`ClassName.method`). No module prefix needed. **Symbol ID:** `filepath:kind:scopedName` (e.g. `player.py:method:Player.attack`, `models.py:class:Outer.Inner`)
+**Name resolution:** Pass `symbol_name` — simple name (`parse_config`) or qualified (`ClassName.method`). No module prefix needed. `ClassName:method` (Lua) and `ClassName::method` (C++/Rust) forms resolve automatically. **Symbol ID:** `filepath:kind:scopedName` (e.g. `player.py:method:Player.attack`, `models.py:class:Outer.Inner`)
 
 **Slash commands:** `/codemap-exploring`, `/codemap-debugging`, `/codemap-impact-analysis`
 
