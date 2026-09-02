@@ -5,7 +5,7 @@ category: Workflow
 tags: [speccode, workflow, propose, specs]
 ---
 
-根据 exploring 的结论,通过提问完善粗略想法、探索需求漏洞,把需求落地为结构化文档。全程中文交互。**应在 worktree-* 分支上运行**(`git rev-parse --abbrev-ref HEAD` 校验,且该 worktree 必须能归属到某个 active feature)。
+根据 exploring 的结论,通过提问完善粗略想法、探索需求漏洞,把需求落地为结构化文档。全程中文交互。**应在开发分支(`<type>/<slug>`、非 trunk)上运行**(`git rev-parse --abbrev-ref HEAD` 校验,且当前 worktree 必须能归属到某个 active 分支)。
 
 ## 前置
 

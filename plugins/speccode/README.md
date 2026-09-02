@@ -6,11 +6,11 @@
 
 ## 1. What is speccode
 
-speccode is a Claude Code workflow orchestration plugin that turns the practices previously held together by manual convention — parallel development of multiple requirements, spec document hosting, and a standardized PR/MR flow — into executable primitives exposed as 23 `/speccode:*` slash commands.
+speccode is a Claude Code workflow orchestration plugin that turns the practices previously held together by manual convention — parallel development of multiple requirements, spec document hosting, and a standardized PR/MR flow — into executable primitives exposed as `/speccode:*` slash commands.
 
-**Who it's for**: small teams or solo developers running **multiple requirements in parallel inside the same repo** — when you need to run several features at once, split each feature into multiple worktrees for parallel work, and don't want to keep second-guessing "where do the docs go", "which branch do I branch from", "who opens the PR" — speccode offers an end-to-end default path.
+**Who it's for**: small teams or solo developers running **multiple requirements in parallel inside the same repo** — when you need to run several requirements at once, split a large requirement into multiple child branches for parallel work, and don't want to keep second-guessing "where do the docs go", "which branch do I branch from", "who opens the PR" — speccode offers an end-to-end default path.
 
-**Since 0.2**, speccode ships with the complete SDD methodology (explore → document → plan → subagent execution → review → finish) plus hooks / memory capabilities; the branch topology has been reduced from four layers to **three** (trunk / feature / worktree). The methodology is ported from superpowers (v6.2.0) and self-contained inside the plugin, so target projects have **zero external dependencies**.
+**Since 0.2**, speccode ships with the complete SDD methodology (explore → document → plan → subagent execution → review → finish) plus hooks / memory capabilities; the branch topology is **two-layered** — normal requirements go straight from trunk to a `<type>/<slug>` development branch (git worktree, one step), while large requirements opt in to an integration branch + parent entity (see Section 3). The methodology is ported from superpowers (v6.2.0) and self-contained inside the plugin, so target projects have **zero external dependencies**.
 
 ## Dependencies & Prerequisites (applies to the whole document)
 
@@ -22,7 +22,7 @@ speccode is a Claude Code workflow orchestration plugin that turns the practices
 
 1. [What is speccode](#1-what-is-speccode)
 2. [23-Command Quick Reference](#2-23-command-quick-reference)
-3. [Three-Layer Branch Topology](#3-three-layer-branch-topology)
+3. [Two-Layer Branch Topology](#3-two-layer-branch-topology)
 4. [Development Workflow](#4-development-workflow)
 5. [Documentation Layout](#5-documentation-layout)
 6. [The `.speccode/` Directory Structure](#6-the-speccode-directory-structure)
@@ -41,24 +41,24 @@ Lifecycle:
 
 | Command | Purpose | Prerequisite (branch to run on) |
 |---|---|---|
-| `/speccode:init` | Initialize/update: probe the remote, trunk, and code intelligence tools; configure the worktree directory and hooks; write `.speccode/config.json` (config 0.2) | Any branch (first run usually on trunk) |
-| `/speccode:exploring` | Explore a requirement (produces no documents; conclusions live in the session context; code intelligence tools preferred) | trunk |
-| `/speccode:creating-feature` | Cut a feature branch from trunk and push it; register state; create the memory skeleton | trunk |
-| `/speccode:creating-worktree` | Cut a worktree from the feature branch (worktree_dir configurable, check-ignore validation, project setup, baseline tests) | feature/bugfix/refactor/chore branch |
-| `/speccode:finishing-worktree` | Merge worktree results back into the feature branch (test gate; wait for PR / don't wait for PR / local squash / keep; discarding requires the literal word `discard`) | worktree-* branch |
-| `/speccode:finishing-feature` | Wrap up the whole feature: single PR → trunk (block until merged) → delete state → switch back to trunk | feature branch |
-| `/speccode:status` | Read-only overview: worktree progress of every active feature, pending_operation, config summary | Any branch |
-| `/speccode:reset` | Reset the environment: clear state and worktrees, ask field-by-field whether to clear config, ask whether to clear memory//sdd//brainstorm/ (refuses to run when active features exist) | Any branch, and must have no active features |
+| `/speccode:init` | Initialize/update: probe the remote, trunk, and code intelligence tools; configure the worktree directory and hooks; write `.speccode/config.json` (config v3) | Any branch (first run usually on trunk) |
+| `/speccode:exploring` | Explore a requirement (produces no documents; conclusions live in the session context; code intelligence tools preferred; ends with the three-way requirement-shape confirmation) | trunk |
+| `/speccode:creating-feature` | **Opt-in (large requirement)**: cut an integration branch from trunk and push it; register the parent-entity state; create the memory skeleton | trunk |
+| `/speccode:creating-worktree` | Cut a development branch from trunk or from an integration branch (the only entry for normal requirements; worktree_dir configurable, check-ignore validation, project setup, baseline tests) | trunk (normal) or integration branch (parent scenario); HEAD unconstrained |
+| `/speccode:finishing-worktree` | Finish a development branch and route the merge by `merge_target`: local squash + retest into the integration branch / PR to trunk (test gate; discarding requires the literal word `discard`) | a `<type>/<slug>` development branch |
+| `/speccode:finishing-feature` | **Opt-in (large requirement)** finale: all children completed gate → integration branch → trunk single PR (blocks until merged) → delete the parent-entity state → switch back to trunk | integration branch |
+| `/speccode:status` | Read-only overview: progress of every active branch, pending_operation, config summary (parent entities render child statuses derived in real time) | Any branch |
+| `/speccode:reset` | Reset the environment: clear state and worktrees, ask field-by-field whether to clear config, ask whether to clear memory//sdd//brainstorm/ (refuses to run when any active branch exists) | Any branch, and must have no active branches |
 
 Documentation flow (every step commits on save):
 
 | Command | Purpose | Prerequisite (branch to run on) |
 |---|---|---|
-| `/speccode:proposing` | Land the four document types (proposal/design/specs/tasks) into `speccode/changes/<slug>/propose/`; the complexity assessment recommends brainstorming | worktree-* branch |
-| `/speccode:brainstorming` | Socratic design refinement; designs land in `brainstorm/` and are written back into propose/ to keep them consistent | worktree-* branch |
-| `/speccode:writing-plans` | Detailed implementation plan (brainstorm/ first, propose/ as fallback), lands in `plan/` | worktree-* branch |
-| `/speccode:syncing` | Merge incremental changes into the `speccode/spec/` main spec (absorbs leftover brainstorm material; idempotent) | worktree-* branch |
-| `/speccode:archiving` | Archive: move changes/<slug>/ into `speccode/archive/<YYYY-MM-DD>-<slug>/` | worktree-* branch |
+| `/speccode:proposing` | Land the four document types (proposal/design/specs/tasks) into `speccode/changes/<slug>/propose/`; the complexity assessment recommends brainstorming | a `<type>/<slug>` development branch |
+| `/speccode:brainstorming` | Socratic design refinement; designs land in `brainstorm/` and are written back into propose/ to keep them consistent | a `<type>/<slug>` development branch |
+| `/speccode:writing-plans` | Detailed implementation plan (brainstorm/ first, propose/ as fallback), lands in `plan/` | a `<type>/<slug>` development branch |
+| `/speccode:syncing` | Merge incremental changes into the `speccode/spec/` main spec (absorbs leftover brainstorm material; idempotent) | a `<type>/<slug>` development branch |
+| `/speccode:archiving` | Archive: move changes/<slug>/ into `speccode/archive/<YYYY-MM-DD>-<slug>/` | a `<type>/<slug>` development branch |
 
 Knowledge:
 
@@ -71,50 +71,65 @@ Methodology:
 
 | Command | Purpose | Prerequisite (branch to run on) |
 |---|---|---|
-| `/speccode:subagent-driven-development` | Dispatch a fresh subagent per task + double review + final review of the whole team; ledger recovery | worktree-* branch |
-| `/speccode:executing-plans` | Execute the plan in batches within this session, with human checkpoints | worktree-* branch |
-| `/speccode:dispatching-parallel-agents` | Concurrent subagent workflow (independent failure domains) | worktree-* branch |
-| `/speccode:test-driven-development` | RED-GREEN-REFACTOR loop (with iron rules and an anti-pattern table) | worktree-* branch |
-| `/speccode:systematic-debugging` | 4-stage root-cause process + defense in depth + conditional-wait techniques | worktree-* branch |
-| `/speccode:requesting-code-review` | Dispatch a review subagent (spec compliance + code quality) | worktree-* branch |
-| `/speccode:receiving-code-review` | Handle review feedback technically (no performative agreement) | worktree-* branch |
-| `/speccode:verification-before-completion` | Evidence before assertion: verification must run before declaring anything done | worktree-* branch |
+| `/speccode:subagent-driven-development` | Dispatch a fresh subagent per task + double review + final review of the whole team; ledger recovery | a `<type>/<slug>` development branch |
+| `/speccode:executing-plans` | Execute the plan in batches within this session, with human checkpoints | a `<type>/<slug>` development branch |
+| `/speccode:dispatching-parallel-agents` | Concurrent subagent workflow (independent failure domains) | a `<type>/<slug>` development branch |
+| `/speccode:test-driven-development` | RED-GREEN-REFACTOR loop (with iron rules and an anti-pattern table) | a `<type>/<slug>` development branch |
+| `/speccode:systematic-debugging` | 4-stage root-cause process + defense in depth + conditional-wait techniques | a `<type>/<slug>` development branch |
+| `/speccode:requesting-code-review` | Dispatch a review subagent (spec compliance + code quality) | a `<type>/<slug>` development branch |
+| `/speccode:receiving-code-review` | Handle review feedback technically (no performative agreement) | a `<type>/<slug>` development branch |
+| `/speccode:verification-before-completion` | Evidence before assertion: verification must run before declaring anything done | a `<type>/<slug>` development branch |
 
-## 3. Three-Layer Branch Topology
+## 3. Two-Layer Branch Topology
 
 ```
 origin/<trunk> (trunk; spec documents tracked)
    │
-   │  /speccode:creating-feature
-   ▼
-feature/<slug>  (feature branch; one requirement can split into multiple rounds / multiple worktrees)
-   │
-   │  /speccode:creating-worktree (multiple can run in parallel)
+   │  /speccode:creating-worktree (normal requirement, one step; base = trunk, several can run in parallel)
    ├──────────────┬──────────────┐
    ▼              ▼              ▼
-worktree-a     worktree-b     worktree-c
+feature/a       feature/b      feature/c   ← development branches <type>/<slug> (no worktree- prefix)
    │  The documentation flow (proposing→brainstorming→writing-plans→…→syncing→archiving) happens on this layer
-   └── /speccode:finishing-worktree (test gate + PR / local squash) merges back into feature ──┘
+   └── /speccode:finishing-worktree (merge_target=trunk: test gate + PR) merges back into trunk ──┘
    │
-   │  /speccode:finishing-feature (single PR → trunk, blocks until merged)
    ▼
-origin/<trunk>  (feature lands; the feature branch stays as history)
+origin/<trunk>  (normal requirement lands; the development branch stays as history)
+
+- - - - - Large-requirement opt-in path (only when exploring's exit shape confirmation says "large") - - - - -
+   │
+   │  /speccode:creating-feature (cut an integration branch from trunk, register the parent-entity state)
+   ▼
+feature/big-rework  (integration branch; parent entity kind:integration, children register slugs only)
+   │
+   │  /speccode:creating-worktree (base = integration head; parallel or serial child branches)
+   ├──────────────┬──────────────┐
+   ▼              ▼              ▼
+feature/s1      feature/s2     feature/s3   (child branches; merge_target = the integration branch)
+   │  The documentation flow as above, on each child branch
+   └── /speccode:finishing-worktree (merge_target=integration: local squash + retest)──────────┘
+   │
+   ▼
+feature/big-rework  (integration head advances; children statuses are derived from the child-branch states)
+   │
+   │  /speccode:finishing-feature (all-children-completed gate; single PR → trunk)
+   ▼
+origin/<trunk>  (the large requirement lands in one shot)
 ```
 
 Key points:
 
 - **trunk**: the trunk branch (default `master`), spec documents tracked.
-- **feature/bugfix/refactor/chore/<slug>**: feature branches, cut from trunk; one requirement can split into multiple rounds and multiple worktrees.
-- **worktree-<suffix>**: development branches with a hard `worktree-` prefix (configurable), cut from feature via `git worktree add`; multiple can run in parallel.
-- **The topology has only three layers**: v0.1's milestone branch layer and temporary wrap-up branches have been removed (see Section 11); `speccode/` documents are tracked on every branch and ride the PR chain up to trunk.
+- **`<type>/<slug>` development branches**: cut from trunk for normal requirements (via `git worktree add`; several can run in parallel), with no `worktree-` prefix; in the large-requirement scenario they are cut from the integration branch with `merge_target` pointing at it.
+- **Integration branch (opt-in large requirement)**: created from trunk by `/speccode:creating-feature`, registered as a parent-entity state (`kind:"integration"`); `children` registers child slugs only (identity only), with statuses derived in real time from the child-branch states; the finale is a single PR to trunk via `/speccode:finishing-feature`.
+- **The topology has only two layers**: normal requirements go trunk ↔ development branch directly; the integration branch is the opt-in aggregation layer for large requirements, never a mandatory default layer. `speccode/` documents are tracked on every branch and ride the PR chain up to trunk.
 
 ## 4. Development Workflow
 
-The 12-step default path from requirement to archive:
+The default path from requirement to delivery (normal requirements go directly; large requirements opt in to the integration branch):
 
-1. `/speccode:exploring` — explore the requirement on trunk; conclusions stay in the session context (writes per-topic `_exploring/<topic>` memories).
-2. `/speccode:creating-feature` — cut the feature branch from trunk; register state; create the memory skeleton.
-3. `/speccode:creating-worktree` — cut a worktree from feature; run baseline tests.
+1. `/speccode:exploring` — explore the requirement on trunk; conclusions stay in the session context (writes per-topic `_exploring/<topic>` memories); the exit runs the **requirement-shape confirmation** with three outcomes: a single normal requirement / several independent normal requirements / a large requirement (integration).
+2. (Large-requirement opt-in only) `/speccode:creating-feature` — cut the integration branch from trunk and register the parent-entity state; normal requirements skip this step.
+3. `/speccode:creating-worktree` — cut a development branch from trunk (normal) or from the integration branch (large requirement); run baseline tests.
 4. `/speccode:proposing` — land the four document types: proposal/design/specs/tasks.
 5. (For complex ones) `/speccode:brainstorming` — refine the design and write it back into propose/.
 6. `/speccode:writing-plans` — produce the detailed implementation plan.
@@ -122,8 +137,8 @@ The 12-step default path from requirement to archive:
 8. `/speccode:requesting-code-review` — dispatch a review subagent; process feedback with `/speccode:receiving-code-review`.
 9. `/speccode:syncing` — merge the delta into the main spec.
 10. `/speccode:archiving` — archive changes/<slug>/.
-11. `/speccode:finishing-worktree` — merge worktree results back into feature.
-12. `/speccode:finishing-feature` — single PR → trunk, block until merged, delete state, switch back to trunk.
+11. `/speccode:finishing-worktree` — route by `merge_target`: normal requirements open a PR → trunk; large-requirement child branches local-squash into the integration branch.
+12. (Large-requirement opt-in only) `/speccode:finishing-feature` — once all children are completed, a single PR from the integration branch → trunk (blocks until merged), delete the parent-entity state, switch back to trunk; normal requirements have no such step.
 
 ## 5. Documentation Layout
 
@@ -155,18 +170,18 @@ Conventions:
 
 ```
 .speccode/
-├── config.json                          # static config (config 0.2), written wholesale by init / reset; creating-worktree can write back worktree_dir
+├── config.json                          # static config (config v3), written wholesale by init / reset; creating-worktree can write back worktree_dir
 ├── config.json.bak.<timestamp>          # explicit backup before init-idempotent / reset flows rewrite config (backup-config verb)
-├── state/features/<type>__<slug>.json   # dynamic state, isolated per feature
+├── state/branches/<type>__<slug>.json   # dynamic state, isolated per branch (v2 legacy lives in state/features/, dual-format compatible)
 ├── memory/                              # feature-level memory + per-topic _exploring__<topic>.md / _knowledge.md (self-ignored via .gitignore)
 └── sdd/                                 # SDD execution artifacts: task briefs / review packages / ledger (self-ignored via .gitignore)
 ```
 
-- **`config.json`**: the global static config; the config 0.2 field set: `version` (=2), `initialized_at`, `trunk`, `remote`, `pr_tool`, `worktree_prefix`, `worktree_dir`, `code_intel_tools`; `hooks` only exists when the user configured it. Wholesale writes happen only in `/speccode:init` (fresh or idempotent) and `/speccode:reset`; additionally, `/speccode:creating-worktree` asks for a directory when config lacks `worktree_dir`, then writes the field back into config via `write-config` (read current config → add field → write back wholesale). **Backups are not an automatic behavior of `write-config`**: `config.json.bak.<timestamp>` is produced by the init-idempotent flow and the reset flow explicitly calling `backup-config` before rewriting; creating-worktree's single-field write-back creates no backup.
-- **`state/features/`**: one file per active feature (`<type>__<slug>.json`, double underscore separating type and slug), recording worktree progress (`pending | in_progress | pr_open | completed`) and any suspended `pending_operation` (for `--resume`). Multiple features each write their own files in parallel, no locks needed.
+- **`config.json`**: the global static config; the config v3 field set: `version` (=3), `initialized_at`, `trunk`, `remote`, `pr_tool`, `worktree_dir`, `code_intel_tools`; `hooks` only exists when the user configured it (v2's `worktree_prefix` retired with the two-layer topology; idempotent init removes it via the field diff). Wholesale writes happen only in `/speccode:init` (fresh or idempotent) and `/speccode:reset`; additionally, `/speccode:creating-worktree` asks for a directory when config lacks `worktree_dir`, then writes the field back into config via `write-config` (read current config → add field → write back wholesale). **Backups are not an automatic behavior of `write-config`**: `config.json.bak.<timestamp>` is produced by the init-idempotent flow and the reset flow explicitly calling `backup-config` before rewriting; creating-worktree's single-field write-back creates no backup.
+- **`state/branches/`**: one file per active branch (`<type>__<slug>.json`, double underscore separating type and slug), recording that branch's status (`pending | in_progress | pr_open | completed`) and any suspended `pending_operation` (for `--resume`); parent entities (`kind:"integration"`) additionally hold the children list (child slugs only, identity only) — child-branch statuses are derived in real time and never stored on the parent. v2-legacy `state/features/` files are read and written with v2 semantics as-is (dual-format compatibility; init can migrate them explicitly). Branches each write their own files in parallel, no locks needed.
 - **`memory/`**: feature-level session memory (see Section 8); the plugin writes its own `.gitignore` (content `*`) so it stays invisible to `git status` and is spared by `git clean -fd`.
 - **`sdd/`**: SDD execution artifacts, belonging to the **current worktree root** (not the main repo root), cleaned up together with `git worktree remove`; self-ignored as well.
-- Every write to `config.json` and `state/features/*.json` uses the atomic "write a temp file + rename over" strategy to avoid half-written states when a process is interrupted; memory text writes use the same strategy.
+- Every write to `config.json` and `state/branches/*.json` (v2-legacy `state/features/*.json` same policy) uses the atomic "write a temp file + rename over" strategy to avoid half-written states when a process is interrupted; memory text writes use the same strategy.
 
 ## 7. Hooks
 
@@ -202,7 +217,7 @@ the hook shell is fail-open: any error passes the original input through untouch
 speccode maintains one cross-session memory per feature: `.speccode/memory/<type>__<slug>.md`.
 
 - **Untracked, shared across worktrees**: the memory path resolves from the **main repo root**'s `.speccode/` (same as config/state), so multiple worktrees of the same feature read and write the same file; the directory is self-ignored by the plugin's own `.gitignore` and never pollutes `git status`.
-- **Per-topic exploring memory and `_knowledge.md` are the trunk-level exceptions**: exploring happens on trunk and belongs to no feature, so its conclusions go into `memory/_exploring__<topic>.md` (one file per topic; phased requirements share a prefix like `<topic>-p1`); creating-feature adopts the matching topic file via an atomic rename (slug = topic). The knowledge commands also run from trunk, so their maintenance summaries go into `memory/_knowledge.md`.
+- **Per-topic exploring memory and `_knowledge.md` are the trunk-level exceptions**: exploring happens on trunk and belongs to no feature, so its conclusions go into `memory/_exploring__<topic>.md` (one file per topic; phased requirements share a prefix like `<topic>-p1`); the adoption host for exploration conclusions is creating-worktree (normal requirements / child requirements — an atomic rename on a slug match) and creating-feature (the large requirement's parent topic). The knowledge commands also run from trunk, so their maintenance summaries go into `memory/_knowledge.md`.
 - **Commands read on entry, write on exit**: SDD commands read this feature's memory at the start to restore context, and write conclusions / decisions / remaining tasks back on exit.
 - **Proactive writing during long sessions — three triggers**: ① a stage completes (e.g. propose lands, the plan passes review); ② context has grown significantly (more key decisions accumulating); ③ after a compact / session restore — hit any one of these and write memory proactively, rather than waiting for a command exit.
 
@@ -223,13 +238,13 @@ Usage convention: `/speccode:exploring`, `/speccode:proposing`, and `/speccode:b
 
 > The numbering follows the original v0.1 risk table: R1 / R7 / R10 were retired together with the v0.1 four-layer topology (milestone branch layer + temporary wrap-up branches), see the Section 11 migration; the rest are kept and updated to the new command names.
 
-- **R2 — ancestry checks can misjudge when cherry-picks cross features** → Mitigation: the `worktree_overrides` field explicitly specifies worktree ownership as an "advanced-user fallback"; when a single worktree matches ≥2 features, reconciliation records `conflicts` and exits with an error, never assigning arbitrarily.
+- **R2 — ancestry checks can misjudge when cherry-picks cross features** → as of v3, reconciliation uses **path identification** (inside worktree_dir + state registration) and no longer performs ancestry checks, so this misjudgment surface is gone; the v2-era mitigation was the `worktree_overrides` field explicitly specifying worktree ownership as an "advanced-user fallback" — that field is now retired (read-compatible, ignored).
 - **R3 — during init's field-by-field idempotent flow, the user may accidentally change fields like trunk** → Mitigation: every changed field MUST show the `[old value] → [new value]` diff when confirming, and is only written after the user chooses "use the new value".
 - **R4 — `.speccode/` is not in `.gitignore`, so `git clean -fdx` can wipe the config** → Mitigation: explicitly warned about in the init prompt and in this README; no forced protection at the command level (consistent with the principle that "the plugin doesn't modify `.gitignore` or override the user's git mechanisms"). See Section 14's Important Warning.
 - **R5 — the blocking wait for a PR merge times out after 30 minutes by default, which may not be enough for long PR reviews** → Mitigation: the timeout is a soft limit; the suspended state goes into `pending_operation` and `--resume` lets you continue later, so the command never deadlocks permanently.
 - **R6 — the worktree directory is configurable, defaulting to `.claude/worktrees`** → Mitigation: `.claude/` itself is already untracked, so git won't sweep it up as content to commit; init can override the default via the config `worktree_dir`, and `creating-worktree` runs a check-ignore validation before creating the directory.
 - **R8 — cross-platform (Windows / macOS / Linux) path and command differences** → Mitigation: the implementation targets macOS / Linux first, and Windows support is out of scope; command implementations rely as much as possible on the cross-platform behavior of `git` / `gh` / `glab` itself rather than doing platform checks at the shell layer.
-- **R9 — `pr_open` worktrees depend on reconciliation to advance** → Mitigation: `creating-worktree` / `finishing-worktree` / `finishing-feature` / `status` all run reconciliation on entry, so any one of them advances a merged `pr_open` worktree to `completed`; if the user merges a PR and never runs another speccode command, the state won't update by itself — acceptable, since `status` is the explicit query entry point and can be triggered manually at any time.
+- **R9 — `pr_open` branches depend on reconciliation to advance** → Mitigation: `creating-worktree` / `finishing-worktree` / `finishing-feature` / `status` all run reconciliation on entry, so any one of them advances a merged `pr_open` branch to `completed`; if the user merges a PR and never runs another speccode command, the state won't update by itself — acceptable, since `status` is the explicit query entry point and can be triggered manually at any time.
 - **R11 — hooks execute via `sh -c` with the current user's full permissions** → Mitigation and threat model: ① failure semantics are warn-only (30s timeout, `run-hook` always exits 0), so a hook cannot break the main flow; ② `config.hooks` is safe because `.speccode/` is **untracked by convention** — a hook command can never enter someone else's repo via clone / PR / merge, and the only way to write config is the local user's own `init`; ③ hook payload values are structurally constrained by `slug.mjs` (type is a closed enum, slug matches `/^[a-z0-9-]+$/`), and path-like fields are generated by the engine, containing no arbitrary user input.
 - **R12 — concurrent memory writes are last-writer-wins** → multiple worktrees of the same feature share one memory file, and when two sessions "write on exit" at the same time, the later write overwrites the earlier one. Mitigation: read before write (read-before-write: increment on top of the existing content rather than replacing the whole file); confirm with the user before large overwriting rewrites.
 - **R13 — trunk document churn** → spec documents are tracked on every branch, so multiple features landing in parallel keep changing `speccode/` on trunk and widen the merge-conflict surface. Mitigation: `syncing` only does **incremental, idempotent merges** (rerunning leaves no dirty changes); `archiving` **moves** whole directories rather than deleting, keeping review diffs clean and history traceable; documents ride the same PR as the code to trunk and are visible during review.
@@ -288,11 +303,11 @@ speccode's methodology commands inherit five working philosophies:
 
 The `.speccode/` directory is **not tracked by git and will not be added to `.gitignore`** in user projects — this is an explicit design decision of the plugin (speccode decouples from git's native mechanisms; all tracking management goes through explicit commands, and the plugin never edits `.gitignore` on the user's behalf).
 
-**What this means**: if you run `git clean -fdx` in this repo, `.speccode/config.json`, `state/features/*.json`, `memory/`, and `sdd/` are all treated as "untracked/ignored files" and deleted along with them — you lose the current speccode config, the progress state of every active feature, and all session memory (corresponding to risk R4).
+**What this means**: if you run `git clean -fdx` in this repo, `.speccode/config.json`, `state/` (`branches/` and legacy `features/`), `memory/`, and `sdd/` are all treated as "untracked/ignored files" and deleted along with them — you lose the current speccode config, the progress state of every active branch, and all session memory (corresponding to risk R4).
 
 `git clean -fd` (without `-x`) is gentler: `memory/` and `sdd/` are judged ignored because of the plugin's self-written `.gitignore` (content `*`), so `-fd` spares both; but `config.json`, `state/`, and `config.json.bak.*` are still ordinary untracked files, and **`-fd` deletes them too**.
 
 **Recommendations**:
 
 - Before running any `git clean` variant, first confirm what `-x` and `-f` cover; if in doubt, dry-run with `git clean -n` first, or explicitly exclude the `.speccode/` path.
-- If `config.json` really is lost, rerun `/speccode:init` to rebuild it; when `state/features/*.json` are lost, the progress information of the corresponding features cannot be recovered and must be re-registered via reconciliation against the actual current git state; a lost `memory/` means session memory is unrecoverable — only the committed documents under `speccode/` can rebuild context.
+- If `config.json` really is lost, rerun `/speccode:init` to rebuild it; when the files under `state/` are lost, the progress information of the corresponding branches cannot be recovered and must be re-registered via reconciliation against the actual current git state; a lost `memory/` means session memory is unrecoverable — only the committed documents under `speccode/` can rebuild context.

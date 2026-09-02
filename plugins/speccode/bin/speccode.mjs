@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
-import { join, dirname, resolve } from 'node:path';
+import { join, dirname, resolve, isAbsolute } from 'node:path';
 import { isatty } from 'node:tty';
 import { git } from '../lib/git.mjs';
-import { detectPrToolFromUrl, isInstalled, queryPrState } from '../lib/prtool.mjs';
+import { detectPrToolFromUrl, isInstalled, queryPrState, repoMergeConfig, isSquashOnly } from '../lib/prtool.mjs';
 import { reconcile } from '../lib/reconcile.mjs';
 import { loadConfig, saveConfig, backupConfig } from '../lib/config.mjs';
-import { readState, writeState, deleteState, WORKTREE_STATUS } from '../lib/state.mjs';
+import { readState, writeState, deleteState, migrateStateV2toV3, WORKTREE_STATUS } from '../lib/state.mjs';
 import { detectCodeIntelTools, resolveWorktreeDir, worktreeDirIgnoreState } from '../lib/detect.mjs';
 import { sddWorkspace, taskBrief, reviewPackage, tickTask } from '../lib/sdd.mjs';
 import { buildHookPayload, runHook } from '../lib/hooks.mjs';
@@ -73,7 +73,16 @@ const VERBS = {
         queryPr = (prNumber) => queryPrState(tool, String(prNumber), { cwd });
       }
     }
-    const res = reconcile(sc, { prefix: cfg?.worktree_prefix || 'worktree-', cwd, queryPr });
+    // A relative config worktree_dir must resolve against the repo root (where
+    // .speccode lives), never the process cwd — isPathInside would otherwise
+    // anchor it wherever the CLI happened to be launched from.
+    const res = reconcile(sc, {
+      cwd,
+      worktreeDir: cfg?.worktree_dir
+        ? isAbsolute(cfg.worktree_dir) ? cfg.worktree_dir : resolve(dirname(sc), cfg.worktree_dir)
+        : undefined,
+      queryPr,
+    });
     return { ok: true, orphans: res.orphans, conflicts: res.conflicts, advanced: res.advanced,
       features: res.features };
   },
@@ -101,9 +110,19 @@ const VERBS = {
     return { ok: true };
   },
 
+  'migrate-state': ({ cwd }) => ({ ok: true, ...migrateStateV2toV3(speccodeDirOf(cwd)) }),
+
   'feature-progress': ({ cwd, branch }) => {
     const st = readState(speccodeDirOf(cwd), branch);
     if (!st) return { ok: false, error: `no state for ${branch}` };
+    // v3: one branch IS one unit (branch ↔ worktree 1:1, the legacy `worktrees`
+    // map is gone — design D3). v2-era states keep the old counting. The v3
+    // discriminator matches reconcile's own v3/legacy split in reconcile.mjs.
+    if (typeof st.branch === 'string') {
+      return { ok: true, total: 1,
+        completed: st.status === WORKTREE_STATUS.COMPLETED ? 1 : 0,
+        worktree: st.worktree ?? null };
+    }
     const wts = st.worktrees || {};
     const total = Object.keys(wts).length;
     const completed = Object.values(wts)
@@ -196,6 +215,13 @@ const VERBS = {
     } catch (err) {
       return { ok: true, hook: { ran: false, ok: false, error: String(err?.message || err) } };
     }
+  },
+
+  'repo-merge-config': ({ cwd }) => {
+    const cfg = loadConfig(speccodeDirOf(cwd));
+    const tool = cfg?.pr_tool ?? 'none';
+    const config = repoMergeConfig(tool, { cwd });
+    return { ok: true, config, squashOnly: isSquashOnly(config) };
   },
 
   'read-memory': ({ cwd, branch }) => {

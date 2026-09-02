@@ -5,12 +5,12 @@ category: Workflow
 tags: [speccode, workflow, archive]
 ---
 
-把已完成的需求变更归档。全程中文交互。**应在 worktree-* 分支上运行**(syncing 之后、finishing-worktree 之前)。
+把已完成的需求变更归档。全程中文交互。**应在开发分支(`<type>/<slug>`、非 trunk)上运行**(syncing 之后、finishing-worktree 之前)。
 
 ## 前置
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
-2. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix`(默认 `worktree-`)开头;否则退出并提示"请在 worktree 分支上运行本命令"(防止直提 trunk)。
+2. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须为非 trunk 的 `<type>/<slug>` 形态分支;否则退出并提示「请在开发分支上运行本命令」(防止直提 trunk)。
 3. 确定 slug:默认取当前 worktree 所属 feature 的 slug 段;用户也可在命令参数中显式指定。`speccode/changes/<slug>/` 不存在 → 报错退出。
 4. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 

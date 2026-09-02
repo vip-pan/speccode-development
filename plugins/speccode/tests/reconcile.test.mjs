@@ -1,127 +1,126 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { rmSync, mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { rmSync, mkdirSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { makeRepo, commitFile } from './helpers/tmprepo.mjs';
+import { makeRepo } from './helpers/tmprepo.mjs';
 import { writeState, readState } from '../lib/state.mjs';
+import { writeJsonAtomic } from '../lib/atomic.mjs';
 import { reconcile } from '../lib/reconcile.mjs';
 
-function g(repo, ...args) {
-  const r = spawnSync('git', args, { cwd: repo, encoding: 'utf8' });
-  if (r.status !== 0) throw new Error(r.stderr);
-  return r.stdout.trim();
+// ---- v3 path identification ----
+
+function writeV3Branch(sc, branch, extra = {}) {
+  writeState(sc, branch, {
+    branch, type: branch.split('/')[0], worktree: null,
+    status: 'in_progress', created_at: '2026-09-02T00:00:00.000Z', initial_branch: 'main',
+    ...extra,
+  });
 }
 
-test('auto-attaches unregistered worktree via ancestry', () => {
-  const repo = makeRepo();
-  const sc = mkdtempSync(join(tmpdir(), 'sc-'));
-  g(repo, 'checkout', '-b', 'feature/payment');
-  commitFile(repo, 'a.txt', 'a', 'a');
-  g(repo, 'checkout', 'master');
-  writeState(sc, 'feature/payment', {
-    feature_branch: 'feature/payment', initial_branch: 'master',
-    status: 'in_progress', worktrees: {},
-  });
-  const wt = join(repo, '..', `wt-p-${Date.now()}`);
-  g(repo, 'worktree', 'add', wt, '-b', 'worktree-payment', 'feature/payment');
-  const res = reconcile(sc, { prefix: 'worktree-', cwd: repo });
-  const st = readState(sc, 'feature/payment');
-  assert.equal(st.worktrees['worktree-payment'].status, 'in_progress');
-  assert.equal(res.orphans.length, 0);
-  g(repo, 'worktree', 'remove', wt, '--force');
+function addWorktree(repo, dir, branch) {
+  const r = spawnSync('git', ['worktree', 'add', dir, '-b', branch], { cwd: repo, encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  return dir;
+}
+
+test('v3 reconcile: managed = worktree under worktreeDir, branch name irrelevant', () => {
+  // realpathSync: git worktree list prints real paths; on macOS /var is a
+  // symlink to /private/var (same normalization as cli.test.mjs makeRepo use)
+  const repo = realpathSync(makeRepo());
+  const sc = join(repo, '.speccode');
+  const wtdir = join(repo, 'wts');
+  mkdirSync(wtdir, { recursive: true });
+  writeV3Branch(sc, 'feature/payment');
+  addWorktree(repo, join(wtdir, 'feature__payment'), 'feature/payment');
+  const res = reconcile(sc, { cwd: repo, worktreeDir: wtdir });
+  assert.deepEqual(res.orphans, []);
+  assert.deepEqual(res.conflicts, []);
   rmSync(repo, { recursive: true, force: true });
-  rmSync(sc, { recursive: true, force: true });
 });
 
-test('marks orphan when state worktree absent in git', () => {
-  const repo = makeRepo();
-  const sc = mkdtempSync(join(tmpdir(), 'sc-'));
-  writeState(sc, 'feature/x', {
-    feature_branch: 'feature/x', initial_branch: 'master', status: 'in_progress',
-    worktrees: { 'worktree-x': { status: 'in_progress' } },
-  });
-  const res = reconcile(sc, { prefix: 'worktree-', cwd: repo });
-  assert.ok(res.orphans.includes('worktree-x'));
+test('v3 reconcile: worktree outside worktreeDir is invisible (host-owned)', () => {
+  const repo = realpathSync(makeRepo());
+  const sc = join(repo, '.speccode');
+  const wtdir = join(repo, 'wts');
+  mkdirSync(wtdir, { recursive: true });
+  writeV3Branch(sc, 'feature/payment');
+  addWorktree(repo, join(repo, 'outside-wt'), 'feature/payment'); // 在 wtdir 之外
+  const res = reconcile(sc, { cwd: repo, worktreeDir: wtdir });
+  assert.deepEqual(res.orphans, []);
   rmSync(repo, { recursive: true, force: true });
-  rmSync(sc, { recursive: true, force: true });
 });
 
-test('does not mark orphan for completed worktree absent in git', () => {
-  const repo = makeRepo();
-  const sc = mkdtempSync(join(tmpdir(), 'sc-'));
-  writeState(sc, 'feature/x', {
-    feature_branch: 'feature/x', initial_branch: 'master', status: 'in_progress',
-    worktrees: { 'worktree-x': { status: 'completed', completed_at: '2026-08-11T00:00:00.000Z' } },
-  });
-  const res = reconcile(sc, { prefix: 'worktree-', cwd: repo });
-  assert.equal(res.orphans.length, 0);
+test('v3 reconcile: unregistered worktree under worktreeDir is an orphan', () => {
+  const repo = realpathSync(makeRepo());
+  const sc = join(repo, '.speccode');
+  const wtdir = join(repo, 'wts');
+  mkdirSync(wtdir, { recursive: true });
+  addWorktree(repo, join(wtdir, 'stray'), 'feature/stray');
+  const res = reconcile(sc, { cwd: repo, worktreeDir: wtdir });
+  assert.ok(res.orphans.length === 1 && res.orphans[0].includes('stray'));
   rmSync(repo, { recursive: true, force: true });
-  rmSync(sc, { recursive: true, force: true });
 });
 
-test('worktree_overrides wins over ancestry', () => {
-  const repo = makeRepo();
-  const sc = mkdtempSync(join(tmpdir(), 'sc-'));
-  // both features share ancestry with the worktree branch (branched from master)
-  g(repo, 'branch', 'feature/a');
-  g(repo, 'branch', 'feature/b');
-  writeState(sc, 'feature/a', {
-    feature_branch: 'feature/a', status: 'in_progress', worktrees: {},
-    worktree_overrides: { 'worktree-shared': 'feature/a' },
-  });
-  writeState(sc, 'feature/b', {
-    feature_branch: 'feature/b', status: 'in_progress', worktrees: {},
-  });
-  const wt = join(repo, '..', `wt-s-${Date.now()}`);
-  g(repo, 'worktree', 'add', wt, '-b', 'worktree-shared', 'master');
-  const res = reconcile(sc, { prefix: 'worktree-', cwd: repo });
-  assert.ok(readState(sc, 'feature/a').worktrees['worktree-shared']);
-  assert.ok(!readState(sc, 'feature/b').worktrees['worktree-shared']);
-  assert.equal(res.conflicts.length, 0);
-  g(repo, 'worktree', 'remove', wt, '--force');
+test('v3 reconcile: unregistered worktree outside worktreeDir is not an orphan', () => {
+  // Anchors the isPathInside filter itself: the worktree is unregistered AND
+  // outside worktreeDir, so loop 2 (unregistered managed worktrees) must never
+  // see it. Remove the path filter and this stray would be reported as an orphan.
+  const repo = realpathSync(makeRepo());
+  const sc = join(repo, '.speccode');
+  const wtdir = join(repo, 'wts');
+  mkdirSync(wtdir, { recursive: true });
+  addWorktree(repo, join(repo, 'outside-stray'), 'feature/outside-stray');
+  const res = reconcile(sc, { cwd: repo, worktreeDir: wtdir });
+  assert.ok(!res.orphans.some((o) => o.includes('outside-stray')), JSON.stringify(res.orphans));
   rmSync(repo, { recursive: true, force: true });
-  rmSync(sc, { recursive: true, force: true });
 });
 
-test('records conflicts when worktree branch is ancestor of >=2 features', () => {
+test('v3 reconcile: non-completed branch missing from git is an orphan; completed exempt', () => {
   const repo = makeRepo();
-  const sc = mkdtempSync(join(tmpdir(), 'sc-'));
-  // both features share ancestry with the worktree branch (branched from master)
-  g(repo, 'branch', 'feature/a');
-  g(repo, 'branch', 'feature/b');
-  writeState(sc, 'feature/a', {
-    feature_branch: 'feature/a', status: 'in_progress', worktrees: {},
-  });
-  writeState(sc, 'feature/b', {
-    feature_branch: 'feature/b', status: 'in_progress', worktrees: {},
-  });
-  const wt = join(repo, '..', `wt-c-${Date.now()}`);
-  g(repo, 'worktree', 'add', wt, '-b', 'worktree-shared', 'master');
-  const res = reconcile(sc, { prefix: 'worktree-', cwd: repo });
-  assert.equal(res.conflicts.length, 1);
-  assert.equal(res.conflicts[0].worktree, 'worktree-shared');
-  assert.deepEqual(res.conflicts[0].features.slice().sort(), ['feature/a', 'feature/b']);
-  assert.ok(!readState(sc, 'feature/a').worktrees['worktree-shared']);
-  assert.ok(!readState(sc, 'feature/b').worktrees['worktree-shared']);
-  g(repo, 'worktree', 'remove', wt, '--force');
+  const sc = join(repo, '.speccode');
+  const wtdir = join(repo, 'wts');
+  mkdirSync(wtdir, { recursive: true });
+  writeV3Branch(sc, 'feature/gone');
+  writeV3Branch(sc, 'feature/done', { status: 'completed', completed_at: '2026-09-02T00:00:00.000Z' });
+  const res = reconcile(sc, { cwd: repo, worktreeDir: wtdir });
+  assert.deepEqual(res.orphans, ['feature/gone']);
   rmSync(repo, { recursive: true, force: true });
-  rmSync(sc, { recursive: true, force: true });
 });
 
-test('advances pr_open to completed when queryPr returns MERGED', () => {
+test('v3 reconcile: merge_target pointing to a missing branch is an orphan', () => {
   const repo = makeRepo();
-  const sc = mkdtempSync(join(tmpdir(), 'sc-'));
-  writeState(sc, 'feature/p', {
-    feature_branch: 'feature/p', status: 'in_progress',
-    worktrees: { 'worktree-p': { status: 'pr_open', pr_number: 42 } },
-  });
-  const res = reconcile(sc, {
-    prefix: 'worktree-', cwd: repo, queryPr: () => 'MERGED',
-  });
-  assert.equal(readState(sc, 'feature/p').worktrees['worktree-p'].status, 'completed');
-  assert.equal(res.advanced[0].to, 'completed');
+  const sc = join(repo, '.speccode');
+  const wtdir = join(repo, 'wts');
+  mkdirSync(wtdir, { recursive: true });
+  writeV3Branch(sc, 'feature/child', { merge_target: 'feature/no-such-integration' });
+  const res = reconcile(sc, { cwd: repo, worktreeDir: wtdir });
+  assert.ok(res.orphans.includes('feature/child'));
   rmSync(repo, { recursive: true, force: true });
-  rmSync(sc, { recursive: true, force: true });
+});
+
+test('v3 reconcile: v2 entries pass through untouched', () => {
+  const repo = makeRepo();
+  const sc = join(repo, '.speccode');
+  mkdirSync(join(sc, 'state', 'features'), { recursive: true });
+  writeJsonAtomic(join(sc, 'state', 'features', 'feature__old.json'), {
+    feature_branch: 'feature/old', status: 'in_progress', worktrees: {},
+  });
+  const res = reconcile(sc, { cwd: repo, worktreeDir: join(repo, 'wts') });
+  const old = res.features.find((f) => f.feature_branch === 'feature/old');
+  assert.ok(old);
+  assert.deepEqual(old.worktrees, {});
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('v3 reconcile: pr_open advances to completed via queryPr (unchanged semantics)', () => {
+  const repo = makeRepo();
+  const sc = join(repo, '.speccode');
+  const wtdir = join(repo, 'wts');
+  mkdirSync(wtdir, { recursive: true });
+  writeV3Branch(sc, 'feature/pr', { status: 'pr_open', pr_number: 7 });
+  const res = reconcile(sc, { cwd: repo, worktreeDir: wtdir, queryPr: () => 'MERGED' });
+  assert.deepEqual(res.advanced, [{ branch: 'feature/pr', from: 'pr_open', to: 'completed' }]);
+  assert.equal(readState(sc, 'feature/pr').status, 'completed');
+  rmSync(repo, { recursive: true, force: true });
 });

@@ -1,8 +1,6 @@
-## Purpose
+# git-workflow-lifecycle Delta
 
-speccode 的端到端 git 工作流:双层分支拓扑(普通需求 trunk → `<type>/<slug>` 开发分支直达;大需求 opt-in 集成分支),21 个 `/speccode:*` slash 命令的行为契约,阻塞等 PR 合并、merge_target 路由合并、状态报告、功能分支命名规则与路径识别对账。
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: 命令清单
 
@@ -61,12 +59,12 @@ speccode SHALL 暴露以下 21 个 slash 命令:`init`、`exploring`、`creating
 - **THEN** 报告 MUST 形如 `feature/mkt-req 1/3 done`,并列出每个子分支的 status
 
 #### Scenario: 全部完成时仍打印
-- **WHEN** feature 下所有 worktree 都已 completed
+- **WHEN** 父实体下所有子分支都已 completed
 - **THEN** 命令 MUST 打印报告,并建议用户执行 `/speccode:finishing-feature`
 
 ### Requirement: 功能分支命名规则
 
-分支名(worktree 分支与集成分支同规)MUST 形如 `<type>/<slug>`,恰好一个 `/`;`type` MUST ∈ `{feature, bugfix, refactor, chore}`;`slug` MUST 只含 `[a-z0-9-]`。`/speccode:creating-worktree` 与 `/speccode:creating-feature` MUST 校验该规则,非法则拒绝并提示用户。type/slug 的确定 MUST 按以下顺序:命令参数直给(合法则直接采用,slug 即探索 topic 名,按 slug=topic 约定查找 `_exploring/<slug>`)→ `list-memory` 列出既有 `_exploring` topic 供用户选择(选定 topic 的记忆文件内容作为 type 推断来源,slug 预填 topic 名)→ AskUserQuestion 询问;推断结果 MUST NOT 静默生效,MUST 以预置推荐项形式经用户确认。MUST NOT 以扫描 `speccode/changes/` 作为推断来源(该目录仅存在于开发分支,trunk 上永不命中);MUST NOT 将未与 slug 匹配的探索 topic 内容混入推断或骨架。探索结论的承接(rename-memory 原子迁移)宿主 MUST 为 `creating-worktree`(普通需求与集成分支的子需求)与 `creating-feature`(大需求父 topic)。
+分支名(worktree 分支与集成分支同规)MUST 形如 `<type>/<slug>`,恰好一个 `/`;`type` MUST ∈ `{feature, bugfix, refactor, chore}`;`slug` MUST 只含 `[a-z0-9-]`。`/speccode:creating-worktree` 与 `/speccode:creating-feature` MUST 校验该规则,非法则拒绝并提示用户。type/slug 的确定 MUST 按以下顺序:命令参数直给(合法则直接采用,slug 即探索 topic 名,按 slug=topic 约定查找 `_exploring/<slug>`)→ `list-memory` 列出既有 `_exploring` topic 供用户选择(选定 topic 的记忆文件内容作为 type 推断来源,slug 预填 topic 名)→ AskUserQuestion 询问;推断结果 MUST NOT 静默生效,MUST 以预置推荐项形式经用户确认。MUST NOT 以扫描 `speccode/changes/` 作为推断来源(该目录仅存在于开发分支,trunk 上永不命中);MUST NOT 将未与 slug 匹配的探索 topic 内容混入推断或骨架。探索结论的承接(rename-memory 原子迁移)宿主 MUST 为 `creating-worktree`(普通子需求)与 `creating-feature`(大需求父 topic)。
 
 #### Scenario: 合法 worktree 分支名
 - **WHEN** 用户提供 slug `payment-api`,type 经上述顺序确定并经用户确认为 feature
@@ -97,11 +95,127 @@ speccode SHALL 暴露以下 21 个 slash 命令:`init`、`exploring`、`creating
 
 #### Scenario: 无 active 分支
 - **WHEN** `.speccode/state/branches/` 为空
-- **THEN** `/speccode:status` MUST 提示"当前无 active 分支"并显示 config 摘要
+- **THEN** `/speccode:status` MUST 提示「当前无 active 分支」并显示 config 摘要
 
 #### Scenario: status 触发 pr_open 推进
 - **WHEN** 某分支为 `pr_open` 且其 PR 已 MERGED
 - **THEN** `/speccode:status` 的对账 MUST 把该分支推进为 `completed` 并清理
+
+### Requirement: finishing-feature 单 PR 流程
+
+`/speccode:finishing-feature` MUST 先经 finish 阻塞门禁(children 全 completed),随后创建并阻塞等待唯一 PR(集成分支→trunk);合并后 MUST 删除父实体 state、切回 trunk 并 `fetch & pull`、保留集成分支与子分支作历史;全程 MUST NOT 创建 `-complete` 分支、MUST NOT 执行任何文档剥离操作。
+
+#### Scenario: 单 PR 到 trunk
+- **WHEN** 用户执行 `/speccode:finishing-feature` 且门禁与对账通过
+- **THEN** 命令 MUST 创建以 trunk 为 base、集成分支为 head 的唯一 PR 并阻塞等待合并
+
+#### Scenario: 合并后的分支归宿
+- **WHEN** trunk PR 合并完成
+- **THEN** 父实体 state 文件 MUST 被删除,HEAD MUST 切回 trunk 并 `fetch & pull`,集成分支与子分支 MUST 保留(不被 speccode 删除)
+
+#### Scenario: 超时挂起
+- **WHEN** trunk PR 在超时内未合并
+- **THEN** 命令 MUST 把 `pending_operation{command: "finishing-feature", phase: "waiting_trunk_pr", pr_number}` 写入父实体 state 并中止,供 `--resume` 续跑
+
+#### Scenario: 全程无 -complete 分支
+- **WHEN** finishing-feature 完整执行
+- **THEN** MUST NOT 创建 `<branch>-complete` 分支,MUST NOT 执行 `git rm --cached` 文档剥离
+
+### Requirement: finishing-worktree 测试验证与选项菜单
+
+`/speccode:finishing-worktree` 在执行任何合并路径前 MUST 运行全量测试,测试失败 MUST 停止且不呈现合并选项。合并路径 MUST 按 state 的 `merge_target` 路由:`merge_target` 为非 trunk 分支(集成分支)时 MUST 走本地 squash 路径(合并到该集成分支、复跑全量测试、本分支 state 置 `completed`——父实体 children 仅身份登记 MUST NOT 被写、收尾切到该分支 `fetch & pull`),MUST NOT 呈现 PR 菜单;`merge_target` 缺省(trunk)时菜单 MUST 恰好为三项:「PR + 等待合并」「PR + 不等待」「保留 worktree」。丢弃路径 MUST NOT 出现在菜单中,仅当用户显式要求丢弃时进入,且 MUST 先展示分支名、完整 commit 列表与 worktree 路径,再要求用户逐字输入 `discard` 确认。本地 squash 路径在合并完成后 MUST 对合并结果复跑全量测试,失败 MUST 停止(此时未推送,现场可恢复)。
+
+#### Scenario: 测试失败即停
+- **WHEN** 全量测试存在失败
+- **THEN** 命令 MUST 展示失败并停止,不呈现合并选项
+
+#### Scenario: trunk 目标菜单三项
+- **WHEN** state 的 `merge_target` 缺省(trunk)且测试通过
+- **THEN** 菜单 MUST 恰好含「PR + 等待合并」「PR + 不等待」「保留 worktree」三个选项,MUST NOT 含「本地 squash」
+
+#### Scenario: 集成目标自动路由
+- **WHEN** state 的 `merge_target` 为集成分支且测试通过
+- **THEN** 命令 MUST 直接执行本地 squash 合并到集成分支并复测,MUST NOT 询问 PR 模式;合并完成后本分支 state MUST 置 `completed`(父实体 children 仅身份登记,MUST NOT 被写)
+
+#### Scenario: 丢弃需逐字确认
+- **WHEN** 用户显式要求丢弃该 worktree 成果
+- **THEN** 命令 MUST 展示分支名、commit 列表与 worktree 路径,且仅在用户逐字输入 `discard` 后才执行删除
+
+#### Scenario: 本地合并后复测
+- **WHEN** 本地 squash 合并提交完成
+- **THEN** 命令 MUST 对合并后的集成分支复跑全量测试;失败 MUST 停止并保留 worktree 与分支现场
+
+#### Scenario: 保留后状态不变
+- **WHEN** 用户选择「保留 worktree」
+- **THEN** 该分支的 state MUST 保持原状态(不新增状态值),status 命令按既有枚举正常展示
+
+### Requirement: worktree 清理来源限定
+
+`/speccode:finishing-worktree` 与 `/speccode:reset` 清理 worktree 时 MUST 仅处理「路径位于 `resolve-worktree-dir` 解析结果之下 或 在 state 中有登记」的 worktree,分支名前缀 MUST NOT 作为清理判定条件;不满足条件的 worktree MUST 原样保留给宿主环境。「state 登记」析取项 MUST 覆盖 worktree_dir 配置变更前创建的旧目录自建 worktree。
+
+#### Scenario: 配置目录内的 worktree 被清理
+- **WHEN** worktree 路径位于 worktree_dir 之下(无论分支名形态)
+- **THEN** 清理流程 MUST 执行 `git worktree remove` + `git worktree prune`
+
+#### Scenario: 外部 worktree 原样保留
+- **WHEN** worktree 路径不在 worktree_dir 之下、未在任何 state 中登记(由宿主环境创建)
+- **THEN** 清理流程 MUST NOT 触碰该 worktree
+
+#### Scenario: worktree_dir 变更后旧目录自建 worktree 不泄漏
+- **WHEN** worktree_dir 已从 A 改为 B,旧目录 A 下仍存在 state 中登记的 worktree
+- **THEN** 清理流程 MUST 正常处理该 worktree(凭 state 登记命中),不因其不在新目录 B 之下而泄漏
+
+### Requirement: 对账 orphan 判定
+
+对账算法(reconcile)SHALL 以路径识别管辖对象:`git worktree list` 中路径位于 `config.worktree_dir` 之下的 worktree 为 speccode 管辖,分支名形态 MUST NOT 参与识别;父实体(无 worktree 的集成分支)MUST 由 state 侧识别。orphan 判定 MUST 覆盖:①state 登记的非 `completed` 分支在 git 中缺失(worktree 或分支消失);②worktree_dir 下存在任何 state 未登记的 worktree;③state 的 `merge_target` 指向的分支不存在。status 为 `completed` 的条目 MUST NOT 计为 orphan——合并完成后 git 侧被清理是设计的正常终态,state 保留 completed 记录供进度核算,直至 finishing-feature 删除父实体 state。
+
+#### Scenario: 未完成且 git 缺失计 orphan
+- **WHEN** state 登记某分支为 `in_progress`,而其 worktree 与分支在 git 中均已不存在
+- **THEN** 对账 MUST 把该分支计入 orphans
+
+#### Scenario: completed 且 git 已清理不计 orphan
+- **WHEN** state 登记某分支为 `completed`,且其 git 侧 worktree 与分支已被 finishing-worktree 清理
+- **THEN** 对账 MUST NOT 把该分支计入 orphans
+
+#### Scenario: 未登记的目录内 worktree 计 orphan
+- **WHEN** `git worktree list` 中某 worktree 路径位于 worktree_dir 之下,但任何 state 均未登记
+- **THEN** 对账 MUST 把该 worktree 计入 orphans(半截创建的发现能力)
+
+#### Scenario: merge_target 分支缺失计 orphan
+- **WHEN** 某分支 state 的 `merge_target` 指向的集成分支在 git 中不存在
+- **THEN** 对账 MUST 把该分支计入 orphans 并报告
+
+### Requirement: 开发完成收尾路由
+
+`/speccode:subagent-driven-development` 与 `/speccode:executing-plans` 完成开发后 MUST 依据是否存在落地文档(`speccode/changes/<slug>/` 是否存在)路由收尾:
+- 存在落地文档 → MUST 引导用户先执行 `/speccode:syncing` 合并规格,再 `/speccode:archiving` 归档,最后 `/speccode:finishing-worktree`;该顺序为硬约束——syncing/archiving 的 trunk 防护要求当前处于非 trunk 的开发分支,而 finishing-worktree 会移除 worktree,故 sync/archive 只能在 finishing-worktree 之前执行;
+- 不存在落地文档 → MUST 直接引导 `/speccode:finishing-worktree`,不引导 syncing/archiving。
+
+路由引导 MUST 遵循手动/auto 模式约定:手动模式 MUST 用 AskUserQuestion 询问;auto 模式 MUST 自动衔接执行 `/speccode:syncing`;判断依据不充分时 MUST 默认询问。
+
+#### Scenario: 有落地文档的完整收尾
+- **WHEN** 开发完成且 `speccode/changes/<slug>/` 存在
+- **THEN** 命令 MUST 引导用户依次执行 `/speccode:syncing` → `/speccode:archiving` → `/speccode:finishing-worktree`
+
+#### Scenario: 无落地文档直接收尾
+- **WHEN** 开发完成且 `speccode/changes/<slug>/` 不存在
+- **THEN** 命令 MUST 直接引导 `/speccode:finishing-worktree`,不引导 syncing/archiving
+
+#### Scenario: auto 模式自动衔接
+- **WHEN** 开发完成、落地文档存在且当前处于 auto 模式
+- **THEN** 命令 MUST 自动衔接执行 `/speccode:syncing`
+
+## REMOVED Requirements
+
+### Requirement: worktree 前缀硬约定
+
+** removal reason**:worktree 分支改用 `<type>/<slug>` 功能命名,身份识别由对账的路径识别与 state 登记接管,分支名前缀不再承担任何职责;`config.worktree_prefix` 随之退役(见 speccode-config-management delta)。
+
+### Requirement: 分支拓扑三层结构
+
+** removal reason**:feature 中间层退役,普通需求 trunk → worktree 分支直达;大需求的聚合点由「分支拓扑双层结构」(ADDED)中的 opt-in 集成分支承担。
+
+## ADDED Requirements
 
 ### Requirement: 分支拓扑双层结构
 
@@ -138,146 +252,6 @@ speccode SHALL 管理双层分支拓扑:trunk 主干(默认 `config.trunk`,`spec
 #### Scenario: 串行依赖由切点编码
 - **WHEN** 子分支 p1 已本地 squash 合并进集成分支,用户随后创建 p3(依赖 p1)
 - **THEN** p3 MUST 从集成分支当前 head 切出(含 p1 内容),系统 MUST NOT 要求任何依赖声明
-
-### Requirement: finishing-feature 单 PR 流程
-
-`/speccode:finishing-feature` MUST 先经 finish 阻塞门禁(children 全 completed),随后创建并阻塞等待唯一 PR(集成分支→trunk);合并后 MUST 删除父实体 state、切回 trunk 并 `fetch & pull`、保留集成分支与子分支作历史;全程 MUST NOT 创建 `-complete` 分支、MUST NOT 执行任何文档剥离操作。
-
-#### Scenario: 单 PR 到 trunk
-- **WHEN** 用户执行 `/speccode:finishing-feature` 且门禁与对账通过
-- **THEN** 命令 MUST 创建以 trunk 为 base、集成分支为 head 的唯一 PR 并阻塞等待合并
-
-#### Scenario: 合并后的分支归宿
-- **WHEN** trunk PR 合并完成
-- **THEN** 父实体 state 文件 MUST 被删除,HEAD MUST 切回 trunk 并 `fetch & pull`,集成分支与子分支 MUST 保留(不被 speccode 删除)
-
-#### Scenario: 超时挂起
-- **WHEN** trunk PR 在超时内未合并
-- **THEN** 命令 MUST 把 `pending_operation{command: "finishing-feature", phase: "waiting_trunk_pr", pr_number}` 写入父实体 state 并中止,供 `--resume` 续跑
-
-#### Scenario: 全程无 -complete 分支
-- **WHEN** finishing-feature 完整执行
-- **THEN** MUST NOT 创建 `<branch>-complete` 分支,MUST NOT 执行 `git rm --cached` 文档剥离
-
-### Requirement: finishing-worktree 测试验证与选项菜单
-
-`/speccode:finishing-worktree` 在执行任何合并路径前 MUST 运行全量测试,测试失败 MUST 停止且不呈现合并选项。合并路径 MUST 按 state 的 `merge_target` 路由:`merge_target` 为非 trunk 分支(集成分支)时 MUST 走本地 squash 路径(合并到该集成分支、复跑全量测试、本分支 state 置 `completed`——父实体 children 仅身份登记 MUST NOT 被写、收尾切到该分支 `fetch & pull`),MUST NOT 呈现 PR 菜单;`merge_target` 为 trunk 时菜单 MUST 恰好为三项:「PR + 等待合并」「PR + 不等待」「保留 worktree」。丢弃路径 MUST NOT 出现在菜单中,仅当用户显式要求丢弃时进入,且 MUST 先展示分支名、完整 commit 列表与 worktree 路径,再要求用户逐字输入 `discard` 确认。本地 squash 路径在合并完成后 MUST 对合并结果复跑全量测试,失败 MUST 停止(此时未推送,现场可恢复)。
-
-#### Scenario: 测试失败即停
-- **WHEN** 全量测试存在失败
-- **THEN** 命令 MUST 展示失败并停止,不呈现合并选项
-
-#### Scenario: trunk 目标菜单三项
-- **WHEN** state 的 `merge_target` 为 trunk 且测试通过
-- **THEN** 菜单 MUST 恰好含「PR + 等待合并」「PR + 不等待」「保留 worktree」三个选项,MUST NOT 含「本地 squash」
-
-#### Scenario: 集成目标自动路由
-- **WHEN** state 的 `merge_target` 为集成分支且测试通过
-- **THEN** 命令 MUST 直接执行本地 squash 合并到集成分支并复测,MUST NOT 询问 PR 模式;合并完成后本分支 state MUST 置 `completed`(父实体 children 仅身份登记,MUST NOT 被写)
-
-#### Scenario: 丢弃需逐字确认
-- **WHEN** 用户显式要求丢弃该 worktree 成果
-- **THEN** 命令 MUST 展示分支名、commit 列表与 worktree 路径,且仅在用户逐字输入 `discard` 后才执行删除
-
-#### Scenario: 本地合并后复测
-- **WHEN** 本地 squash 合并提交完成
-- **THEN** 命令 MUST 对合并后的集成分支复跑全量测试;失败 MUST 停止并保留 worktree 与分支现场
-
-#### Scenario: 保留后状态不变
-- **WHEN** 用户选择「保留 worktree」
-- **THEN** 该分支的 state MUST 保持原状态(不新增状态值),status 命令按既有枚举正常展示
-
-### Requirement: worktree 清理来源限定
-
-`/speccode:finishing-worktree` 与 `/speccode:reset` 清理 worktree 时 MUST 仅处理「路径位于 `resolve-worktree-dir` 解析结果之下 或 在 state 中有登记」的 worktree,分支名前缀 MUST NOT 作为清理判定条件;不满足条件的 worktree MUST 原样保留给宿主环境。「state 登记」析取项 MUST 覆盖 worktree_dir 配置变更前创建的旧目录自建 worktree。
-
-#### Scenario: 配置目录内的 worktree 被清理
-- **WHEN** worktree 路径位于 worktree_dir 之下(无论分支名形态)
-- **THEN** 清理流程 MUST 执行 `git worktree remove` + `git worktree prune`
-
-#### Scenario: 外部 worktree 原样保留
-- **WHEN** worktree 路径不在 worktree_dir 之下、未在任何 state 中登记(由宿主环境创建)
-- **THEN** 清理流程 MUST NOT 触碰该 worktree
-
-#### Scenario: worktree_dir 变更后旧目录自建 worktree 不泄漏
-- **WHEN** worktree_dir 已从 A 改为 B,旧目录 A 下仍存在 state 中登记的 worktree
-- **THEN** 清理流程 MUST 正常处理该 worktree(凭 state 登记命中),不因其不在新目录 B 之下而泄漏
-
-### Requirement: creating-worktree 项目 setup 与基线测试
-
-`/speccode:creating-worktree` 创建 worktree 后 MUST 按标记文件执行项目 setup(`package.json`→npm install、`Cargo.toml`→cargo build、`requirements.txt`→pip install、`pyproject.toml`→poetry install、`go.mod`→go mod download),随后 MUST 运行基线测试;基线测试失败时 MUST 报告并询问用户继续还是调查。
-
-#### Scenario: 按标记文件 setup
-- **WHEN** 新 worktree 根存在 `package.json`
-- **THEN** 命令 MUST 执行 `npm install` 后再进入基线测试
-
-#### Scenario: 基线测试失败询问
-- **WHEN** 基线测试存在失败
-- **THEN** 命令 MUST 展示失败摘要并询问「继续开发还是先行调查」,不擅自继续
-
-### Requirement: creating-worktree 后续引导
-
-`/speccode:creating-worktree` 成功创建 worktree 后 MUST 引导用户进入 `/speccode:proposing` 落地文档;auto 模式(按 Claude Code / Codex 等工具的会话执行模式判断)下 MUST 自动衔接;判断依据不充分时 MUST 默认询问。
-
-#### Scenario: 手动模式询问
-- **WHEN** worktree 创建成功且当前非 auto 模式
-- **THEN** 命令 MUST 询问用户是否执行 `/speccode:proposing`
-
-#### Scenario: auto 模式自动衔接
-- **WHEN** worktree 创建成功且当前处于 auto 模式
-- **THEN** 命令 MUST 自动衔接执行 `/speccode:proposing`
-
-### Requirement: 对账 orphan 判定
-
-对账算法(reconcile)SHALL 以路径识别管辖对象:`git worktree list` 中路径位于 `config.worktree_dir` 之下的 worktree 为 speccode 管辖,分支名形态 MUST NOT 参与识别;父实体(无 worktree 的集成分支)MUST 由 state 侧识别。orphan 判定 MUST 覆盖:①state 登记的非 `completed` 分支在 git 中缺失(worktree 或分支消失);②worktree_dir 下存在任何 state 未登记的 worktree;③state 的 `merge_target` 指向的分支不存在。status 为 `completed` 的条目 MUST NOT 计为 orphan——合并完成后 git 侧被清理是设计的正常终态,state 保留 completed 记录供进度核算,直至 finishing-feature 删除父实体 state。
-
-#### Scenario: 未完成且 git 缺失计 orphan
-- **WHEN** state 登记某分支为 `in_progress`,而其 worktree 与分支在 git 中均已不存在
-- **THEN** 对账 MUST 把该分支计入 orphans
-
-#### Scenario: completed 且 git 已清理不计 orphan
-- **WHEN** state 登记某分支为 `completed`,且其 git 侧 worktree 与分支已被 finishing-worktree 清理
-- **THEN** 对账 MUST NOT 把该分支计入 orphans
-
-#### Scenario: 未登记的目录内 worktree 计 orphan
-- **WHEN** `git worktree list` 中某 worktree 路径位于 worktree_dir 之下,但任何 state 均未登记
-- **THEN** 对账 MUST 把该 worktree 计入 orphans(半截创建的发现能力)
-
-#### Scenario: merge_target 分支缺失计 orphan
-- **WHEN** 某分支 state 的 `merge_target` 指向的集成分支在 git 中不存在
-- **THEN** 对账 MUST 把该分支计入 orphans 并报告
-
-### Requirement: 开发完成收尾路由
-
-`/speccode:subagent-driven-development` 与 `/speccode:executing-plans` 完成开发后 MUST 依据是否存在落地文档(`speccode/changes/<slug>/` 是否存在)路由收尾:
-- 存在落地文档 → MUST 引导用户先执行 `/speccode:syncing` 合并规格,再 `/speccode:archiving` 归档,最后 `/speccode:finishing-worktree`;该顺序为硬约束——syncing/archiving 的 trunk 防护要求 worktree-* 分支,而 finishing-worktree 会移除 worktree,故 sync/archive 只能在 finishing-worktree 之前执行;
-- 不存在落地文档 → MUST 直接引导 `/speccode:finishing-worktree`,不引导 syncing/archiving。
-
-路由引导 MUST 遵循手动/auto 模式约定:手动模式 MUST 用 AskUserQuestion 询问;auto 模式 MUST 自动衔接执行 `/speccode:syncing`;判断依据不充分时 MUST 默认询问。
-
-#### Scenario: 有落地文档的完整收尾
-- **WHEN** 开发完成且 `speccode/changes/<slug>/` 存在
-- **THEN** 命令 MUST 引导用户依次执行 `/speccode:syncing` → `/speccode:archiving` → `/speccode:finishing-worktree`
-
-#### Scenario: 无落地文档直接收尾
-- **WHEN** 开发完成且 `speccode/changes/<slug>/` 不存在
-- **THEN** 命令 MUST 直接引导 `/speccode:finishing-worktree`,不引导 syncing/archiving
-
-#### Scenario: auto 模式自动衔接
-- **WHEN** 开发完成、落地文档存在且当前处于 auto 模式
-- **THEN** 命令 MUST 自动衔接执行 `/speccode:syncing`
-
-### Requirement: finishing-worktree 未归档变更警告
-
-`/speccode:finishing-worktree` 在呈现合并选项之前 MUST 检查当前 feature 是否仍有未归档的落地文档(`speccode/changes/<slug>/` 是否存在);存在 → MUST 打印 warn-only 警告「建议先执行 /speccode:syncing 与 /speccode:archiving」,然后 MUST 继续呈现合并选项,警告 MUST NOT 阻断流程。
-
-#### Scenario: 存在未归档变更
-- **WHEN** 执行 finishing-worktree 时 `speccode/changes/<slug>/` 仍存在
-- **THEN** 命令 MUST 打印警告「建议先 syncing + archiving」并继续呈现合并选项
-
-#### Scenario: 无未归档变更
-- **WHEN** 执行 finishing-worktree 时 `speccode/changes/<slug>/` 不存在(已归档或从未落地)
-- **THEN** 命令 MUST 不打印该警告,直接进入合并选项
 
 ### Requirement: trunk 保护 squash 合并
 

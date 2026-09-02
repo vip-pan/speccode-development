@@ -46,10 +46,10 @@ digraph when_to_use {
 - 需要理解完整的系统状态
 - 代理之间会相互干扰
 
-## 前置:worktree-* 分支
+## 前置:开发分支
 
-1. **分支校验**:`read-config` 先跑(为 null → 提示先 `/speccode:init` 并退出);`git rev-parse --abbrev-ref HEAD` 必须以 `config.worktree_prefix`(默认 `worktree-`)开头,否则退出。
-2. **会写代码的代理需要隔离工作区**:并行代理 MUST NOT 在同一个工作目录里相互踩踏——要么把它们的文件范围切成互不相交,要么为每个代理建独立 worktree(经 `/speccode:creating-worktree`,分支名加后缀区分,如 `worktree-<slug>-api`)。只读调查类代理(不改文件)可直接并行。
+1. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须为非 trunk 的 `<type>/<slug>` 形态分支;否则退出并提示「请在开发分支上运行本命令」(防止直提 trunk)。(`read-config` 先跑,为 null → 提示先 `/speccode:init` 并退出)
+2. **会写代码的代理需要隔离工作区**:并行代理 MUST NOT 在同一个工作目录里相互踩踏——要么把它们的文件范围切成互不相交,要么为每个代理建独立 worktree(经 `/speccode:creating-worktree`,slug 加后缀区分,如 `<type>/<slug>-api`)。只读调查类代理(不改文件)可直接并行。
 
 ## 模式(The Pattern)
 

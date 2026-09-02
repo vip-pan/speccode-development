@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   detectPrToolFromUrl, createPrArgs, queryPrArgs, parsePrState, queryPrState,
+  repoMergeConfig, isSquashOnly,
 } from '../lib/prtool.mjs';
 
 test('detectPrToolFromUrl maps hosts', () => {
@@ -86,4 +87,25 @@ test('queryPrState returns OPEN via injected run for glab', () => {
     return { code: 0, stdout: '{"state":"opened"}' };
   };
   assert.equal(queryPrState('glab', 'worktree-y', { run }), 'OPEN');
+});
+
+test('repoMergeConfig parses gh api fields; non-squash-only detected', () => {
+  const calls = [];
+  const cfg = repoMergeConfig('gh', { run: (cmd, args) => {
+    calls.push([cmd, args]);
+    return { code: 0, stdout: '{"allow_squash_merge":true,"allow_merge_commit":true,"allow_rebase_merge":false}' };
+  } });
+  assert.deepEqual(cfg, { allowSquash: true, allowMerge: true, allowRebase: false });
+  assert.equal(isSquashOnly(cfg), false);
+  assert.equal(calls[0][0], 'gh');
+  assert.ok(calls[0][1][0] === 'api' && calls[0][1][1] === 'repos/{owner}/{repo}');
+});
+
+test('repoMergeConfig: squash-only true / failure null / glab null', () => {
+  assert.equal(isSquashOnly(repoMergeConfig('gh', { run: () => ({ code: 0,
+    stdout: '{"allow_squash_merge":true,"allow_merge_commit":false,"allow_rebase_merge":false}' }) })), true);
+  assert.equal(repoMergeConfig('gh', { run: () => ({ code: 1, stdout: '' }) }), null);
+  assert.equal(repoMergeConfig('gh', { run: () => ({ code: 0, stdout: 'not-json' }) }), null);
+  assert.equal(repoMergeConfig('glab', { run: () => ({ code: 0, stdout: '{}' }) }), null);
+  assert.equal(repoMergeConfig('none', {}), null);
 });
