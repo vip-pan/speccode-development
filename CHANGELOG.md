@@ -8,6 +8,10 @@
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-09-02
+
+> EN: New bundled PreToolUse sanitizer hook strips GLM-injected CRs from AskUserQuestion tool input, ending garbled Chinese question rendering.
+
 ### Added
 
 - **AskUserQuestion CR 清洗 hook**:插件自带 PreToolUse hook(`hooks/hooks.json` + `lib/sanitize.mjs`),在工具执行前剥离 AskUserQuestion 参数内全部 CR(U+000D),消除 GLM 系模型 tool_use 参数注入 CR 导致的提问乱码;清洗为 lib 纯函数(可单测),hook 壳 fail-open(任何异常 exit 0 放行原输入),启用插件即生效,目标项目零污染。
@@ -155,7 +159,8 @@ v2 全量迭代:四层拓扑收敛为三层、SDD 方法论与文档生命周期
 - 「文档剥离四步走」与 finish 阶段 `commit --amend` 折叠:保证 trunk 上功能提交为单一语义 commit,display reset 不误删文档。
 - GitHub / GitLab remote 探测,自动选择 `gh` / `glab` CLI,无 CLI 时降级为打印等效命令。
 
-[Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/vip-pan/speccode-development/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/vip-pan/speccode-development/compare/v0.2.4...v0.2.5
 [0.2.3]: https://github.com/vip-pan/speccode-development/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/vip-pan/speccode-development/compare/v0.2.1...v0.2.2
