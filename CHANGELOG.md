@@ -8,6 +8,33 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-03
+
+> EN: Two-layer branch topology (v3) — the default feature layer is removed: dev branches cut straight from trunk, integration branches become opt-in for large requirements.
+
+### BREAKING
+
+- **双层分支拓扑(v3,feature 层移除)**:普通需求从 trunk 直接切 `<type>/<slug>` 开发分支(git worktree,一步直达;`worktree-` 统一前缀退役);`creating-feature` / `finishing-feature` 语义改为「集成分支 + 父实体 state」的创建与收尾,仅大需求(多阶段、all-or-nothing 上线)opt-in 使用,子分支从集成当前 head 切出、终局一次 PR squash 上 trunk(children 全 completed 门禁)。
+- **config v2 → v3**:`worktree_prefix` 字段退役,升级经 `/speccode:init` 字段 diff 逐项确认(接受 → 移除遗留字段;拒绝 → 整体保持 v2 原样,不存在混合态)。
+- **state 目录改名 `state/features/` → `state/branches/`**:v3 schema 为 `{branch, type, worktree, merge_target(恒写), status, created_at, initial_branch}`,父实体为 `{branch, kind:"integration", children:[{slug}], …}`;v2 遗留文件双格式原样读写、不强制迁移,init 提供一次性显式迁移(`migrate-state` + reconcile 验证)。
+- **合并模式四项收敛为三项**(PR+等待 / PR+不等待 / 保留):「本地 squash」模式对 trunk 目标移除——子→集成本地 squash 成为该合并形态的唯一路径;合并动作保持人点合并,`repo-merge-config` 探测非 squash-only 设置时警告 + 指路(否决插件代合并)。
+
+### Added
+
+- **探索记忆 per-topic 化**:新增 `list-memory` / `rename-memory` verb 与 lib `validateMemoryBranch` / `listMemory` / `renameMemory`;exploring 以 topic 列表退出(新写入落 `_exploring/<topic>`,单文件 `_exploring` 遗留读兼容),creating-feature 经原子 rename 承接探索记忆(替代旧 merge+clear)。
+- **exploring 出口三岔确认**:探索结束时确认需求形态——单普通需求 / 多个独立普通需求 / 大需求(集成);agent 信号建议 + 用户确认,大需求形态与子需求清单落档 topic。
+- `migrate-state` verb:`state/features/` → `state/branches/` 一次性显式迁移(逐文件 v2→v3 转换;`worktrees` 多于一条的文件跳过并提示先按 v2 收尾)。
+- `repo-merge-config` verb:经 `gh`/`glab` 探测仓库合并设置(squash-only 判定),init 与 finishing-worktree 建 PR 前调用。
+
+### Changed
+
+- **reconcile 重写为纯路径识别**:路径位于 `config.worktree_dir` 之下的 worktree 即管辖对象,与分支名无关;ancestry / `worktree_overrides` / conflicts 归属逻辑删除(worktree↔state 1:1)。
+- **children 仅身份、状态派生**:父实体 `children` 只登记 `{slug}`,任何命令 MUST NOT 写父实体状态;门禁与 status 渲染实时从子分支 state 派生(单写者原则)。
+- **依赖 = 切点即依赖**:子分支一律从集成当前 head 切出,无依赖图/阻塞机制。
+- `init`:幂等流程新增 v1/v2→v3 迁移 diff、state 迁移步骤与 squash-only 探测;trunk 防护从「`worktree-` 前缀」改为「非 trunk 的 `<type>/<slug>` 形态判断」(syncing / archiving / brainstorming / dispatching-parallel-agents 等 8 处同改)。
+- **exploring 前置**:MUST 在 trunk 执行(不符仅警告不阻断),启动先 `fetch & pull`。
+- 收尾惯例:合并动作完成后切换到目标分支(trunk 或集成分支)并 `fetch & pull`。
+
 ## [0.2.6] - 2026-09-02
 
 > EN: New bundled PreToolUse sanitizer hook strips GLM-injected CRs from AskUserQuestion tool input, ending garbled Chinese question rendering.
@@ -159,9 +186,11 @@ v2 全量迭代:四层拓扑收敛为三层、SDD 方法论与文档生命周期
 - 「文档剥离四步走」与 finish 阶段 `commit --amend` 折叠:保证 trunk 上功能提交为单一语义 commit,display reset 不误删文档。
 - GitHub / GitLab remote 探测,自动选择 `gh` / `glab` CLI,无 CLI 时降级为打印等效命令。
 
-[Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.2.6...HEAD
+[Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/vip-pan/speccode-development/compare/v0.2.6...v0.3.0
 [0.2.6]: https://github.com/vip-pan/speccode-development/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/vip-pan/speccode-development/compare/v0.2.4...v0.2.5
+[0.2.4]: https://github.com/vip-pan/speccode-development/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/vip-pan/speccode-development/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/vip-pan/speccode-development/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/vip-pan/speccode-development/compare/v0.2.0...v0.2.1
