@@ -191,6 +191,12 @@ The config's `hooks` field maps fixed lifecycle events to shell commands, trigge
 
 **Threat model**: hooks execute via `sh -c` with the full permissions of the current user; the security rationale is in R11.
 
+**Bundled tool-input sanitizer**: the plugin ships a PreToolUse hook (`hooks/hooks.json`)
+that strips stray carriage returns (U+000D) from `AskUserQuestion` tool input before the
+dialog renders — some model backends inject CRs into `tool_use` arguments, garbling
+question text. Sanitization logic lives in `lib/sanitize.mjs` (pure function, unit-tested);
+the hook shell is fail-open: any error passes the original input through untouched.
+
 ## 8. Memory
 
 speccode maintains one cross-session memory per feature: `.speccode/memory/<type>__<slug>.md`.

@@ -8,6 +8,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- **AskUserQuestion CR 清洗 hook**:插件自带 PreToolUse hook(`hooks/hooks.json` + `lib/sanitize.mjs`),在工具执行前剥离 AskUserQuestion 参数内全部 CR(U+000D),消除 GLM 系模型 tool_use 参数注入 CR 导致的提问乱码;清洗为 lib 纯函数(可单测),hook 壳 fail-open(任何异常 exit 0 放行原输入),启用插件即生效,目标项目零污染。
+
 ## [0.2.5] - 2026-08-16
 
 > EN: Knowledge commands (distilling/recording) now run from trunk — bootstrap a chore/knowledge-* maintenance branch + direct PR to trunk, no longer bound to feature/worktree state.

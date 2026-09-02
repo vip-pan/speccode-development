@@ -191,6 +191,11 @@ config 的 `hooks` 字段把固定的生命周期事件映射到 shell 命令,�
 
 **威胁模型**:hook 以 `sh -c` 在当前用户的完整权限下执行,其安全性论证见 R11。
 
+**内置工具输入清洗器**:插件自带 PreToolUse hook(`hooks/hooks.json`),在 AskUserQuestion
+对话框渲染前剥离其 tool_input 中的游离 CR(U+000D)——部分模型后端会在 tool_use 参数里注入
+CR 导致提问乱码。清洗逻辑位于 `lib/sanitize.mjs`(纯函数、有单测);hook 壳为 fail-open:
+任何错误都原样放行输入,绝不阻断交互。
+
 ## 8. memory
 
 speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>__<slug>.md`。
