@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, existsSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { memoryDir, memoryPath, readMemory, writeMemory } from '../lib/memory.mjs';
+import { listMemory, memoryDir, memoryPath, readMemory, renameMemory, writeMemory, validateMemoryBranch } from '../lib/memory.mjs';
 
 function tmp() { return mkdtempSync(join(tmpdir(), 'speccode-mem-')); }
 
@@ -88,5 +88,76 @@ test('writeMemory self-ignores the memory dir with a plugin-owned .gitignore', (
   writeMemory(dir, 'feature/x', 'more\n', 'append');
   assert.equal(readFileSync(gitignore, 'utf8'), '*\n');
   assert.equal(readMemory(dir, 'feature/x'), '# memory\nmore\n');
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('memoryPath encodes an _exploring topic via branchToStateName', () => {
+  assert.equal(memoryPath('/x/.speccode', '_exploring/payment-rework'),
+    '/x/.speccode/memory/_exploring__payment-rework.md');
+});
+
+test('validateMemoryBranch accepts reserved keys, topics, and feature branches', () => {
+  assert.equal(validateMemoryBranch('_exploring'), true);
+  assert.equal(validateMemoryBranch('_knowledge'), true);
+  assert.equal(validateMemoryBranch('_exploring/payment-rework'), true);
+  assert.equal(validateMemoryBranch('feature/payment-api'), true);
+  assert.equal(validateMemoryBranch('bugfix/fix-cr'), true);
+});
+
+test('validateMemoryBranch rejects bad topics and branches', () => {
+  assert.equal(validateMemoryBranch('_exploring/Bad_Topic'), false);
+  assert.equal(validateMemoryBranch('_exploring/'), false);
+  assert.equal(validateMemoryBranch('_exploring/a/b'), false);
+  assert.equal(validateMemoryBranch('_unknown'), false);
+  assert.equal(validateMemoryBranch('worktree-typo'), false);
+  assert.equal(validateMemoryBranch(42), false);
+});
+
+test('listMemory returns only _exploring topic keys, sorted', () => {
+  const dir = tmp();
+  writeMemory(dir, '_exploring/b-p1', 'x\n', 'replace');
+  writeMemory(dir, '_exploring/a', 'x\n', 'replace');
+  writeMemory(dir, 'feature/c', 'x\n', 'replace');
+  assert.deepEqual(listMemory(dir), ['_exploring/a', '_exploring/b-p1']);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('listMemory returns empty when no topics exist', () => {
+  const dir = tmp();
+  assert.deepEqual(listMemory(dir), []);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('renameMemory moves the topic file and keeps content', () => {
+  const dir = tmp();
+  writeMemory(dir, '_exploring/a', 'conclusions\n', 'replace');
+  const dst = renameMemory(dir, '_exploring/a', 'feature/b');
+  assert.equal(dst, memoryPath(dir, 'feature/b'));
+  assert.equal(readMemory(dir, 'feature/b'), 'conclusions\n');
+  assert.equal(readMemory(dir, '_exploring/a'), null);
+  assert.equal(existsSync(memoryPath(dir, '_exploring/a')), false);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('renameMemory refuses a missing source', () => {
+  const dir = tmp();
+  assert.throws(() => renameMemory(dir, '_exploring/none', 'feature/b'), /not found/);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('renameMemory refuses an existing target and keeps both files', () => {
+  const dir = tmp();
+  writeMemory(dir, '_exploring/a', 'exploring\n', 'replace');
+  writeMemory(dir, 'feature/b', 'existing\n', 'replace');
+  assert.throws(() => renameMemory(dir, '_exploring/a', 'feature/b'), /already exists/);
+  assert.equal(readMemory(dir, '_exploring/a'), 'exploring\n');
+  assert.equal(readMemory(dir, 'feature/b'), 'existing\n');
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('renameMemory validates both branch keys', () => {
+  const dir = tmp();
+  writeMemory(dir, '_exploring/a', 'x\n', 'replace');
+  assert.throws(() => renameMemory(dir, '_exploring/a', 'feature/Bad_Slug'), /invalid branch/);
   rmSync(dir, { recursive: true, force: true });
 });

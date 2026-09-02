@@ -602,6 +602,67 @@ test('write-memory accepts the _knowledge sentinel branch', () => {
   rmSync(repo, { recursive: true, force: true });
 });
 
+test('write-memory accepts an _exploring topic branch', () => {
+  const repo = makeRepo();
+  const w = spawnSync('node', [BIN, 'write-memory', '--cwd', repo, '--branch', '_exploring/payment-rework', '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ mode: 'append', content: 'topic notes\n' }), encoding: 'utf8' });
+  assert.equal(w.status, 0);
+  const r = runCli(repo, 'read-memory', '--cwd', repo, '--branch', '_exploring/payment-rework');
+  assert.equal(r.json.memory, 'topic notes\n');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-memory rejects an invalid _exploring topic', () => {
+  const repo = makeRepo();
+  const w = spawnSync('node', [BIN, 'write-memory', '--cwd', repo, '--branch', '_exploring/Bad_Topic', '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ mode: 'replace', content: 'x' }), encoding: 'utf8' });
+  assert.equal(w.status, 1);
+  assert.ok(JSON.parse(w.stdout.trim()).error.includes('invalid branch'));
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('list-memory lists only _exploring topics', () => {
+  const repo = makeRepo();
+  for (const branch of ['_exploring/b-p1', '_exploring/a', 'feature/c']) {
+    const w = spawnSync('node', [BIN, 'write-memory', '--cwd', repo, '--branch', branch, '--json-stdin'],
+      { cwd: repo, input: JSON.stringify({ mode: 'replace', content: 'x\n' }), encoding: 'utf8' });
+    assert.equal(w.status, 0);
+  }
+  const r = runCli(repo, 'list-memory', '--cwd', repo);
+  assert.equal(r.json.ok, true);
+  assert.deepEqual(r.json.topics, ['_exploring/a', '_exploring/b-p1']);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('rename-memory adopts an exploring topic into a feature memory', () => {
+  const repo = makeRepo();
+  spawnSync('node', [BIN, 'write-memory', '--cwd', repo, '--branch', '_exploring/payment-rework', '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ mode: 'replace', content: 'conclusions\n' }), encoding: 'utf8' });
+  const r = spawnSync('node', [BIN, 'rename-memory', '--cwd', repo, '--branch', '_exploring/payment-rework',
+    '--to', 'feature/payment-rework', '--json-stdin'],
+    { cwd: repo, input: '{}', encoding: 'utf8' });
+  assert.equal(r.status, 0);
+  assert.ok(JSON.parse(r.stdout.trim()).ok);
+  assert.equal(runCli(repo, 'read-memory', '--cwd', repo, '--branch', 'feature/payment-rework').json.memory, 'conclusions\n');
+  assert.equal(runCli(repo, 'read-memory', '--cwd', repo, '--branch', '_exploring/payment-rework').json.memory, null);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('rename-memory refuses when the target already exists', () => {
+  const repo = makeRepo();
+  const write = (branch, content) => spawnSync('node', [BIN, 'write-memory', '--cwd', repo, '--branch', branch, '--json-stdin'],
+    { cwd: repo, input: JSON.stringify({ mode: 'replace', content }), encoding: 'utf8' });
+  write('_exploring/a', 'exploring\n');
+  write('feature/b', 'existing\n');
+  const r = spawnSync('node', [BIN, 'rename-memory', '--cwd', repo, '--branch', '_exploring/a', '--to', 'feature/b', '--json-stdin'],
+    { cwd: repo, input: '{}', encoding: 'utf8' });
+  assert.equal(r.status, 1);
+  assert.ok(JSON.parse(r.stdout.trim()).error.includes('already exists'));
+  assert.equal(runCli(repo, 'read-memory', '--cwd', repo, '--branch', '_exploring/a').json.memory, 'exploring\n');
+  assert.equal(runCli(repo, 'read-memory', '--cwd', repo, '--branch', 'feature/b').json.memory, 'existing\n');
+  rmSync(repo, { recursive: true, force: true });
+});
+
 test('read-memory accepts the _knowledge sentinel branch (returns null when absent)', () => {
   const repo = makeRepo();
   const { code, json } = runCli(repo, 'read-memory', '--cwd', repo, '--branch', '_knowledge');

@@ -1,10 +1,6 @@
-# session-memory Specification
+# session-memory Delta
 
-## Purpose
-
-feature 级跨会话记忆:主仓 `.speccode/memory/` 下按 feature 维度隔离的记忆文件,原子写保障,read-memory / write-memory verb 契约,各命令的读写时机,以及超大会话的主动发现与书写指引,支撑跨会话/多会话共享同一需求的上下文。
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: memory 文件位置与命名
 
@@ -37,26 +33,6 @@ feature 级跨会话记忆:主仓 `.speccode/memory/` 下按 feature 维度隔�
 #### Scenario: _knowledge.md 例外
 - **WHEN** knowledge 命令(distilling/recording)从 trunk 完成维护并创建 PR
 - **THEN** 维护摘要 MUST 追加到主仓 `.speccode/memory/_knowledge.md`,MUST NOT 写 feature 级 memory
-
-### Requirement: memory 原子写
-
-memory 写入按模式分两种原子策略:replace 模式 MUST 采用「写临时文件 + rename 覆盖」,任何异常退出 MUST NOT 产生半写状态;append 模式 MUST 为单次 O_APPEND 追加写(跨 worktree 并发追加互不覆盖),MUST NOT 使用读-改-写。append 模式 MUST 保证条目边界:既有内容非空且不以换行符结尾、且追加内容不以换行符开头时,MUST 在两者之间插入恰好一个换行符(作为同一次追加写的一部分);其余情况 MUST 原样追加,不多做规范化。
-
-#### Scenario: replace 写入过程异常退出
-- **WHEN** 进程在以 replace 模式写入 memory 文件时被 kill
-- **THEN** memory 文件 MUST 保持写入前的完整旧内容,不留半写状态
-
-#### Scenario: append 缺失边界补一个换行
-- **WHEN** 文件既有内容为 `first`(无尾换行),以 append 模式追加 `- second`(无头换行)
-- **THEN** 结果 MUST 为 `first\n- second`(边界插入恰好一个换行符)
-
-#### Scenario: append 边界已存在不重复补
-- **WHEN** 既有内容以换行符结尾,或追加内容以换行符开头
-- **THEN** 引擎 MUST 原样追加,不插入额外换行
-
-#### Scenario: append 空文件不补前置换行
-- **WHEN** memory 文件不存在或为空,以 append 模式写入内容
-- **THEN** 引擎 MUST 直接写入该内容,MUST NOT 在开头添加换行
 
 ### Requirement: read-memory / write-memory verb
 
@@ -127,15 +103,3 @@ memory 写入按模式分两种原子策略:replace 模式 MUST 采用「写临�
 #### Scenario: reset 按目录粒度清理
 - **WHEN** 用户执行 reset 且无 active feature
 - **THEN** 命令 MUST 询问是否整体清理 `.speccode/memory/`(以及 `.speccode/sdd/`),按目录整体处理,不提供按 feature 挑选
-
-### Requirement: 超大会话主动发现与书写
-
-各命令的 prose 指引 MUST 指示 agent 在长会话中主动执行 write-memory,而非仅依赖命令出入口的被动读写:当阶段完成、会话上下文显著增长、或 compact 恢复后继续工作时,agent MUST 主动把关键决策/进度/待办写入 memory,写入内容 MUST 经用户确认或遵循命令内置的既定判据。
-
-#### Scenario: 阶段完成主动书写
-- **WHEN** 长会话中某开发阶段(如一个 task 完成)结束且距上次 memory 写入已隔多个阶段
-- **THEN** agent MUST 主动将阶段摘要写入 memory,不等待命令出口
-
-#### Scenario: compact 恢复后补写
-- **WHEN** 会话发生 compact 且 agent 从 memory 恢复上下文继续工作
-- **THEN** agent MUST 在恢复后的首个阶段完成时更新 memory,保证下一次恢复所需信息完整

@@ -10,9 +10,8 @@ import { readState, writeState, deleteState, WORKTREE_STATUS } from '../lib/stat
 import { detectCodeIntelTools, resolveWorktreeDir, worktreeDirIgnoreState } from '../lib/detect.mjs';
 import { sddWorkspace, taskBrief, reviewPackage, tickTask } from '../lib/sdd.mjs';
 import { buildHookPayload, runHook } from '../lib/hooks.mjs';
-import { readMemory, writeMemory, TRUNK_MEMORY_KEYS } from '../lib/memory.mjs';
+import { listMemory, readMemory, renameMemory, writeMemory, validateMemoryBranch } from '../lib/memory.mjs';
 import { assertSafeRel, buildIndex, knowledgeRoot, listTopics, parseDistilledBlocks, replaceDistilledBlocks, writeKnowledge, archiveRoot, distilledMetaPath, readConsumedArchives, addConsumedArchives, listArchiveBundles, unconsumedArchives } from '../lib/knowledge.mjs';
-import { validateBranch } from '../lib/slug.mjs';
 
 function readStdin() {
   return readFileSync(0, 'utf8');
@@ -201,8 +200,7 @@ const VERBS = {
 
   'read-memory': ({ cwd, branch }) => {
     if (!branch || branch === true) return { ok: false, error: 'read-memory requires --branch <F>' };
-    // trunk-level keys (`_exploring`, `_knowledge`) bypass <type>/<slug> validation
-    if (!TRUNK_MEMORY_KEYS.includes(branch) && !validateBranch(branch)) {
+    if (!validateMemoryBranch(branch)) {
       return { ok: false, error: `invalid branch name: ${branch}` };
     }
     return { ok: true, memory: readMemory(speccodeDirOf(cwd), branch) };
@@ -211,7 +209,7 @@ const VERBS = {
   'write-memory': ({ cwd, branch, 'json-stdin': jsonStdin }) => {
     if (!jsonStdin) return { ok: false, error: 'write-memory requires --json-stdin (pipe JSON via stdin)' };
     if (!branch || branch === true) return { ok: false, error: 'write-memory requires --branch <F>' };
-    if (!TRUNK_MEMORY_KEYS.includes(branch) && !validateBranch(branch)) {
+    if (!validateMemoryBranch(branch)) {
       return { ok: false, error: `invalid branch name: ${branch}` };
     }
     const { mode, content } = JSON.parse(readStdin());
@@ -221,6 +219,20 @@ const VERBS = {
     if (typeof content !== 'string') return { ok: false, error: 'write-memory content must be a string' };
     const path = writeMemory(speccodeDirOf(cwd), branch, content, mode);
     return { ok: true, path };
+  },
+
+  'list-memory': ({ cwd }) => ({ ok: true, topics: listMemory(speccodeDirOf(cwd)) }),
+
+  'rename-memory': ({ cwd, branch, to, 'json-stdin': jsonStdin }) => {
+    if (!jsonStdin) return { ok: false, error: 'rename-memory requires --json-stdin (pipe JSON via stdin)' };
+    if (!branch || branch === true) return { ok: false, error: 'rename-memory requires --branch <from>' };
+    if (!to || to === true) return { ok: false, error: 'rename-memory requires --to <to>' };
+    try {
+      const path = renameMemory(speccodeDirOf(cwd), branch, to);
+      return { ok: true, from: branch, to, path };
+    } catch (err) {
+      return { ok: false, error: String(err?.message || err) };
+    }
   },
 
   'read-knowledge': ({ cwd, index, topic, blocks }) => {

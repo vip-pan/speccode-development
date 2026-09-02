@@ -112,7 +112,7 @@ Key points:
 
 The 12-step default path from requirement to archive:
 
-1. `/speccode:exploring` — explore the requirement on trunk; conclusions stay in the session context (writes the `_exploring` memory).
+1. `/speccode:exploring` — explore the requirement on trunk; conclusions stay in the session context (writes per-topic `_exploring/<topic>` memories).
 2. `/speccode:creating-feature` — cut the feature branch from trunk; register state; create the memory skeleton.
 3. `/speccode:creating-worktree` — cut a worktree from feature; run baseline tests.
 4. `/speccode:proposing` — land the four document types: proposal/design/specs/tasks.
@@ -158,7 +158,7 @@ Conventions:
 ├── config.json                          # static config (config 0.2), written wholesale by init / reset; creating-worktree can write back worktree_dir
 ├── config.json.bak.<timestamp>          # explicit backup before init-idempotent / reset flows rewrite config (backup-config verb)
 ├── state/features/<type>__<slug>.json   # dynamic state, isolated per feature
-├── memory/                              # feature-level memory + _exploring.md / _knowledge.md (self-ignored via .gitignore)
+├── memory/                              # feature-level memory + per-topic _exploring__<topic>.md / _knowledge.md (self-ignored via .gitignore)
 └── sdd/                                 # SDD execution artifacts: task briefs / review packages / ledger (self-ignored via .gitignore)
 ```
 
@@ -202,7 +202,7 @@ the hook shell is fail-open: any error passes the original input through untouch
 speccode maintains one cross-session memory per feature: `.speccode/memory/<type>__<slug>.md`.
 
 - **Untracked, shared across worktrees**: the memory path resolves from the **main repo root**'s `.speccode/` (same as config/state), so multiple worktrees of the same feature read and write the same file; the directory is self-ignored by the plugin's own `.gitignore` and never pollutes `git status`.
-- **`_exploring.md` and `_knowledge.md` are the trunk-level exceptions**: exploring happens on trunk and belongs to no feature, so its conclusions go into `memory/_exploring.md`; the knowledge commands also run from trunk, so their maintenance summaries go into `memory/_knowledge.md`.
+- **Per-topic exploring memory and `_knowledge.md` are the trunk-level exceptions**: exploring happens on trunk and belongs to no feature, so its conclusions go into `memory/_exploring__<topic>.md` (one file per topic; phased requirements share a prefix like `<topic>-p1`); creating-feature adopts the matching topic file via an atomic rename (slug = topic). The knowledge commands also run from trunk, so their maintenance summaries go into `memory/_knowledge.md`.
 - **Commands read on entry, write on exit**: SDD commands read this feature's memory at the start to restore context, and write conclusions / decisions / remaining tasks back on exit.
 - **Proactive writing during long sessions — three triggers**: ① a stage completes (e.g. propose lands, the plan passes review); ② context has grown significantly (more key decisions accumulating); ③ after a compact / session restore — hit any one of these and write memory proactively, rather than waiting for a command exit.
 

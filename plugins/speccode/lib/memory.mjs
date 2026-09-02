@@ -1,7 +1,7 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { writeTextAtomic } from './atomic.mjs';
-import { branchToStateName } from './slug.mjs';
+import { branchToStateName, validateBranch, validateSlug } from './slug.mjs';
 
 // Per-feature session memory: <main repo>/.speccode/memory/<type>__<slug>.md.
 // Untracked by convention like the rest of .speccode/; resolved from the main
@@ -12,6 +12,19 @@ import { branchToStateName } from './slug.mjs';
 // a feature exists; `_knowledge` = knowledge-command maintenance summaries
 // (knowledge commands run from trunk, not bound to a feature).
 export const TRUNK_MEMORY_KEYS = ['_exploring', '_knowledge'];
+
+// Branch-key validation for read/write/rename-memory: reserved no-slash trunk
+// keys, `_exploring/<topic>` topic keys (topic reuses the slug charset), and
+// regular <type>/<slug> feature branches. Supersedes the bin-side inline
+// `TRUNK_MEMORY_KEYS.includes(branch) || validateBranch(branch)` check.
+export function validateMemoryBranch(branch) {
+  if (typeof branch !== 'string') return false;
+  if (TRUNK_MEMORY_KEYS.includes(branch)) return true;
+  if (branch.startsWith('_exploring/')) {
+    return validateSlug(branch.slice('_exploring/'.length));
+  }
+  return validateBranch(branch);
+}
 
 export function memoryDir(speccodeDir) {
   return join(speccodeDir, 'memory');
@@ -55,4 +68,30 @@ export function writeMemory(speccodeDir, branch, content, mode) {
     writeTextAtomic(p, content);
   }
   return p;
+}
+
+// List existing exploring topic keys (`_exploring/<topic>`), sorted. The
+// legacy bare `_exploring.md` does not match the `_exploring__` prefix and is
+// never listed; feature memory files are excluded by the same filter.
+export function listMemory(speccodeDir) {
+  const dir = memoryDir(speccodeDir);
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.startsWith('_exploring__') && f.endsWith('.md'))
+    .map((f) => `_exploring/${f.slice('_exploring__'.length, -'.md'.length)}`)
+    .sort();
+}
+
+// Atomically adopt an exploring topic file into a feature memory file (same
+// directory, renameSync). Refuses to overwrite an existing target — adoption
+// must never merge or clobber (same safety stance as reconcile attribution).
+export function renameMemory(speccodeDir, from, to) {
+  if (!validateMemoryBranch(from)) throw new Error(`invalid branch name: ${from}`);
+  if (!validateMemoryBranch(to)) throw new Error(`invalid branch name: ${to}`);
+  const src = memoryPath(speccodeDir, from);
+  const dst = memoryPath(speccodeDir, to);
+  if (!existsSync(src)) throw new Error(`memory file not found: ${src}`);
+  if (existsSync(dst)) throw new Error(`memory file already exists: ${dst}`);
+  renameSync(src, dst);
+  return dst;
 }
