@@ -26,16 +26,18 @@ digraph when_to_use {
     "Stay in this session?" [shape=diamond];
     "subagent-driven-development" [shape=box];
     "executing-plans" [shape=box];
-    "Manual execution or brainstorm first" [shape=box];
+    "applying (tier 1) or brainstorm first" [shape=box];
 
     "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
+    "Have implementation plan?" -> "applying (tier 1) or brainstorm first" [label="no"];
     "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
-    "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
+    "Tasks mostly independent?" -> "applying (tier 1) or brainstorm first" [label="no - tightly coupled"];
     "Stay in this session?" -> "subagent-driven-development" [label="yes"];
     "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
 }
 ```
+
+无 plan 的出口在 speccode 分级体系下 = Tier 1 的 `/speccode:applying`(准入:proposal.md 的 tier 字段为 1 且无 plan;详见该命令)或 Tier 3 的先 `/speccode:brainstorming`。
 
 **对比 Executing Plans(并行会话):**
 - 同一会话(无上下文切换)

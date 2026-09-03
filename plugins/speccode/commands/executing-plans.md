@@ -64,6 +64,7 @@ tags: [speccode, workflow, plan, execute]
 ### 第 3 步:完成开发
 
 所有任务完成并验证后:
+- **code review(必经)**:全部任务完成并验证后 MUST 调用 `/speccode:requesting-code-review` 派发审查(BASE 用第 1 步加载 plan 前记录的 commit;开始执行时未记录则用 plan 簿记 commit 之前的 head);审查反馈按 `/speccode:receiving-code-review` 核实处理。**review 未通过前 MUST NOT 进入收尾路由(syncing/archiving)。**
 - **写记忆**:把本命令产出的执行进度摘要(完成的任务、验证结果,经用户确认或按本命令内置判据)追加到本 feature 的 memory。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,摘要含单引号也会破壳):
   ```bash
   speccode.mjs write-memory --cwd . --branch <F> --json-stdin <<'EOF'
