@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Creating Feature"
 description: "opt-in(大需求):从 trunk 切出集成分支并推送,登记父实体 state;普通需求直接用 creating-worktree"
 category: Workflow
 tags: [speccode, workflow, feature]

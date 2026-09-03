@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Applying"
 description: "Tier 1 手动执行入口:按 tasks.md 勾选清单逐条实现(无 plan),条目勾选回填 + 簿记 commit,完成后必经 code review"
 category: Workflow
 tags: [speccode, workflow, applying, tier1]

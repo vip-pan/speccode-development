@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Executing Plans"
 description: "在当前会话分批执行实现计划,带人工检查点;子代理可用时优先 subagent-driven-development"
 category: Workflow
 tags: [speccode, workflow, plan, execute]

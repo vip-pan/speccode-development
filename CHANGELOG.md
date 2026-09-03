@@ -8,6 +8,14 @@
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-09-04
+
+> EN: Drop the nonstandard `name` frontmatter field from all 24 command markdown files. IDE extensions may misread it as the slash-command path, showing entries like `/speccode:SpecCode: Exploring` that fail with "Unknown command" — per official docs, `commands/*.md` ignores `name` and invocation names come from filenames.
+
+### Fixed
+
+- **命令 frontmatter 移除非标 `name` 字段**(全部 24 个命令):修复 VS Code slash 菜单误显示 `/speccode:SpecCode: …` 且选中报 Unknown command 的问题。官方文档明文 `commands/*.md` 忽略 `name`(调用名 = 文件名),IDE 扩展会违规捡用为菜单条目;更新插件后菜单回落 `/speccode:<命令名>` 正确形态。`category`/`tags` 同为非标字段但无证据参与症状,留待 0.6.0 skills 迁移清理。
+
 ## [0.5.0] - 2026-09-03
 
 > EN: The knowledge set becomes a capability-keyed current-state snapshot — distilled blocks keyed by `cap/<slug>`, upserted and freshness-audited against the specs each run (carry-forward/stale/superseded retire; hand-written sections become gate-driven tidyable via `replace-hand`) — plus a three-tier dev flow (Tier 1/2/3) with the new `applying` command.
@@ -224,7 +232,8 @@ v2 全量迭代:四层拓扑收敛为三层、SDD 方法论与文档生命周期
 - 「文档剥离四步走」与 finish 阶段 `commit --amend` 折叠:保证 trunk 上功能提交为单一语义 commit,display reset 不误删文档。
 - GitHub / GitLab remote 探测,自动选择 `gh` / `glab` CLI,无 CLI 时降级为打印等效命令。
 
-[Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/vip-pan/speccode-development/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/vip-pan/speccode-development/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/vip-pan/speccode-development/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/vip-pan/speccode-development/compare/v0.2.6...v0.3.0

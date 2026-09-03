@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Status"
 description: "只读总览:所有 active 分支的进度与 pending_operation,父实体按 children 实时派生子分支状态,附 config 摘要"
 category: Workflow
 tags: [speccode, workflow, status]

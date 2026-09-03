@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Syncing"
 description: "把 changes/<slug>/ 的 delta specs 智能合并进 speccode/spec/ 主规格(brainstorm 优先吸收),幂等,落盘即提交"
 category: Workflow
 tags: [speccode, workflow, sync, specs]

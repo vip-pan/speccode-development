@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Archiving"
 description: "归档本次需求变更:speccode/changes/<slug>/ 移入 speccode/archive/<YYYY-MM-DD>-<slug>/,落盘即提交"
 category: Workflow
 tags: [speccode, workflow, archive]

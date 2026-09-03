@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Distilling Knowledge"
 description: "从 spec/ 与 archive/ 蒸馏知识集:全量重蒸 distilled 段,经人工闸门落盘 speccode/knowledge/"
 category: Workflow
 tags: [speccode, workflow, knowledge]

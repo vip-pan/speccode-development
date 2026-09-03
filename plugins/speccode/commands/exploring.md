@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Exploring"
 description: "探索需求:学习/探索/提问澄清,结论留在会话上下文,不写文档;完成后引导建分支"
 category: Workflow
 tags: [speccode, workflow, explore, thinking]

@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Finishing Worktree"
 description: "完成开发分支并按 merge_target 路由合并(集成分支本地 squash / trunk 走 PR,测试门禁;支持 --resume)"
 category: Workflow
 tags: [speccode, workflow, worktree, merge]

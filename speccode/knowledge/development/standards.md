@@ -19,7 +19,7 @@
 
 **版本发布纪律**:bump plugin.json version 的提交 MUST 同一提交(或同一 PR)同步更新根 CHANGELOG.md 对应版本小节;未完成的 version bump MUST NOT 合入 trunk。发版 MUST 打 `v<version>` tag 并建 GitHub Release(notes 摘自 CHANGELOG);Release 是给人看的标记,更新检测实际走 marketplace git 拉取 + plugin.json version 比对,Release 不触发自动更新。**CHANGELOG 格式**:中文条目为主体 + Keep a Changelog 骨架(Added/Changed/Fixed/Removed + semver 比较链接),版本小节顶部加一句英文 highlights(控成本);CHANGELOG 是版本号与测试数量的单一数据源。**patch vs minor 判据**:全部为修复与小变更、无新能力、无 BREAKING 不发 minor/major(不夸大变更面);Fixed 对应修复项,Changed 收录清理与规格演进,对照 squash commit 逐一核对防漏。**syncing 顺序**:先 bump+CHANGELOG 再 sync,使「version 与 CHANGELOG 最新小节一致」合并后立即为真。**BREAKING 需在 CHANGELOG 显式标注**(含升级路径)。
 
-**命令 markdown 规范**:全程中文交互;frontmatter 四字段 name("SpecCode: <Name>")/description/category:Workflow/tags;未知 verb 或抛错 → {ok:false, error} + exit 1。(出自 archive/2026-07-13-add-speccode-plugin、2026-08-07-restructure-as-claude-code-plugin、2026-08-09-plugin-release-process、2026-08-09-speccode-v2-sdd-flow、2026-08-10-release-0-2-1、2026-08-11-release-0-2-2)
+**命令 markdown 规范**:全程中文交互;frontmatter 为 description + 非标遗留 category/tags(name 已于 0.5.1 移除——官方文档明文 commands/*.md 忽略 name,调用名=文件名,VS Code 扩展会把 name 误用为菜单条目致 Unknown command;category/tags 无证据参与症状,留待 0.6.0 skills 迁移一并清理);未知 verb 或抛错 → {ok:false, error} + exit 1。(出自 archive/2026-07-13-add-speccode-plugin、2026-08-07-restructure-as-claude-code-plugin、2026-08-09-plugin-release-process、2026-08-09-speccode-v2-sdd-flow、2026-08-10-release-0-2-1、2026-08-11-release-0-2-2;0.5.1 由 vscode-slash-command-name 变更修正,归档 archive/2026-09-04-vscode-slash-command-name)
 <!-- /distilled -->
 
 <!-- distilled-from: cap/documentation-facade -->

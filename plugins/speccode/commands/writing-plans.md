@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Writing Plans"
 description: "把批准的设计转化为细粒度实现计划(每任务 2-5 分钟步,精确文件路径/完整代码/验证步骤),落 plan/ 并提交"
 category: Workflow
 tags: [speccode, workflow, plan]

@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Creating Worktree"
 description: "从 trunk 或集成分支切出开发分支(git worktree)并登记 state,普通需求的唯一入口"
 category: Workflow
 tags: [speccode, workflow, worktree]
