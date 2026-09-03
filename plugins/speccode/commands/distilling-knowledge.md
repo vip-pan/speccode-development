@@ -5,19 +5,19 @@ category: Workflow
 tags: [speccode, workflow, knowledge]
 ---
 
-从 `speccode/spec/` 与 `speccode/archive/` 蒸馏知识集,全量重蒸 `speccode/knowledge/` 各 topic 文件的蒸馏段,经人工闸门落盘。全程中文交互。**应在 trunk 分支上运行**(`git rev-parse --abbrev-ref HEAD` 校验等于 `config.trunk`)。
+从 `speccode/spec/` 与 `speccode/archive/` 蒸馏知识集,全量重蒸 `speccode/knowledge/` 各 topic 文件的蒸馏段,经人工闸门落盘。全程中文交互。**应在 state 登记的 `chore/knowledge-*` worktree 分支上运行**(trunk 上运行时由本命令引导建分支,见 §3)。
 
 ## 前置
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
-2. **trunk 入口校验**:`git rev-parse --abbrev-ref HEAD` MUST 等于 `config.trunk`,或为 `chore/knowledge-*` 维护分支(续跑,见 §3)。HEAD 为非 trunk 的 `<type>/<slug>` 开发分支,或**不匹配 `chore/knowledge-` 的** `chore/` 分支 → 退出并提示「请在 trunk 上运行本命令(knowledge 维护从 trunk 跑,不经开发分支)」。
-3. **bootstrap 维护分支**:
-   - 若 HEAD 已是 `chore/knowledge-*` 分支(续跑)→ 先跑下面的**登记校验**;通过则跳过本步,直接进入 §4。
-   - 否则(在 trunk)检测本地**未完成**的 `chore/knowledge-*` 分支:`git branch --list 'chore/knowledge-*' --no-merged <config.trunk> || true`(`--no-merged` 排除已合入 trunk 的历史维护分支;`|| true` 保证无命中的非零退出码不被当作失败;输出逐行去掉前导 `*`/空格才是分支名)。有命中 → AskUserQuestion 询问「续跑(checkout 既有)/新建」;续跑 → 对选中分支先跑**登记校验**,通过后 `git checkout <既有分支>` 并进入 §4。
-   - **登记校验**(上面两条续跑路径 MUST 各跑一次):`speccode.mjs feature-progress --cwd . --branch <该分支>`——返回 `{"ok":false,"error":"no state for <分支>"}`(无 state,注意此时 verb 退出码为 1,属预期——判据以 JSON 的 `ok` 字段为准,不要当成命令失败)说明是纯维护分支 → 放行;返回 `ok:true`(带 `total`/`completed`)说明该分支是**已登记的功能分支**(名字恰好撞上 `chore/knowledge-` 前缀)→ 退出并提示「这是已登记的功能分支(<分支>),knowledge 维护请回 trunk 新建 chore/knowledge-* 分支」,不做任何写入。
-   - 无命中 → AskUserQuestion 确认新分支名(默认 `chore/knowledge-distill`);slug 须匹配 `^[a-z0-9-]+$`,组合为 `chore/knowledge-<slug>`。
-   - `git checkout -b chore/knowledge-<slug>` + `git push -u origin chore/knowledge-<slug>`。
-   - **不创建 speccode state、不运行 reconcile、不开 git worktree。**
+2. **运行位置校验**:运行 `git rev-parse --abbrev-ref HEAD` 取当前分支,并运行 `speccode.mjs reconcile --cwd .` 取 `features`:
+   - HEAD 为 `chore/knowledge-*` 且 `features` 中存在该分支的 state 登记(status ∈ {pending, in_progress, pr_open})→ 直接进入 §4(在本 knowledge worktree 中执行)。
+   - HEAD 为 `config.trunk` → 走 §3「分支引导」。
+   - 其他(非 trunk、非 state 登记的 `chore/knowledge-*`)→ 退出并提示「知识维护请在 chore/knowledge-* worktree 分支上进行:回 trunk 运行本命令引导建分支,或 cd 到既有 knowledge worktree」。
+3. **分支引导(仅 trunk 上运行时)**:从 §2 的 reconcile `features` 输出筛选 `branch` 匹配 `^chore/knowledge-` 且 `status ∈ {pending, in_progress, pr_open}` 的条目:
+   - 有命中 → AskUserQuestion 询问「续跑(cd 到该分支 worktree)/ 新建」;续跑 → `cd <该条目的 worktree>` 后进入 §4;新建 → 按无命中流程另起 slug(不得复用同一分支名,该分支仍有未完成 state)。
+   - 无命中 → AskUserQuestion 确认 slug(默认 `knowledge-distill`;须匹配 `^[a-z0-9-]+$`),引导执行 `/speccode:creating-worktree chore/knowledge-<slug>`(type=`chore`,基点 trunk,登记 state)→ 建成后 `cd <worktree>` 进入 §4。若 creating-worktree 检测到大需求父实体并提议从集成分支切出,MUST 坚持基点为 `config.trunk`(知识维护不挂在任何大需求下),不接受其集成基点提议。
+   - 「未完成」判定 MUST 基于 state 查询(reconcile 输出),MUST NOT 依赖 `git branch --no-merged` 等 git merge 判定(squash-only 合并下对已合并分支永真,会把已收尾分支误判为未完成)。
 4. 运行 `speccode.mjs read-knowledge --cwd .`(无 flag)获取现状:`files`(topic 清单)与 `index`(`_index.md` 内容,可能为 null)。
 5. `speccode/knowledge/` 不存在 → 创建骨架:6 个初始 topic 空文件(development/architecture.md、development/standards.md、development/environment.md、development/integrations.md、development/pitfalls.md、development/security.md)+ `_index.md`,不创建 business/ 目录。机制:对 6 个文件逐个执行 `write-knowledge --rel <file> --json-stdin`(mode=replace,content 为空串),再执行 `write-knowledge --rel _index.md --json-stdin`(mode=index,entries 为 development 一个空清单 section)创建索引——绝不 mkdir/touch/手写文件。
 6. 读 `speccode/spec/`(各 capability 主规格,**全量**)。archive 改**增量读**:运行 `speccode.mjs read-consumed-archives --cwd .` 得 `{consumed, present, unconsumed, bootstrap}`——`bootstrap=true`(sidecar `_distilled.meta.json` 缺失)则首次引导,本次全量读 archive 全部归档包;否则只读 `unconsumed` 列出的归档包,`consumed` 包整包跳过(含其 propose/design/brainstorm 子文档)。`present` 是盘上归档包全集,留给闸门做 stale 判定。
@@ -61,15 +61,15 @@ source 指向的 archive 或 spec capability 已不存在 → 该块标 **stale*
    git add speccode/knowledge/
    git commit -m "docs(knowledge): distill knowledge set"
    ```
-4. **直通 PR**:先 `git push origin <维护分支>`(把 item 3 的提交推到远端,PR 创建前置;镜像 finishing-feature §2)。创建前 MUST **查重**——查该维护分支上是否已有 open PR(`pr_tool=github`:`gh pr list --head <维护分支> --state open --json url --jq '.[0].url'`;`pr_tool=gitlab`:`glab mr list --source-branch <维护分支> --state opened`);**已有 open PR → 跳过创建**,直接复用既有 PR url(续跑场景常见,重复 create 会报错)。无 open PR 才用 `pr_tool` 创建 PR(参数同 `createPrArgs`,base=`config.trunk`,head=当前 `chore/knowledge-*` 维护分支,title=`docs(knowledge): distill knowledge set`,body=topic 变化摘要)。`pr_tool=none` → 打印等效命令(如 `gh pr create --base <trunk> --head <维护分支> --title "docs(knowledge): distill knowledge set"`)、跳过查重与创建(仅中止 PR 创建,item 5/6 照常执行),且 MUST NOT 创建 speccode state 或经 finishing-feature。**不阻塞等待合并、不调用 finishing-feature/finishing-worktree。**
-5. **memory(trunk 级)**:PR 创建/复用(或 `pr_tool=none` 打印等效命令)**之后**,经 `speccode.mjs write-memory --cwd . --branch _knowledge --json-stdin`(mode=append)追加本次蒸馏摘要(哪些 topic 变化/无变化/新增)**+ PR url**(`pr_tool=none` 时记等效命令与维护分支名):
+4. **收尾**:全部写入与提交完成后,引导执行 `/speccode:finishing-worktree` 收尾(测试门禁 + 按 `merge_target` 的 PR 路由 + squash-only 探测 + 切回 merge_target);建议在 PR 菜单选「PR+不等待」(知识维护不阻塞日常开发)。从 finishing-worktree 的输出取得 PR url(或 `pr_tool=none` 时的等效命令)。
+5. **memory(trunk 级)**:finishing-worktree 收尾取得 PR url(或等效命令)**之后**,经 `speccode.mjs write-memory --cwd . --branch _knowledge --json-stdin`(mode=append)追加本次蒸馏摘要(哪些 topic 变化/无变化/新增)**+ PR url**(`pr_tool=none` 时记等效命令与维护分支名):
    ```bash
    speccode.mjs write-memory --cwd . --branch _knowledge --json-stdin <<'EOF'
    {"mode":"append","content":"<摘要 + PR url>"}
    EOF
    ```
    顺序不可调换:摘要必须含 PR url,所以只能在 PR 之后写。`.speccode/memory/` 自忽略,在 item 3 的 `git add speccode/knowledge/` 之后写不会影响提交内容。
-6. 报告:哪些 topic 变化/无变化/新增 + PR url(或等效命令)。
+6. 报告:哪些 topic 变化/无变化/新增 + finishing-worktree 输出的 PR url(或等效命令)。
 
 ## 约束
 

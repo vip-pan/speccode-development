@@ -153,43 +153,45 @@ SDD 认知型命令(exploring / proposing / brainstorming / writing-plans / exec
 
 ### Requirement: 知识维护分支与直通 PR
 
-distilling-knowledge 与 recording-knowledge MUST 从 trunk 运行(trunk 为唯一入口):MUST NOT 在 `worktree-` 前缀分支,或 `feature/`/`bugfix/`/`refactor/` 功能分支,或**不匹配 `chore/knowledge-` 的** `chore/` 功能分支上执行,违反时 MUST 提示用户切回 trunk 后退出。`chore/knowledge-*` 维护分支是本命令自身 bootstrap 出的分支,MUST 放行(续跑,见下)。
+distilling-knowledge 与 recording-knowledge MUST 运行于 state 登记的 `chore/knowledge-*` 开发分支的 worktree 中(与其他开发分支同一入口与收尾,无特权形态)。MUST NOT 在其他任何分支(含 trunk、`feature/`/`bugfix/`/`refactor/` 分支、不匹配 `chore/knowledge-` 的 `chore/` 分支)的 worktree 或主工作区执行知识写入,违反时 MUST 提示并退出。
 
-从 trunk 运行时,命令 MUST 经 AskUserQuestion 确认一个 `chore/knowledge-*` 维护分支名(默认:distilling 用 `chore/knowledge-distill`,recording 用 `chore/knowledge-<topic>`),随后 `git checkout -b <分支>` 并 `push -u`。该流程 MUST NOT 创建 speccode feature state、MUST NOT 运行 reconcile、MUST NOT 开 git worktree。若 HEAD 已在 `chore/knowledge-*` 分支(续跑)→ MUST 跳过 bootstrap 直接进入执行。若 trunk 上已存在未完成(未合入 `config.trunk`)的 `chore/knowledge-*` 分支 → MUST 经 AskUserQuestion 询问「续跑(切到既有分支)/新建」。任何续跑路径 MUST 先经 `feature-progress` 确认该分支未被登记为 speccode feature state;已登记(名字恰好撞上 `chore/knowledge-*` 的功能分支)→ MUST 拒绝并提示回 trunk 另建维护分支。
+在 trunk 上运行时,命令 MUST 先经 state 查询识别未完成(status ∈ {pending, in_progress, pr_open})的 `chore/knowledge-*` 分支:恰有候选时 MUST 经 AskUserQuestion 询问「续跑(cd 到该分支 worktree)/ 新建」;无候选时 MUST 经 AskUserQuestion 确认 slug(默认:distilling 用 `knowledge-distill`,recording 用 `knowledge-<内容主题>`,无主题用 `knowledge-record`),随后引导执行 `/speccode:creating-worktree` 以 type=`chore` 创建 worktree 分支并登记 state,再继续本命令。「未完成」判定 MUST 基于 state 查询,MUST NOT 依赖 git merge 判定(如 `git branch --no-merged`——在 squash-only 合并下对已合并分支永真)。
 
-落盘 commit 后 MUST 直接经 `prtool.createPrArgs` 创建 PR(base=`config.trunk`,head=维护分支);创建前 MUST 先查该维护分支上是否已有 open PR,已有则 MUST 跳过创建、直接复用并报告既有 PR url。`pr_tool` 为 none 时 MUST 打印等效命令(如 `gh pr create --base <trunk> --head <分支> --title ...`)并中止,且 MUST NOT 创建 speccode state 或经 finishing-feature。该 PR 流程 MUST NOT 阻塞等待合并、MUST NOT 调用 finishing-feature 或 finishing-worktree。
+落盘 commit 后 MUST 经 `/speccode:finishing-worktree` 收尾(测试门禁、PR 路由、squash-only 探测、切回 merge_target),MUST NOT 内置独立的 PR 创建/查重/等待逻辑。PR 等待策略由 finishing-worktree 既有菜单决定,命令 SHOULD 建议知识维护选「PR 不等待」。
 
-维护摘要(topic 变化/新增/无变化 + PR url)MUST 在 PR 创建(或 `pr_tool=none` 打印等效命令)之后追加到 trunk 级 `.speccode/memory/_knowledge.md`(见 session-memory「memory 文件位置与命名」),内容 MUST 含 PR url(或等效命令),MUST NOT 写 feature 级 memory。
+维护摘要(topic 变化/新增/无变化 + PR url)MUST 在收尾输出 PR url(或 `pr_tool=none` 等效命令)之后追加到 trunk 级 `.speccode/memory/_knowledge.md`(见 session-memory「memory 文件位置与命名」),内容 MUST 含 PR url(或等效命令),MUST NOT 写 feature 级 memory。
 
-#### Scenario: trunk 首次 bootstrap
+#### Scenario: trunk 首次运行引导建分支
 
-- WHEN 用户在 trunk 运行 distilling-knowledge,无未完成 chore/knowledge-* 分支
-- THEN 命令经 AskUserQuestion 确认分支名(默认 chore/knowledge-distill),git checkout -b + push,无 state/reconcile/worktree,随后进入蒸馏执行
+- WHEN 用户在 trunk 运行 distilling-knowledge,且 state 中无未完成 chore/knowledge-* 分支
+- THEN 命令经 AskUserQuestion 确认 slug(默认 knowledge-distill),引导执行 creating-worktree 以 type=chore 创建 worktree 分支并登记 state,随后在新 worktree 中继续蒸馏
 
-#### Scenario: 续跑既有分支
+#### Scenario: 续跑未完成分支
 
-- WHEN HEAD 已在 chore/knowledge-* 分支
-- THEN 经 feature-progress 确认无 feature state 后跳过 bootstrap,直接进入执行,不重复创建分支
-- AND feature-progress 返回 ok:true(该分支是已登记功能分支)时拒绝执行并提示回 trunk 另建维护分支
+- WHEN state 中存在 status 为 pending/in_progress/pr_open 的 chore/knowledge-* 分支
+- THEN AskUserQuestion 询问续跑(cd 到该分支 worktree)或新建;判定基于 state 查询而非 git merge 判定
 
-#### Scenario: 检测到未完成分支询问续跑
+#### Scenario: squash 合并后不再误报未完成
 
-- WHEN 在 trunk 运行,已存在未完成的 chore/knowledge-* 分支
-- THEN AskUserQuestion 询问续跑(切既有)/新建;续跑则 checkout 既有分支,新建则另起分支名
+- WHEN 某历史 chore/knowledge-* 分支已经 finishing-worktree 收尾且 state 已推进/删除,但 git branch --no-merged 因 squash 合并仍列出该分支
+- THEN 命令 MUST NOT 将其视为未完成分支(state 是唯一判定来源),不发起续跑询问
 
-#### Scenario: 在 worktree/feature 分支运行被拒
+#### Scenario: 在其他分支运行被拒
 
-- WHEN HEAD 为 worktree-* 或功能分支(feature/bugfix/refactor,或不匹配 `chore/knowledge-` 的 chore/ 功能分支)
-- THEN 提示切回 trunk 并退出,不执行任何写入
-- AND HEAD 为 `chore/knowledge-*` 且该分支未被登记为 feature state 时不受本条拒绝(视为维护分支续跑)
+- WHEN HEAD 为 feature/bugfix/refactor 分支、不匹配 chore/knowledge- 的 chore/ 分支,或其 worktree
+- THEN 提示回 trunk(由 trunk 引导建分支)或回自己的 chore/knowledge-* worktree,退出且不执行任何写入
 
-#### Scenario: pr_tool=none 打印等效命令
+#### Scenario: 收尾统一走 finishing-worktree
+
+- WHEN 蒸馏/记录落盘 commit 完成
+- THEN 命令引导执行 finishing-worktree 完成测试门禁、PR 创建与 merge_target 切回,不运行命令内置 PR 逻辑
+
+#### Scenario: pr_tool=none
 
 - WHEN config.pr_tool 为 none
-- THEN 落盘 commit 后打印完整等效 PR 命令与分支名并中止 PR 创建,不创建 state、不调 finishing-feature
-- AND 仍把维护摘要(含该等效命令与分支名)追加到 _knowledge memory 后报告
+- THEN finishing-worktree 既有降级路径打印等效命令,维护摘要(含等效命令与分支名)仍追加到 _knowledge memory
 
 #### Scenario: 维护摘要写 _knowledge memory
 
-- WHEN 落盘并创建(或复用)PR 后
+- WHEN 收尾完成并获得 PR url(或等效命令)后
 - THEN 含 PR url 的维护摘要追加到 .speccode/memory/_knowledge.md,不写 feature memory
