@@ -164,7 +164,7 @@ export function replaceDistilledBlocks(text, blocks) {
   // bytes survive); trailing blank lines collapse into the section
   // separators so a second run is byte-identical (idempotent).
   const handText = hand.join('\n').replace(/\n+$/, '');
-  const sections = hand.length > 0 ? [handText, ...blockOut] : blockOut;
+  const sections = handText !== '' ? [handText, ...blockOut] : blockOut;
   const joined = sections.join('\n\n');
   return joined === '' || joined.endsWith('\n') ? joined : `${joined}\n`;
 }

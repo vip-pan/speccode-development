@@ -103,6 +103,12 @@ test('replaceDistilledBlocks appends blocks to empty text without leading newlin
   assert.equal(out, '<!-- distilled-from: cap/x -->\nb\n<!-- /distilled -->\n');
 });
 
+test('replaceDistilledBlocks emits no leading blank lines when the file has no hand-written content', () => {
+  const text = '<!-- distilled-from: cap/one -->\nb\n<!-- /distilled -->\n';
+  const out = replaceDistilledBlocks(text, [{ source: 'cap/one', body: 'b' }]);
+  assert.equal(out, '<!-- distilled-from: cap/one -->\nb\n<!-- /distilled -->\n');
+});
+
 test('replaceDistilledBlocks does not double up trailing newline when source already ends with one', () => {
   const text = 'hand A\n<!-- distilled-from: cap/old -->\nold body\n<!-- /distilled -->\nhand B\n';
   const out = replaceDistilledBlocks(text, [{ source: 'cap/old', body: 'new body' }]);
