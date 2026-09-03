@@ -65,8 +65,8 @@ speccode 是一个 Claude Code 流程编排插件,用一组 `/speccode:*` slash 
 
 | 命令 | 作用 | 前置(运行分支) |
 |---|---|---|
-| `/speccode:distilling-knowledge` | 从 spec/(全量)+ archive/(**增量**:只读未消费归档包,经 `knowledge/_distilled.meta.json` 追踪;已消费包整包跳过、其蒸馏块原样 carry forward 不重蒸)蒸馏 knowledge/ 各 topic 的 distilled 段;闸门区分 stale(包已删)与 superseded(被新包取代);只蒸 SDD 过程知识,范围外 topic 经闸门日落;删 sidecar 即强制全量重蒸(不设 `--full`);人工闸门后落盘,落盘即提交 | chore/knowledge-* worktree 分支(creating-worktree 统一入口、finishing-worktree 统一收尾)|
-| `/speccode:recording-knowledge` | 知识直接记录进 hand-written 段(适配判断:过程知识收录,业务知识建议进外部 RAG;草稿 → 人工闸门 → 原子写),落盘即提交 | chore/knowledge-* worktree 分支(统一入口/收尾)|
+| `/speccode:distilling-knowledge` | 从 spec/(全量读——新鲜度锚点)+ archive/(**增量**:只读未消费归档包,经 `knowledge/_distilled.meta.json` 追踪,纯读成本控制)蒸馏 knowledge/ 各 topic;每次运行都把既有蒸馏块对照当前 spec 做新鲜度审查;蒸馏块以能力为键(`<!-- distilled-from: cap/<slug> -->`,每文件每能力一块,upsert——后蒸覆盖先蒸;退役知识经闸门附理由删除,不留墓碑);旧来源块首次运行时经闸门映射为能力键;只蒸 SDD 过程知识,范围外 topic 经闸门日落;删 sidecar 即强制重读全部归档(不设 `--full`);人工闸门后落盘,落盘即提交 | chore/knowledge-* worktree 分支(creating-worktree 统一入口、finishing-worktree 统一收尾)|
+| `/speccode:recording-knowledge` | 知识直接记录进 hand-written 段(适配判断:过程知识收录,业务知识建议进外部 RAG;草稿 → 人工闸门 → 经 `replace-hand` 原子整写,distilled 块逐字节保留;每次运行同时整理该 topic 既有 hand-written 段——合并/删除附理由,裁决权归当下用户),落盘即提交 | chore/knowledge-* worktree 分支(统一入口/收尾)|
 
 方法论:
 
@@ -163,7 +163,7 @@ speccode/
 
 - **落盘即 commit**:proposing / brainstorming / writing-plans / applying(逐条簿记 commit)/ syncing / archiving / distilling-knowledge / recording-knowledge 每一步产出文档后立即提交,文档历史与代码历史同分支同行。
 - **同 feature 多轮重建不冲突**:changes/<slug>/ 归档后目录释放,同一 slug 可再次 proposing 开新一轮;未归档重建时 proposing 会询问「续写 / 先归档 / 取消」。
-- **知识集:distilled 与 hand-written 分层**:`knowledge/` 下每个 topic 文件可混合两类内容。`distilling-knowledge` 把 `spec/`(全量读)与 `archive/`(**增量**——只读未消费归档包,经 `_distilled.meta.json` 追踪;已消费包整包跳过、其蒸馏块原样 carry forward 不重蒸,因归档包不可变)蒸馏为**蒸馏块(distilled blocks)**,用 `<!-- distilled-from: <source> --> ... <!-- /distilled -->` 标记包裹,每个 topic 的蒸馏块每次运行全量重建(来源已消失的块标 stale;被新包取代的块标 superseded,二者均经闸门;删 `_distilled.meta.json` 强制全量重蒸作逃生口,不设 `--full`);`recording-knowledge` 则在这些标记之外追加自由格式的**手写(hand-written)**内容。重建对标记之外的一切内容逐字节保留,故手写内容在每次蒸馏块重建后原样存活。知识集只策展 SDD 过程知识(`development/*`;pitfalls 兼收评审中反复出现的问题模式与团队评审共识)。业务知识交由外部 RAG 系统:`recording-knowledge` 写入前做适配判断(建议而非硬拦),`distilling-knowledge` 对范围外 topic 的蒸馏块经同一人工闸门日落,hand-written 段逐字节保留。读侧兼容旧 `promoted-from`/`/promoted` marker,存量文件随首次蒸馏自动重写为新格式。
+- **知识集:以能力为键的当前态快照**:`knowledge/` 下每个 topic 文件混合两类内容。`distilling-knowledge` 把 `spec/`(全量读——新鲜度锚点)与 `archive/`(**增量**,经 `knowledge/_distilled.meta.json` 追踪,纯为读成本控制)蒸馏为**蒸馏块(distilled blocks)**,用 `<!-- distilled-from: cap/<slug> --> ... <!-- /distilled -->` 标记包裹:键是能力 slug,每文件唯一,每次运行 upsert——后蒸覆盖先蒸,退役知识经闸门附理由删除(不留墓碑;历史在 `archive/` 与 CHANGELOG 里),且每次运行都把既有蒸馏块对照当前 spec 做新鲜度审查。`recording-knowledge` 在这些标记之外写入并整理自由格式的**手写(hand-written)**内容(replace-hand 模式:每次写入整建整个手写区,distilled 块逐字节存活;整理动作——合并/删除——附理由,裁决权归当下用户而非 spec)。两类写入都产出规范布局:手写在前,蒸馏块在后。知识集只策展 SDD 过程知识(`development/*`;pitfalls 兼收评审中反复出现的问题模式与团队评审共识)。业务知识交由外部 RAG 系统:`recording-knowledge` 写入前做适配判断(建议而非硬拦),`distilling-knowledge` 对范围外 topic 的蒸馏块经同一人工闸门日落,hand-written 段逐字节保留。读侧仍解析旧 `promoted-from`/`/promoted` marker 与旧 provenance 来源值;存量文件随首次蒸馏经闸门迁移为能力键。
 
 > 插件侧辅助资源:`plugins/speccode/references/` 内含 visual-companion(brainstorming 的可视化伴侣,见 `references/visual-companion.md`)、评审提示与调试方法论等,随插件源码跟踪。
 
