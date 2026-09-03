@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Reset"
 description: "重置 speccode 开发环境:清 state 与 worktree,按字段询问是否清理 config(要求无任何 active 分支)"
 category: Workflow
 tags: [speccode, workflow, reset]

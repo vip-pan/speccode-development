@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Subagent Driven Development"
 description: "为每个任务派发全新子代理实现 + 双重审查 + 整支终审;ledger 恢复;工作区 .speccode/sdd/<plan>/"
 category: Workflow
 tags: [speccode, workflow, sdd, subagent]

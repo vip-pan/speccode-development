@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Recording Knowledge"
 description: "把知识直接记录进知识集:经人工闸门写入 speccode/knowledge/ 的 hand-written 段"
 category: Workflow
 tags: [speccode, workflow, knowledge]

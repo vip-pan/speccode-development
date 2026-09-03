@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Systematic Debugging"
 description: "遇到任何 bug、测试失败或异常行为时使用,提出修复之前必须先完成根因调查;3 次修复失败则质疑架构"
 category: Workflow
 tags: [speccode, workflow, debugging]

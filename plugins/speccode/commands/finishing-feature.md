@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Finishing Feature"
 description: "opt-in 大需求终局:集成分支 → trunk 单 PR(children 全 completed 门禁,阻塞等合并),删父实体 state 后切回 trunk"
 category: Workflow
 tags: [speccode, workflow, finish]

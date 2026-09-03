@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Requesting Code Review"
 description: "完成任务、实现重大功能或合并前,派发 code reviewer 子代理验证工作符合需求;BASE 用调用方记录的 commit"
 category: Workflow
 tags: [speccode, workflow, review]

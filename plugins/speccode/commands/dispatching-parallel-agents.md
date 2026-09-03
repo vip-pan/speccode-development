@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Dispatching Parallel Agents"
 description: "面对 2+ 个无共享状态、无顺序依赖的独立任务时,按问题域并行派发子代理"
 category: Workflow
 tags: [speccode, workflow, parallel, subagent]

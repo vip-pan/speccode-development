@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Receiving Code Review"
 description: "收到代码审查反馈时使用,实施建议之前先核实;要技术严谨与验证,不要表演式认同或盲目实施"
 category: Workflow
 tags: [speccode, workflow, review]

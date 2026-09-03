@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Test Driven Development"
 description: "实现任何功能或 bugfix 时使用,先写测试再写实现代码;没看过测试失败就不算 TDD"
 category: Workflow
 tags: [speccode, workflow, tdd, testing]

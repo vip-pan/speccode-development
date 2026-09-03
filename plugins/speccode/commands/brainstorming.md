@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Brainstorming"
 description: "苏格拉底式设计精化:一次一问、多方案权衡、分段呈现确认;设计落 brainstorm/ 并回写 propose/,落盘即提交"
 category: Workflow
 tags: [speccode, workflow, brainstorm, design]

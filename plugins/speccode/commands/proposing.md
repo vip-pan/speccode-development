@@ -1,5 +1,4 @@
 ---
-name: "SpecCode: Proposing"
 description: "把探索结论落地为 proposal/design/specs/tasks 四类文档(speccode/changes/<slug>/propose/),落盘即提交"
 category: Workflow
 tags: [speccode, workflow, propose, specs]
