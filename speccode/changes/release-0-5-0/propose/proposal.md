@@ -6,7 +6,7 @@ tier: 1
 
 ## Why
 
-0.4.0 后 main 已累积 5 个 PR(#42-#46),其中 #45 knowledge-compact 含 BREAKING(能力键制写侧、append-hand 退役)——按版本发布纪律(bump 与 CHANGELOG 同一提交、tag + GitHub Release)出 0.5.0。
+0.4.0 后 main 已累积 6 个 PR(#41-#46,其中 #41/#46 为本仓 dogfood 蒸馏,用户不可感知、不记 CHANGELOG),其中 #45 knowledge-compact 含 BREAKING(能力键制写侧、append-hand 退役)——按版本发布纪律(bump 与 CHANGELOG 同一提交、tag + GitHub Release)出 0.5.0。
 
 ## What Changes
 
