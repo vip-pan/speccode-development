@@ -1,31 +1,6 @@
-# knowledge-set Specification
+# knowledge-set delta: knowledge-compact
 
-## Purpose
-
-知识集层:tracked、可检索、按主题组织的项目知识库,落 `speccode/knowledge/`(与 spec/changes/archive 平级)。由蒸馏命令(distilling-knowledge,从 spec/archive 蒸馏 distilled 段)与记录命令(recording-knowledge 写 hand-written 段)写入,均经人工闸门;SDD 认知型命令入口读 `_index.md` 索引并按需读 topic 文件,失败静默兜底。
-
-## Requirements
-
-### Requirement: 知识集目录结构
-
-speccode MUST 支持 tracked 知识集目录 `speccode/knowledge/`,包含 `_index.md` 检索索引与按主题组织的 topic 文件(初始骨架:development/architecture.md、development/standards.md、development/environment.md、development/integrations.md、development/pitfalls.md、development/security.md),topic 清单可演进(用户可经 recording-knowledge 在 `development/` 下新建 topic)。知识集 MUST 只策展 SDD 开发过程知识;业务知识 MUST NOT 进入初始骨架,由外部 RAG 系统维护。
-
-`_index.md` MUST 由实扫现有 topic 文件(跳过内容为空的 topic 文件)按顶层目录名分组生成,不得硬编码固定 section 清单。
-
-#### Scenario: 新项目无知识集
-
-- WHEN 项目尚无 `speccode/knowledge/` 目录
-- THEN 消费入口静默跳过;distilling-knowledge 或 recording-knowledge 首次运行时创建骨架(目录 + `_index.md` + 6 个初始 development topic 空文件),MUST NOT 创建 business/ 目录
-
-#### Scenario: 索引缺失但 topic 文件存在
-
-- WHEN `_index.md` 缺失但 topic 文件存在
-- THEN distilling-knowledge 或 recording-knowledge 运行时用 buildIndex 重建 `_index.md`,sections 按实扫结果的顶层目录名分组
-
-#### Scenario: 存量 business topic 自然消失
-
-- WHEN 存量项目的 business/*(或任何蒸馏目标外 topic)的蒸馏块经日落闸门移除,且文件无 hand-written 内容残留(文件为空)
-- THEN 下次重建 `_index.md` 时该空 topic 文件 MUST 不被收录(实扫跳过空文件),条目自然消失;文件本身留在盘上,由用户自行处置
+## MODIFIED Requirements
 
 ### Requirement: 来源标记
 
@@ -157,7 +132,7 @@ read-consumed-archives verb 返回 `{consumed, unconsumed, present, bootstrap}`;
 
 #### Scenario: 记录过程知识
 
-- WHEN 用户提供的过程知识内容并确认草稿
+- WHEN 用户提供过程知识内容并确认草稿
 - THEN 内容写入对应 topic 文件的 hand-written 段,并更新 `_index.md`(新 topic、摘要变化或索引缺失时)
 
 #### Scenario: 业务知识经闸门建议后坚持写入
@@ -174,57 +149,3 @@ read-consumed-archives verb 返回 `{consumed, unconsumed, present, bootstrap}`;
 
 - WHEN 手写段经 mode=replace-hand 写入
 - THEN hand-written 区整体替换为闸门确认内容,同文件蒸馏块与原内容逐字节一致,布局为手写段在前
-
-### Requirement: 消费入口
-
-SDD 认知型命令(exploring / proposing / brainstorming / writing-plans / executing-plans / subagent-driven-development / systematic-debugging / requesting-code-review / receiving-code-review)入口 MUST 读 `_index.md` 索引并按需读相关 topic 文件;`knowledge/` 不存在或读取失败时静默跳过,绝不阻断主流程。
-
-#### Scenario: 知识集缺失不阻断
-
-- WHEN 项目无 `knowledge/` 目录或读取失败
-- THEN 命令正常继续,不输出错误、不中断
-
-### Requirement: 知识维护分支与直通 PR
-
-distilling-knowledge 与 recording-knowledge MUST 运行于 state 登记的 `chore/knowledge-*` 开发分支的 worktree 中(与其他开发分支同一入口与收尾,无特权形态)。MUST NOT 在其他任何分支(含 trunk、`feature/`/`bugfix/`/`refactor/` 分支、不匹配 `chore/knowledge-` 的 `chore/` 分支)的 worktree 或主工作区执行知识写入,违反时 MUST 提示并退出。
-
-在 trunk 上运行时,命令 MUST 先经 state 查询识别未完成(status ∈ {pending, in_progress, pr_open})的 `chore/knowledge-*` 分支:恰有候选时 MUST 经 AskUserQuestion 询问「续跑(cd 到该分支 worktree)/ 新建」;无候选时 MUST 经 AskUserQuestion 确认 slug(默认:distilling 用 `knowledge-distill`,recording 用 `knowledge-<内容主题>`,无主题用 `knowledge-record`),随后引导执行 `/speccode:creating-worktree` 以 type=`chore` 创建 worktree 分支并登记 state,再继续本命令。「未完成」判定 MUST 基于 state 查询,MUST NOT 依赖 git merge 判定(如 `git branch --no-merged`——在 squash-only 合并下对已合并分支永真)。
-
-落盘 commit 后 MUST 经 `/speccode:finishing-worktree` 收尾(测试门禁、PR 路由、squash-only 探测、切回 merge_target),MUST NOT 内置独立的 PR 创建/查重/等待逻辑。PR 等待策略由 finishing-worktree 既有菜单决定,命令 SHOULD 建议知识维护选「PR 不等待」。
-
-维护摘要(topic 变化/新增/无变化 + PR url)MUST 在收尾输出 PR url(或 `pr_tool=none` 等效命令)之后追加到 trunk 级 `.speccode/memory/_knowledge.md`(见 session-memory「memory 文件位置与命名」),内容 MUST 含 PR url(或等效命令),MUST NOT 写 feature 级 memory。
-
-#### Scenario: trunk 首次运行引导建分支
-
-- WHEN 用户在 trunk 运行 distilling-knowledge,且 state 中无未完成 chore/knowledge-* 分支
-- THEN 命令经 AskUserQuestion 确认 slug(默认 knowledge-distill),引导执行 creating-worktree 以 type=chore 创建 worktree 分支并登记 state,随后在新 worktree 中继续蒸馏
-
-#### Scenario: 续跑未完成分支
-
-- WHEN state 中存在 status 为 pending/in_progress/pr_open 的 chore/knowledge-* 分支
-- THEN AskUserQuestion 询问续跑(cd 到该分支 worktree)或新建;判定基于 state 查询而非 git merge 判定
-
-#### Scenario: squash 合并后不再误报未完成
-
-- WHEN 某历史 chore/knowledge-* 分支已经 finishing-worktree 收尾且 state 已推进/删除,但 git branch --no-merged 因 squash 合并仍列出该分支
-- THEN 命令 MUST NOT 将其视为未完成分支(state 是唯一判定来源),不发起续跑询问
-
-#### Scenario: 在其他分支运行被拒
-
-- WHEN HEAD 为 feature/bugfix/refactor 分支、不匹配 chore/knowledge- 的 chore/ 分支,或其 worktree
-- THEN 提示回 trunk(由 trunk 引导建分支)或回自己的 chore/knowledge-* worktree,退出且不执行任何写入
-
-#### Scenario: 收尾统一走 finishing-worktree
-
-- WHEN 蒸馏/记录落盘 commit 完成
-- THEN 命令引导执行 finishing-worktree 完成测试门禁、PR 创建与 merge_target 切回,不运行命令内置 PR 逻辑
-
-#### Scenario: pr_tool=none
-
-- WHEN config.pr_tool 为 none
-- THEN finishing-worktree 既有降级路径打印等效命令,维护摘要(含等效命令与分支名)仍追加到 _knowledge memory
-
-#### Scenario: 维护摘要写 _knowledge memory
-
-- WHEN 收尾完成并获得 PR url(或等效命令)后
-- THEN 含 PR url 的维护摘要追加到 .speccode/memory/_knowledge.md,不写 feature memory

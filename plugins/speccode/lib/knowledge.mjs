@@ -56,12 +56,19 @@ const DISTILLED_END = '<!-- /distilled -->';
 // next full rebuild (replaceDistilledBlocks rewrites every block it keeps).
 const LEGACY_PROMOTED_START = /^<!-- promoted-from:\s*(.+?)\s*-->$/;
 const LEGACY_PROMOTED_END = '<!-- /promoted -->';
+// Write-side block identity (design D1): a distilled block's source is a
+// capability key. The read side still accepts legacy provenance strings so
+// existing files parse until their gated first-run migration.
+const CAP_SOURCE_RE = /^cap\/[a-z0-9-]+$/;
 
 // Extract distilled blocks as [{source, body}]. Both the current
 // (distilled-from//distilled) and legacy (promoted-from//promoted) marker
 // formats are recognized, in order of appearance; a block's closing marker
 // must match its opening format. Malformed markers throw — corrupted
 // knowledge files need a human, never silent repair (design D5).
+// Source values may be legacy provenance strings (archive/<name>/,
+// spec/<name>/) pending first-run capability-key migration — the write side
+// rejects them until mapped.
 export function parseDistilledBlocks(text) {
   const blocks = [];
   const lines = String(text).split('\n');
@@ -90,9 +97,11 @@ export function parseDistilledBlocks(text) {
 // current or legacy format — is replaced by the new block with the same
 // source, or dropped when its source is gone; kept and new blocks are always
 // written in the CURRENT format, so a legacy-marked file migrates on its
-// first rebuild. New sources are appended at the end (preceded by a blank
-// line). Everything outside markers passes through untouched, so hand-written
-// content is preserved byte-for-byte (split/join is lossless).
+// first rebuild. The layout is canonical: the hand-written section comes
+// first (its lines kept in order, byte-for-byte, only repositioned; trailing
+// blank lines collapse into the section separators), followed by the
+// distilled blocks — kept ones in file order, new sources in argument order —
+// with exactly one blank line between adjacent sections.
 //
 // `blocks` is validated up front: a duplicate `source` would silently drop
 // one gate-confirmed block (whichever the write path or the append loop
@@ -102,6 +111,9 @@ export function parseDistilledBlocks(text) {
 export function replaceDistilledBlocks(text, blocks) {
   const seen = new Set();
   for (const b of blocks) {
+    if (typeof b.source !== 'string' || !CAP_SOURCE_RE.test(b.source)) {
+      throw new Error(`knowledge: distilled source must be a capability key (cap/<slug>): ${b.source}`);
+    }
     if (seen.has(b.source)) throw new Error(`knowledge: duplicate distilled source: ${b.source}`);
     seen.add(b.source);
     const body = String(b.body ?? '');
@@ -110,7 +122,8 @@ export function replaceDistilledBlocks(text, blocks) {
     }
   }
   const lines = text === '' ? [] : String(text).split('\n');
-  const out = [];
+  const hand = [];
+  const blockOut = [];
   const emitted = new Set();
   let i = 0;
   while (i < lines.length) {
@@ -130,7 +143,7 @@ export function replaceDistilledBlocks(text, blocks) {
       if (j >= lines.length) throw new Error('knowledge: unclosed distilled marker');
       const block = blocks.find((b) => b.source === source);
       if (block) {
-        out.push(`<!-- distilled-from: ${source} -->`, String(block.body ?? ''), DISTILLED_END);
+        blockOut.push(`<!-- distilled-from: ${source} -->\n${String(block.body ?? '')}\n${DISTILLED_END}`);
         emitted.add(source);
       }
       i = j + 1;
@@ -139,18 +152,62 @@ export function replaceDistilledBlocks(text, blocks) {
     if (line.trim() === DISTILLED_END || line.trim() === LEGACY_PROMOTED_END) {
       throw new Error('knowledge: closing distilled marker without opening');
     }
-    out.push(line);
+    hand.push(line);
     i += 1;
   }
   for (const b of blocks) {
     if (emitted.has(b.source)) continue;
-    if (out.length > 0 && out[out.length - 1] !== '') out.push('');
-    out.push(`<!-- distilled-from: ${b.source} -->`, String(b.body ?? ''), DISTILLED_END);
+    blockOut.push(`<!-- distilled-from: ${b.source} -->\n${String(b.body ?? '')}\n${DISTILLED_END}`);
   }
-  // Mirror buildIndex's trailing newline, but only when the join doesn't
-  // already end with one (source already ending in `\n` round-trips through
-  // split/join as a trailing '' element — adding another would double it).
-  const joined = out.join('\n');
+  // Canonical layout: hand-written section first, then distilled blocks, one
+  // blank line between adjacent sections. Hand lines only MOVE (each line's
+  // bytes survive); trailing blank lines collapse into the section
+  // separators so a second run is byte-identical (idempotent).
+  const handText = hand.join('\n').replace(/\n+$/, '');
+  const sections = handText !== '' ? [handText, ...blockOut] : blockOut;
+  const joined = sections.join('\n\n');
+  return joined === '' || joined.endsWith('\n') ? joined : `${joined}\n`;
+}
+
+// Full rebuild of the hand-written region (design D4): replace everything
+// outside distilled blocks with `content`, preserving every distilled block
+// byte-for-byte (legacy format included — no migration here) and emitting
+// the canonical layout. `content` must not contain marker strings, or the
+// rebuilt file would be unparseable (same D5 guard as distilled bodies).
+export function replaceHandBlocks(text, content) {
+  const hand = String(content ?? '');
+  if (hand.includes('<!--') || hand.includes('-->')) {
+    throw new Error('knowledge: content contains marker string');
+  }
+  const lines = text === '' ? [] : String(text).split('\n');
+  const blockOut = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const isNew = DISTILLED_START.exec(line);
+    const m = isNew || LEGACY_PROMOTED_START.exec(line);
+    if (m) {
+      const end = isNew ? DISTILLED_END : LEGACY_PROMOTED_END;
+      let j = i + 1;
+      while (j < lines.length && lines[j].trim() !== end) {
+        if (DISTILLED_START.exec(lines[j]) || LEGACY_PROMOTED_START.exec(lines[j])) {
+          throw new Error('knowledge: nested distilled marker');
+        }
+        j += 1;
+      }
+      if (j >= lines.length) throw new Error('knowledge: unclosed distilled marker');
+      blockOut.push(lines.slice(i, j + 1).join('\n'));
+      i = j + 1;
+      continue;
+    }
+    if (line.trim() === DISTILLED_END || line.trim() === LEGACY_PROMOTED_END) {
+      throw new Error('knowledge: closing distilled marker without opening');
+    }
+    i += 1;
+  }
+  const handText = hand.replace(/\n+$/, '');
+  const sections = handText !== '' ? [handText, ...blockOut] : blockOut;
+  const joined = sections.join('\n\n');
   return joined === '' || joined.endsWith('\n') ? joined : `${joined}\n`;
 }
 
@@ -226,11 +283,11 @@ export function archiveRoot(cwd) {
   return join(top, 'speccode', 'archive');
 }
 
-// On-disk archive bundle dir names (sorted). This is the stale-detection data
-// source: a `consumed_archives` entry absent from this list points at a deleted
-// bundle, so its carry-forward block is stale (the sidecar alone can never tell
-// — consumed entries survive the bundle's deletion, see R2). Returns [] when
-// archive/ is absent (fresh project / no archived changes yet).
+// On-disk archive bundle dir names (sorted). Consumed-archive tracking is
+// pure read-cost control: it decides which bundles distilling reads this run,
+// nothing else (block freshness is audited against spec/, not bundle
+// existence). Returns [] when archive/ is absent (fresh project / no archived
+// changes yet).
 //
 // readdirSync({withFileTypes:true}) reads each entry's type from the directory
 // entry itself: non-directories (README.md, a dangling symlink) are skipped
