@@ -404,15 +404,15 @@ git commit -m "feat(cli): write-knowledge replace-hand mode"
 - Consumes: Task 1-2 的 lib 行为(能力键校验、布局归位);既有 verb `read-knowledge --blocks` / `write-knowledge mode=replace-distilled` / `read-consumed-archives` / `write-consumed-archives` 形状均不变。
 - Produces: 命令 prose 契约(下游 dogfood Task 9 按此执行)。本任务无代码,验证 = 术语一致性 grep。
 
-- [ ] **Step 1: 改前置 §6**(增量读定位降级,改写为)
+- [x] **Step 1: 改前置 §6**(增量读定位降级,改写为)
 
 > 6. 读 `speccode/spec/`(各 capability 主规格,**全量**——这是新鲜度审查的真值锚)。archive 保持**增量读**(纯读成本控制):运行 `speccode.mjs read-consumed-archives --cwd .` 得 `{consumed, unconsumed, present, bootstrap}`——`bootstrap=true`(sidecar `_distilled.meta.json` 缺失)则首次引导,本次全量读 archive 全部归档包;否则只读 `unconsumed` 列出的归档包,`consumed` 包整包跳过(含其 propose/design/brainstorm 子文档)。sidecar 只决定本次读哪些包,不参与任何蒸馏块存废判定。
 
-- [ ] **Step 2: 改前置 §7**(逃生口语义)
+- [x] **Step 2: 改前置 §7**(逃生口语义)
 
 > 7. 删 `_distilled.meta.json` 再跑即强制全量重读归档包 + 重种子,为读成本控制失准后的官方逃生口,不另设 `--full` flag。(重蒸本就每次全量:既有块的新鲜度审查不依赖是否重读其来源包。)
 
-- [ ] **Step 3: 重写蒸馏 §2**(carry-forward/supersession 段整段替换)
+- [x] **Step 3: 重写蒸馏 §2**(carry-forward/supersession 段整段替换)
 
 > 2. 蒸馏目标 = 6 个骨架 development topic ∪ `development/` 下用户自建 topic;蒸馏内容限于 SDD 过程知识(架构、准则、环境、对接、坑与评审共识、安全)——spec/archive 中的业务知识(领域术语、业务流程、业务历史)不蒸馏。从 spec/(真值锚)与本次读到的归档包提炼「该主题下值得长期记住的当前态事实/准则/坑」,生成每个目标 topic 的蒸馏块集合:
 >    - **块身份 = 能力键**:每个块 marker 用 `cap/<slug>`(slug 匹配 `^[a-z0-9-]+$`,同文件唯一);块的出处(archive 归档包名 / spec capability 目录名)以纯文本(如括注「出自 archive/<包名>」)记在 body 内。能力键命名优先对齐既有 `speccode/spec/` capability 目录名(如 `cap/git-workflow-lifecycle`);无对应 capability 的主题用稳定 kebab 主题词(如 `cap/documentation-facade`)。
@@ -423,24 +423,24 @@ git commit -m "feat(cli): write-knowledge replace-hand mode"
 >    - 无内容可蒸且该 topic 此前也无蒸馏块 → 产出空 blocks 数组(文件保持现状);该 topic 已有蒸馏块时,blocks 为空意味着其现有蒸馏块将被删除(全量重建语义)。
 >    - 蒸馏块 body 不得包含 `<!--` 或 `-->` 字符串。
 
-- [ ] **Step 4: 改蒸馏 §4**(diff 纪律)
+- [x] **Step 4: 改蒸馏 §4**(diff 纪律)
 
 > 4. 汇总候选:对每个 topic 列出 `blocks: [{source, body}]`,与现状 diff 展示——**只展示变化块**(新增/改写/删除/映射),无变化块不进入展示;每个删除或合并项 MUST 附一句理由。
 
-- [ ] **Step 5: 重写闸门 stale/superseded 段**(整段替换为)
+- [x] **Step 5: 重写闸门 stale/superseded 段**(整段替换为)
 
 > source 指向的 archive 或 spec capability 已不存在**不再构成独立处置语义**(stale/superseded/carry-forward 机制已退役):块的存废一律由新鲜度审查提议、闸门按「附理由的删除/合并/改写」确认。存量旧 source 块经映射确认后写入;映射拒绝 = 换一个能力键再提议(映射本身不可避免——写侧只接受能力键)。
 
-- [ ] **Step 6: 落盘段补一句**(§1 之后)
+- [x] **Step 6: 落盘段补一句**(§1 之后)
 
 > 写入后文件布局自动归位为「手写段在前、蒸馏块在后」(引擎保证,幂等)。
 
-- [ ] **Step 7: 验证**
+- [x] **Step 7: 验证**
 
 Run: `grep -n "carry" plugins/speccode/commands/distilling-knowledge.md; grep -n "stale" plugins/speccode/commands/distilling-knowledge.md; grep -n "superseded" plugins/speccode/commands/distilling-knowledge.md`
 Expected: 无输出(三术语全部清除;§闸门新段中的「stale/superseded/carry-forward 机制已退役」表述位于替换后段落,如 grep 命中该句,确认它是对退役的否定性陈述即可)。再跑全量测试确认 prose 改动零破坏:`node --test ./plugins/speccode/tests/*.test.mjs` 全绿。
 
-- [ ] **Step 8: 提交**
+- [x] **Step 8: 提交**
 
 ```bash
 git add plugins/speccode/commands/distilling-knowledge.md
