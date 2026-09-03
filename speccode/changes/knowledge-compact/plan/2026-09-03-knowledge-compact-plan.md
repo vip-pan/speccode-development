@@ -231,7 +231,7 @@ git commit -m "feat(knowledge): canonical hand-first layout in replaceDistilledB
 - Consumes: 既有 `DISTILLED_START` / `DISTILLED_END` / `LEGACY_PROMOTED_START` / `LEGACY_PROMOTED_END` 常量。
 - Produces: `replaceHandBlocks(text, content) -> string`——`text` 的全部蒸馏块(含 legacy 格式)**逐字节保留且不迁移格式**,块外内容整体替换为 `content`;输出规范布局(手写段在前);`content` 含 `<!--` 或 `-->` 时抛 `Error('knowledge: content contains marker string')`;marker 损坏抛错与 replaceDistilledBlocks 同原则。Task 4 的 bin `replace-hand` 模式消费此函数。
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```js
 test('replaceHandBlocks replaces hand region and preserves distilled blocks byte-identical', () => {
@@ -265,12 +265,12 @@ test('replaceHandBlocks throws on malformed markers', () => {
 });
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `node --test plugins/speccode/tests/knowledge.test.mjs`
 Expected: 新用例 FAIL(replaceHandBlocks 未导出,import 报错)。
 
-- [ ] **Step 3: 写最小实现**(knowledge.mjs,replaceDistilledBlocks 之后)
+- [x] **Step 3: 写最小实现**(knowledge.mjs,replaceDistilledBlocks 之后)
 
 ```js
 // Full rebuild of the hand-written region (design D4): replace everything
@@ -316,12 +316,12 @@ export function replaceHandBlocks(text, content) {
 }
 ```
 
-- [ ] **Step 4: 运行确认通过**
+- [x] **Step 4: 运行确认通过**
 
 Run: `node --test plugins/speccode/tests/knowledge.test.mjs`
 Expected: 全 PASS。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add plugins/speccode/lib/knowledge.mjs plugins/speccode/tests/knowledge.test.mjs
