@@ -549,27 +549,27 @@ git commit -m "chore(cli): retire append-hand mode (subsumed by replace-hand)"
 - Consumes: Task 5-6 的最终命令语义。
 - Produces: 门面文档与机制一致。
 
-- [ ] **Step 1: 替换 README.md:68**(distilling-knowledge 行)
+- [x] **Step 1: 替换 README.md:68**(distilling-knowledge 行)
 
 ```markdown
 | `/speccode:distilling-knowledge` | Distill the `speccode/knowledge/` topic files from `spec/` (full read — the freshness anchor) + `archive/` (**incremental**: only unconsumed archive bundles, tracked via `knowledge/_distilled.meta.json`, pure read-cost control); every existing block is freshness-audited against the current specs on each run; blocks are keyed by capability (`<!-- distilled-from: cap/<slug> -->`, one per capability per file, upsert — later knowledge overrides earlier; retired knowledge is deleted with a reason via the gate, no tombstones); legacy-source blocks are mapped to capability keys through the gate on first run; SDD process knowledge only, out-of-scope topics sunset via the gate; delete the sidecar to force a full archive re-read (no `--full` flag); human gate before write; commits on save | chore/knowledge-* worktree branch (unified creating-worktree entry, finishing-worktree finish) |
 ```
 
-- [ ] **Step 2: 替换 README.md:69**(recording-knowledge 行)
+- [x] **Step 2: 替换 README.md:69**(recording-knowledge 行)
 
 ```markdown
 | `/speccode:recording-knowledge` | Record knowledge directly into hand-written sections (fit check: process knowledge stays, business knowledge is pointed to external RAG; draft → human gate → atomic write via `replace-hand`, distilled blocks preserved byte-for-byte; also tidies the topic's existing hand-written section each run — merge/delete with reasons, authority is the present user); commits on save | chore/knowledge-* worktree branch (unified entry/finish) |
 ```
 
-- [ ] **Step 3: 重写 README.md:166**(知识集分层段,整段替换)
+- [x] **Step 3: 重写 README.md:166**(知识集分层段,整段替换)
 
 ```markdown
 - **Knowledge set: a current-state snapshot, keyed by capability**: each topic file under `knowledge/` mixes two kinds of content. `distilling-knowledge` distills `spec/` (full read — the freshness anchor) and `archive/` (**incrementally**, tracked in `knowledge/_distilled.meta.json` purely as read-cost control) into **distilled blocks** wrapped in `<!-- distilled-from: cap/<slug> --> ... <!-- /distilled -->` markers: the key is a capability slug, unique per file, upserted on every run — later knowledge overrides earlier, retired knowledge is deleted through the gate with a reason (no tombstones; history lives in `archive/` and the CHANGELOG), and every existing block is freshness-audited against the current specs on each run. `recording-knowledge` writes and tidies the free-form **hand-written** prose outside those markers (replace-hand mode: the whole hand region is rebuilt on each write while distilled blocks survive byte-for-byte; tidy actions — merge/delete — carry reasons and answer to the present user, not to the specs). Both writes emit the canonical layout: hand-written first, distilled blocks after. The set curates SDD process knowledge only (`development/*`; pitfalls also covers recurring review findings and team review consensus). Business knowledge is left to external RAG systems: `recording-knowledge` runs a fit check before writing (a recommendation, not a hard block), and `distilling-knowledge` sunsets distilled blocks of out-of-scope topics through the same human gate while preserving hand-written content byte-for-byte. Legacy `promoted-from`/`/promoted` markers and legacy provenance-valued sources are still parsed on read; existing files migrate to capability keys through the gate on their first distill.
 ```
 
-- [ ] **Step 4: README_CN.md:68-69、:166 同步**(语义与上面三段一一对应:能力键制快照、每次新鲜度审查、upsert 覆盖不累积、退役即删附理由不留墓碑、replace-hand 整写手写区整理、布局手写在前、增量读纯成本控制、存量经闸门映射)
+- [x] **Step 4: README_CN.md:68-69、:166 同步**(语义与上面三段一一对应:能力键制快照、每次新鲜度审查、upsert 覆盖不累积、退役即删附理由不留墓碑、replace-hand 整写手写区整理、布局手写在前、增量读纯成本控制、存量经闸门映射)
 
-- [ ] **Step 5: 验证 + 提交**
+- [x] **Step 5: 验证 + 提交**
 
 Run: `grep -n -i "stale\|carried forward\|superseded" plugins/speccode/README.md plugins/speccode/README_CN.md; node --test ./plugins/speccode/tests/*.test.mjs`
 Expected: grep 无输出;测试全绿。
