@@ -220,22 +220,22 @@ git add plugins/speccode/commands/executing-plans.md plugins/speccode/commands/s
 - Consumes: delta 真源「Tier 0 封禁」「勾选清单唯一性」「轻档 proposing(空 delta 归档友好)」。
 - Produces: 零文档合并的警告防线;与降级形态兼容的完成度检查。
 
-- [ ] **Step 1: finishing-worktree.md**——合并路径开始处(测试门禁之前)插入:
+- [x] **Step 1: finishing-worktree.md**——合并路径开始处(测试门禁之前)插入:
 
   「**变更文档存在性检查(Tier 0 防线)**:检查 `speccode/changes/<slug>/` 是否存在(本分支的变更文档);缺失 → 警告「本分支疑似未走文档链(vibe coding),成果将无法回溯」并用 AskUserQuestion 询问是否继续,用户确认才继续,警告不硬阻断。」
 
-- [ ] **Step 2: archiving.md**——「## 归档前检查」第 1 条改造为:
+- [x] **Step 2: archiving.md**——「## 归档前检查」第 1 条改造为:
 
   「1. **任务完成检查(按现存勾选清单计数)**:tasks.md 仍有勾选语义(存在 `- [ ]`)→ 数它的未完成条目;tasks.md 已被 plan 接管(无勾选、含接管标记)或 plan/ 存在 → 数 plan/ 下计划的未完成 step。两处都无勾选语义 → 跳过该检查。有未完成 → 展示数量并询问是否继续归档;用户确认才继续。」
 
   并在第 2 条 sync 状态评估的「已全部合并 → 直接进入移动」前补一句:「`propose/specs/` 为空(轻档,无 delta)→ 判定「无 delta,已同步」,直接进入移动。」
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 Run: `rg -c "vibe coding" plugins/speccode/commands/finishing-worktree.md && rg -c "plan 接管|无 delta" plugins/speccode/commands/archiving.md`
 Expected: 均 ≥ 1
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add plugins/speccode/commands/finishing-worktree.md plugins/speccode/commands/archiving.md && git commit -m "docs(speccode): tier0 gate in finishing-worktree, layered archiving checks"
