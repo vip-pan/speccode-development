@@ -163,21 +163,21 @@ git add plugins/speccode/commands/proposing.md && git commit -m "docs(speccode):
 - Consumes: delta 真源「writing-plans 输入优先级」「勾选清单唯一性」;proposing 落笔的 tier 字段。
 - Produces: 降级后的 tasks.md 形态契约;Task 5 archiving 按层检查的输入。
 
-- [ ] **Step 1: 前置加 tier 读取**——「## 前置」第 3 条(读输入文档)之后插入:
+- [x] **Step 1: 前置加 tier 读取**——「## 前置」第 3 条(读输入文档)之后插入:
 
   「3b. **tier 门禁**:读 `speccode/changes/<slug>/propose/proposal.md` 的 frontmatter `tier:` 字段(缺失或非法 → 报错要求修复并退出):tier 为 3 时 `brainstorm/` 必须已存在,缺失 → 报错「Tier 3 必须先脑暴:请先 `/speccode:brainstorming`」并退出;tier 为 1 → 提示「本变更定层为 Tier 1,通常无需 plan;确认升档为有意行为?」,用户确认后继续并建议同步更新 tier 字段(经用户同意,本命令不擅自改)。」
 
-- [ ] **Step 2: 新增降级与回写义务段**——「## 保存与提交(必须)」的落盘条目后插入:
+- [x] **Step 2: 新增降级与回写义务段**——「## 保存与提交(必须)」的落盘条目后插入:
 
   「- **tasks.md 降级(勾选清单唯一性)**:计划落盘后 MUST 把 `propose/tasks.md` 降级为无勾选的动作列表(所有 `- [ ] `/`- [x] ` 前缀去掉)并在标题下加接管标记行:「> 本清单已由 plan/<计划文件名> 接管:实现进度以 plan 的 checkbox 为准,本文件不再勾选,仅作意图索引。」降级与计划同一簿记 commit 提交。降级后 tasks.md MUST NOT 再被任何命令勾选,archiving 完成度检查只数 plan/。
   - **回写义务**:编写计划中发现前序文档(propose/ 或 brainstorm/)与本计划矛盾(方案错误、范围偏差、决策变更)→ MUST 回写受影响处使文档集一致,随本阶段 commit 落盘(范围不含 frontmatter 元数据)。」
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 Run: `rg -c "tier 门禁|tasks.md 降级|回写义务" plugins/speccode/commands/writing-plans.md`
 Expected: ≥ 3
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add plugins/speccode/commands/writing-plans.md && git commit -m "docs(speccode): writing-plans tier gate and tasks downgrade"
