@@ -1,5 +1,3 @@
-
-
 <!-- distilled-from: cap/git-workflow-lifecycle -->
 **worktree 清理来源限定**:reset/finishing-worktree 清理 worktree 时仅处理「路径位于 resolve-worktree-dir 解析结果之下 或 在 state 中有登记」的 worktree(state 登记项覆盖 worktree_dir 配置变更前旧目录);不满足时原样保留并打印原因,不清理宿主环境创建的 worktree。**丢弃路径需逐字输入 discard**:finishing-worktree 的丢弃不在菜单中,仅显式要求时进入;进入后 MUST 先展示分支名、完整 commit 列表(git log --oneline <F>..<worktree>)、worktree 路径,再要求用户逐字输入 discard;任何其他输入(含「确认/删除/是的」)→ 取消,不删任何东西——防止误操作丢弃工作成果。**finishing-feature 门禁阻止未完成功能**:开头先跑对账,再检查 children;存在任何 pending/in_progress/pr_open 子分支时 MUST 阻止并列出未完成项;对账 orphans 里若有本父实体残留 worktree 提示先清理——防止未完成的工作被误「交付」到 trunk。**对账安全网(缺配置不崩溃)**:对账在每个涉及 worktree 的命令入口运行,容忍用户手动操作 git 后的状态漂移;config 缺失时以默认 worktree_dir(.claude/worktrees)正常执行绝不报错退出(无 config reconcile 端到端测试编码此安全网语义)。(出自 archive/2026-07-13-add-speccode-plugin、2026-08-09-speccode-v2-sdd-flow;自动补齐/前缀兜底句按现行 v3 契约改写)
 <!-- /distilled -->

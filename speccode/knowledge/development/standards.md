@@ -1,5 +1,3 @@
-
-
 <!-- distilled-from: cap/speccode-config-management -->
 **原子写**:所有 .speccode/config.json 和 state(v3 `state/branches/*.json`,v2 遗留 `state/features/*.json` 同策)写入必须走 atomic.writeJsonAtomic(临时文件 `${path}.${pid}.tmp` + renameSync 覆盖);命令层经 write-config/write-state verb 间接调用,绝不手写 JSON。临时文件 PID 后缀防并发碰撞;rename 之前崩溃留临时文件但主文件仍是旧的(「上一次正确状态」远好于半写)。
 

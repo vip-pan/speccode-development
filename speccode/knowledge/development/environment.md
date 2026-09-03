@@ -1,5 +1,3 @@
-
-
 <!-- distilled-from: cap/plugin-packaging -->
 **Tech Stack(引擎)**:Node ≥ 24,纯 ESM,零第三方依赖(仅 node: 内置模块),无 package.json、无 lint/build 步骤。全量测试必须用 glob 形式 node --test ./plugins/speccode/tests/*.test.mjs(裸 node --test plugins/speccode/tests/ 在 Node v24 报 MODULE_NOT_FOUND);单文件与 --test-name-pattern 过滤可用。涉及 git 的测试用 tests/helpers/tmprepo.mjs 的 makeRepo()/commitFile() 建真实临时 git 仓库,rmSync 递归清理,不依赖 mock git;PR/等待类逻辑通过依赖注入(注入 run/queryPr/spawn)做单测,不依赖真实 gh/glab 或真实等待;CLI verb 用 spawnSync('node',[BIN,...]) 端到端测(写 verb 用 input 传 stdin),BIN 用 import.meta.url 定位与 cwd 无关。
 

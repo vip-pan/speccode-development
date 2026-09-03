@@ -1,5 +1,3 @@
-
-
 <!-- distilled-from: cap/pr-tool-integration -->
 **pr_tool 探测与封装**:init 时经 `git remote get-url origin` 探测远端类型(github.com → gh;gitlab → glab;其他 → none)写入 config;命令运行时不再探测。安装校验(command -v)未装则降级 none 并提示。
 

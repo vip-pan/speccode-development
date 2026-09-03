@@ -1,5 +1,3 @@
-
-
 <!-- distilled-from: cap/git-workflow-lifecycle -->
 **双层分支拓扑(现行)**:普通需求 trunk → `<type>/<slug>` worktree 分支直达,收发两步(creating-worktree 建 + finishing-worktree 收,PR squash → trunk);大需求 opt-in 集成分支(同 `<type>/<slug>` 命名、无 worktree)+ 父实体 state(kind:"integration"),子分支从集成当前 head 切出、merge_target 写集成分支名、收尾本地 squash 汇入,终局 finishing-feature 一次 PR(children 全 completed 门禁)。演进:v0.1 四层(display/双 PR/amend)→ v2 三层 → v3 双层,中间层机制已全删;失去「trunk 无文档」物理隔离换单 PR 无 amend,trunk 携带 speccode/ 文档为默认语义,体积由 syncing+archiving 控制。
 
