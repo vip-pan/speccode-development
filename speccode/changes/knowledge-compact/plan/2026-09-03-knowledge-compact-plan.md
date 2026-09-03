@@ -456,11 +456,11 @@ git commit -m "docs(commands): distilling-knowledge freshness-audit + capability
 - Consumes: Task 4 的 `write-knowledge mode=replace-hand`。
 - Produces: 命令 prose 契约——recording 维护手写段(写入 + 整理),蒸馏块绝不触碰。
 
-- [ ] **Step 1: 改闸门 §2 的写入行**(原文「确认 → `write-knowledge --rel <topic路径> --json-stdin`(mode=append-hand,content=内容)原子写(追加为 hand-written 段,不带 marker);」替换为)
+- [x] **Step 1: 改闸门 §2 的写入行**(原文「确认 → `write-knowledge --rel <topic路径> --json-stdin`(mode=append-hand,content=内容)原子写(追加为 hand-written 段,不带 marker);」替换为)
 
 >    - 确认 → 收集「新内容 + 整理后的既有手写段」为完整手写区文本,经 `write-knowledge --rel <topic路径> --json-stdin`(mode=replace-hand,content=完整手写区文本)原子写(手写区整体替换,蒸馏块字节级保留,布局归位为手写段在前);
 
-- [ ] **Step 2: 在「闸门」小节之后新增「手写段整理」小节**
+- [x] **Step 2: 在「闸门」小节之后新增「手写段整理」小节**
 
 > ## 手写段整理
 >
@@ -469,16 +469,16 @@ git commit -m "docs(commands): distilling-knowledge freshness-audit + capability
 > - 每个删除/合并项 MUST 附一句理由,与写入草稿一并展示,经闸门确认后随本次写入一并落盘(经 replace-hand 一次写入);
 > - 整理不触碰蒸馏块(marker 内内容),不把整理结果写成蒸馏块。
 
-- [ ] **Step 3: 改约束段**(末行「内容不得包含 `<!--` 或 `-->` 字符串。」保留,其上一行「只写 hand-written 段(不写 marker);写蒸馏块是 distilling-knowledge 的职责。」替换为)
+- [x] **Step 3: 改约束段**(末行「内容不得包含 `<!--` 或 `-->` 字符串。」保留,其上一行「只写 hand-written 段(不写 marker);写蒸馏块是 distilling-knowledge 的职责。」替换为)
 
 > - 只维护 hand-written 段(写入与整理均经 replace-hand,不写 marker);写蒸馏块是 distilling-knowledge 的职责,蒸馏块字节级保留。
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 Run: `grep -n "append-hand" plugins/speccode/commands/recording-knowledge.md`
 Expected: 无输出。全量测试:`node --test ./plugins/speccode/tests/*.test.mjs` 全绿。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add plugins/speccode/commands/recording-knowledge.md
