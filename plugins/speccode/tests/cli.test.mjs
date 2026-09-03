@@ -793,16 +793,13 @@ test('write-knowledge replace writes atomically via stdin JSON', () => {
   rmSync(repo, { recursive: true, force: true });
 });
 
-test('write-knowledge append-hand appends hand-written section', () => {
+test('write-knowledge append-hand is retired (unknown mode)', () => {
   const repo = makeRepo();
-  const p = join(repo, 'speccode', 'knowledge', 'development', 'pitfalls.md');
-  mkdirSync(dirname(p), { recursive: true });
-  writeFileSync(p, '# 坑\n');
   const { code, json } = runCliStdin(repo, 'write-knowledge', '--cwd', repo, '--rel', 'development/pitfalls.md', '--json-stdin',
-    JSON.stringify({ mode: 'append-hand', content: '## 手写\n新坑一条\n' }));
-  assert.equal(code, 0);
-  assert.equal(json.ok, true);
-  assert.equal(readFileSync(p, 'utf8'), '# 坑\n## 手写\n新坑一条\n');
+    JSON.stringify({ mode: 'append-hand', content: 'x' }));
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  assert.match(json.error, /unknown mode: append-hand/);
   rmSync(repo, { recursive: true, force: true });
 });
 

@@ -328,12 +328,6 @@ const VERBS = {
       writeKnowledge(root, safe.rel, String(content ?? ''));
       return { ok: true, path: safe.rel };
     }
-    if (mode === 'append-hand') {
-      const existing = existsSync(target) ? readFileSync(target, 'utf8') : '';
-      const sep = existing && !existing.endsWith('\n') && !String(content ?? '').startsWith('\n') ? '\n' : '';
-      writeKnowledge(root, safe.rel, existing + sep + String(content ?? ''));
-      return { ok: true, path: safe.rel };
-    }
     if (mode === 'replace-distilled') {
       if (!Array.isArray(blocks)) return { ok: false, error: 'mode replace-distilled requires blocks: [{source, body}]' };
       const existing = existsSync(target) ? readFileSync(target, 'utf8') : '';
