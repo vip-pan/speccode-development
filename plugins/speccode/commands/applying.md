@@ -43,7 +43,7 @@ tags: [speccode, workflow, applying, tier1]
    ```
 7. 触发 onTaskCompleted 钩子(payload 条目序号):
    ```bash
-   echo '{"command":"applying","feature_branch":"<F>","worktree_branch":"<W>","item":<N>}' | speccode.mjs run-hook --cwd . --event onTaskCompleted
+   echo '{"command":"applying","feature_branch":"<F>","worktree_branch":"<W>","task":<N>}' | speccode.mjs run-hook --cwd . --event onTaskCompleted
    ```
    输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
 
