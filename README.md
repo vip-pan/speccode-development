@@ -99,7 +99,7 @@ Test-driven · systematic over improvisation · reduce complexity · evidence ov
 | [CHANGELOG](./CHANGELOG.md) | Release history (Keep a Changelog, all in Chinese) |
 | [CLAUDE.md](./CLAUDE.md) | Development documentation: three-layer engine architecture, testing conventions, speccode workflow |
 | `skills/` | Development-workflow skills (true source) — installed to `.claude/skills/` via `scripts/install-skills.sh` for Claude Code lazy-loading |
-| `speccode/spec/` · `speccode/archive/` | SDD spec master (9 capabilities) and archived change records — the system's own living documentation |
+| `speccode/spec/` · `speccode/archive/` | SDD spec master (11 capabilities) and archived change records — the system's own living documentation |
 
 ## Contributing
 
