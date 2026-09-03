@@ -253,16 +253,16 @@ git add plugins/speccode/commands/finishing-worktree.md plugins/speccode/command
 - Consumes: Global Constraints 双语同步规则;最终命令清单(24 个,含 applying)。
 - Produces: 用户可见的分级说明;SKILL.md 发布纪律与新链路衔接。
 
-- [ ] **Step 1: 根 README ×2**——`README.md:59` 与 `README_CN.md:59` 的 Document flow/文档流 表行追加 `applying`(置于 writing-plans 与 executing 之间语义位:`proposing` `brainstorming` `writing-plans` `applying` `syncing` `archiving`);25 行 quick-start 附近如有命令枚举,同步加 applying;两版对应位置同改。补充一句分级说明(EN/CN 对应):极小需求可走 Tier 1(applying 手动实现),中小型走 writing-plans + SDD/executing-plans,复杂需求先 brainstorming。
-- [ ] **Step 2: 插件 README ×2**——`plugins/speccode/README.md:57` 与 `README_CN.md:57` 命令表加 `/speccode:applying` 行(EN:「Manual executor for Tier-1 changes: implement tasks.md item-by-item (no plan), tick + bookkeeping commit, mandatory code review | a `<type>/<slug>` development branch」;CN 对应);`README_CN.md:92` 流程图行与 `:133`/`:135` 步骤枚举、`:150` 目录布局注释(补「轻档时 design.md/specs/ 可省」)、`:163` 落盘即 commit 命令清单加 applying——EN 版对应行全部同改。
-- [ ] **Step 3: CLAUDE.md**——44 行「23 个 slash 命令」改「24 个」;「常用命令」表加一行 applying 用途;双层拓扑段落补一句:「proposing 定层(Tier 1/2/3)路由后续链路,tier 字段落 proposal.md frontmatter」。
-- [ ] **Step 4: SKILL.md**——「## 发布纪律」节加一行:「release bump 类 chore 走 proposing 轻档(空 delta,design.md/specs/ 可省)→ `/speccode:applying` → syncing → archiving 链路,不再零文档直提。」
-- [ ] **Step 5: 验证(双语对称)**
+- [x] **Step 1: 根 README ×2**——`README.md:59` 与 `README_CN.md:59` 的 Document flow/文档流 表行追加 `applying`(置于 writing-plans 与 executing 之间语义位:`proposing` `brainstorming` `writing-plans` `applying` `syncing` `archiving`);25 行 quick-start 附近如有命令枚举,同步加 applying;两版对应位置同改。补充一句分级说明(EN/CN 对应):极小需求可走 Tier 1(applying 手动实现),中小型走 writing-plans + SDD/executing-plans,复杂需求先 brainstorming。
+- [x] **Step 2: 插件 README ×2**——`plugins/speccode/README.md:57` 与 `README_CN.md:57` 命令表加 `/speccode:applying` 行(EN:「Manual executor for Tier-1 changes: implement tasks.md item-by-item (no plan), tick + bookkeeping commit, mandatory code review | a `<type>/<slug>` development branch」;CN 对应);`README_CN.md:92` 流程图行与 `:133`/`:135` 步骤枚举、`:150` 目录布局注释(补「轻档时 design.md/specs/ 可省」)、`:163` 落盘即 commit 命令清单加 applying——EN 版对应行全部同改。
+- [x] **Step 3: CLAUDE.md**——44 行「23 个 slash 命令」改「24 个」;「常用命令」表加一行 applying 用途;双层拓扑段落补一句:「proposing 定层(Tier 1/2/3)路由后续链路,tier 字段落 proposal.md frontmatter」。
+- [x] **Step 4: SKILL.md**——「## 发布纪律」节加一行:「release bump 类 chore 走 proposing 轻档(空 delta,design.md/specs/ 可省)→ `/speccode:applying` → syncing → archiving 链路,不再零文档直提。」
+- [x] **Step 5: 验证(双语对称)**
 
 Run: `rg -c "applying" README.md README_CN.md plugins/speccode/README.md plugins/speccode/README_CN.md CLAUDE.md skills/speccode-workflow/SKILL.md`
 Expected: 六个文件均 ≥ 1;成对文件计数语义对应(EN 与 CN 同改)
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add README.md README_CN.md plugins/speccode/README.md plugins/speccode/README_CN.md CLAUDE.md skills/speccode-workflow/SKILL.md && git commit -m "docs: facades for tiered flow (applying, tier field, light proposing)"
