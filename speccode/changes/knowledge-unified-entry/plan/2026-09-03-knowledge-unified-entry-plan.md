@@ -156,11 +156,11 @@ git commit -m "docs(knowledge): recording-knowledge adopts unified worktree entr
 - Consumes: Task 1/2 确定的新运行模型(state 登记的 chore/knowledge-* worktree + 统一收尾)。
 - Produces: 双语一致的命令表与 memory 段描述。
 
-- [ ] **Step 1: EN 命令表两行的运行位置列**
+- [x] **Step 1: EN 命令表两行的运行位置列**
 
 `README.md:67` 行尾 `| trunk branch |` → `| chore/knowledge-* worktree branch (unified creating-worktree entry, finishing-worktree finish) |`;`README.md:68` 行尾 `| trunk branch |` → `| chore/knowledge-* worktree branch (unified entry/finish) |`。
 
-- [ ] **Step 2: EN memory 例外段**
+- [x] **Step 2: EN memory 例外段**
 
 `README.md:220` 末句:
 
@@ -174,7 +174,7 @@ The knowledge commands also run from trunk, so their maintenance summaries go in
 The knowledge commands run on `chore/knowledge-*` worktree branches via the standard creating-worktree entry and finishing-worktree finish; their maintenance summaries still go into `memory/_knowledge.md`.
 ```
 
-- [ ] **Step 3: CN 对应行镜像同步**
+- [x] **Step 3: CN 对应行镜像同步**
 
 `README_CN.md:67` 行尾 `| trunk 分支 |` → `| chore/knowledge-* worktree 分支(creating-worktree 统一入口、finishing-worktree 统一收尾)|`;`README_CN.md:68` 行尾 `| trunk 分支 |` → `| chore/knowledge-* worktree 分支(统一入口/收尾)|`。
 
@@ -190,12 +190,12 @@ knowledge 系列命令同样从 trunk 跑,其维护摘要写入 `memory/_knowled
 knowledge 系列命令经 creating-worktree 统一入口在 `chore/knowledge-*` worktree 分支上运行、经 finishing-worktree 统一收尾,其维护摘要仍写入 `memory/_knowledge.md`。
 ```
 
-- [ ] **Step 4: 双语一致性校验**
+- [x] **Step 4: 双语一致性校验**
 
 Run: `grep -c "trunk branch\|trunk 分支" plugins/speccode/README.md plugins/speccode/README_CN.md; grep -n "版本\|tests" plugins/speccode/README.md plugins/speccode/README_CN.md | grep -v "CHANGELOG\|测试门禁" | head -5`
 Expected: 两文件对「trunk branch / trunk 分支」的残留命中为 0(该列已全部替换);无版本号/测试数量硬编码新增
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add plugins/speccode/README.md plugins/speccode/README_CN.md
