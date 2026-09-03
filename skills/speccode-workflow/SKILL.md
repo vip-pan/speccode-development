@@ -23,3 +23,5 @@ description: 本仓库(speccode 插件)自身的开发工作流与发布纪律�
 
 bump `plugins/speccode/.claude-plugin/plugin.json` `version` 的提交**必须同步更新** `CHANGELOG.md` 对应版本小节(见 `speccode/spec/plugin-packaging/spec.md`「版本发布纪律」)。
 
+release bump 类 chore 走 proposing 轻档(空 delta,design.md/specs/ 可省)→ `/speccode:applying` → syncing → archiving 链路,不再零文档直提。
+

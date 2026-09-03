@@ -21,7 +21,7 @@ speccode is a Claude Code workflow orchestration plugin that turns the practices
 ## Table of Contents
 
 1. [What is speccode](#1-what-is-speccode)
-2. [23-Command Quick Reference](#2-23-command-quick-reference)
+2. [24-Command Quick Reference](#2-24-command-quick-reference)
 3. [Two-Layer Branch Topology](#3-two-layer-branch-topology)
 4. [Development Workflow](#4-development-workflow)
 5. [Documentation Layout](#5-documentation-layout)
@@ -35,7 +35,7 @@ speccode is a Claude Code workflow orchestration plugin that turns the practices
 13. [Open Issues](#13-open-issues)
 14. [⚠ Important Warning](#14-⚠-important-warning)
 
-## 2. 23-Command Quick Reference
+## 2. 24-Command Quick Reference
 
 Lifecycle:
 
@@ -54,9 +54,10 @@ Documentation flow (every step commits on save):
 
 | Command | Purpose | Prerequisite (branch to run on) |
 |---|---|---|
-| `/speccode:proposing` | Land the four document types (proposal/design/specs/tasks) into `speccode/changes/<slug>/propose/`; the complexity assessment recommends brainstorming | a `<type>/<slug>` development branch |
+| `/speccode:proposing` | Land the four document types (proposal/design/specs/tasks) into `speccode/changes/<slug>/propose/`; the exit assigns a tier (Tier 1/2/3) into the proposal.md frontmatter `tier:` field; light mode (empty specs delta) may omit design.md/specs/ | a `<type>/<slug>` development branch |
 | `/speccode:brainstorming` | Socratic design refinement; designs land in `brainstorm/` and are written back into propose/ to keep them consistent | a `<type>/<slug>` development branch |
 | `/speccode:writing-plans` | Detailed implementation plan (brainstorm/ first, propose/ as fallback), lands in `plan/` | a `<type>/<slug>` development branch |
+| `/speccode:applying` | Manual executor for Tier-1 changes: implement tasks.md item-by-item (no plan), tick + bookkeeping commit, mandatory code review | a `<type>/<slug>` development branch |
 | `/speccode:syncing` | Merge incremental changes into the `speccode/spec/` main spec (absorbs leftover brainstorm material; idempotent) | a `<type>/<slug>` development branch |
 | `/speccode:archiving` | Archive: move changes/<slug>/ into `speccode/archive/<YYYY-MM-DD>-<slug>/` | a `<type>/<slug>` development branch |
 
@@ -89,7 +90,7 @@ origin/<trunk> (trunk; spec documents tracked)
    ├──────────────┬──────────────┐
    ▼              ▼              ▼
 feature/a       feature/b      feature/c   ← development branches <type>/<slug> (no worktree- prefix)
-   │  The documentation flow (proposing→brainstorming→writing-plans→…→syncing→archiving) happens on this layer
+   │  The documentation flow (proposing→brainstorming→writing-plans→applying→…→syncing→archiving) happens on this layer
    └── /speccode:finishing-worktree (merge_target=trunk: test gate + PR) merges back into trunk ──┘
    │
    ▼
@@ -130,10 +131,10 @@ The default path from requirement to delivery (normal requirements go directly; 
 1. `/speccode:exploring` — explore the requirement on trunk; conclusions stay in the session context (writes per-topic `_exploring/<topic>` memories); the exit runs the **requirement-shape confirmation** with three outcomes: a single normal requirement / several independent normal requirements / a large requirement (integration).
 2. (Large-requirement opt-in only) `/speccode:creating-feature` — cut the integration branch from trunk and register the parent-entity state; normal requirements skip this step.
 3. `/speccode:creating-worktree` — cut a development branch from trunk (normal) or from the integration branch (large requirement); run baseline tests.
-4. `/speccode:proposing` — land the four document types: proposal/design/specs/tasks.
-5. (For complex ones) `/speccode:brainstorming` — refine the design and write it back into propose/.
-6. `/speccode:writing-plans` — produce the detailed implementation plan.
-7. `/speccode:subagent-driven-development` or `/speccode:executing-plans` — execute the plan (methodology commands such as `/speccode:dispatching-parallel-agents`, `/speccode:systematic-debugging`, `/speccode:verification-before-completion`, `/speccode:test-driven-development` are invoked as needed along the way).
+4. `/speccode:proposing` — land the four document types: proposal/design/specs/tasks; the exit assigns the change a tier (Tier 1 tiny / Tier 2 small-to-medium / Tier 3 complex, written to the proposal.md frontmatter `tier:` field) that routes the follow-up chain; light mode (empty specs delta) may omit design.md/specs/.
+5. (Tier 3) `/speccode:brainstorming` — refine the design and write it back into propose/.
+6. (Tier 2/3) `/speccode:writing-plans` — produce the detailed implementation plan.
+7. `/speccode:applying` (Tier 1: implement tasks.md item-by-item by hand) or `/speccode:subagent-driven-development` / `/speccode:executing-plans` — execute (methodology commands such as `/speccode:dispatching-parallel-agents`, `/speccode:systematic-debugging`, `/speccode:verification-before-completion`, `/speccode:test-driven-development` are invoked as needed along the way).
 8. `/speccode:requesting-code-review` — dispatch a review subagent; process feedback with `/speccode:receiving-code-review`.
 9. `/speccode:syncing` — merge the delta into the main spec.
 10. `/speccode:archiving` — archive changes/<slug>/.
@@ -147,7 +148,7 @@ speccode's spec documents live in the repo's `speccode/` directory, **tracked on
 ```
 speccode/
 ├── changes/<slug>/          # in-progress requirement documents
-│   ├── propose/             # proposal.md / design.md / specs/ / tasks.md (produced by proposing)
+│   ├── propose/             # proposal.md / design.md / specs/ / tasks.md (produced by proposing; in light mode design.md/specs/ may be omitted)
 │   ├── brainstorm/          # design refinement documents (produced by brainstorming)
 │   └── plan/                # implementation plan (produced by writing-plans)
 ├── spec/<capability>/       # main spec (where syncing merges deltas)
@@ -160,7 +161,7 @@ speccode/
 
 Conventions:
 
-- **Commit on save**: proposing / brainstorming / writing-plans / syncing / archiving / distilling-knowledge / recording-knowledge each commit immediately after producing their documents, so document history and code history stay on the same branch, moving together.
+- **Commit on save**: proposing / brainstorming / writing-plans / applying (per-item bookkeeping commits) / syncing / archiving / distilling-knowledge / recording-knowledge each commit immediately after producing their documents, so document history and code history stay on the same branch, moving together.
 - **Multi-round rebuilds of the same feature don't collide**: once changes/<slug>/ is archived the directory is freed, and the same slug can start a new round via proposing again; when rebuilding without archiving first, proposing asks "continue / archive first / cancel".
 - **Knowledge set: distilled vs. hand-written split**: each topic file under `knowledge/` can mix two kinds of content. `distilling-knowledge` distills `spec/` (full read) and `archive/` (**incrementally** — only unconsumed bundles, tracked in `knowledge/_distilled.meta.json`; consumed bundles are skipped and their existing blocks carried forward unchanged, since archive bundles are immutable) into **distilled blocks**, wrapped in `<!-- distilled-from: <source> --> ... <!-- /distilled -->` markers, and fully rebuilds each topic's distilled blocks on every run (a block whose source has disappeared is marked stale; one whose knowledge is superseded by a newer bundle is marked superseded — both surfaced in the gate; deleting `_distilled.meta.json` forces a full re-distill as the official escape hatch, no `--full` flag); `recording-knowledge` appends free-form **hand-written** prose outside those markers. The rebuild is byte-preserving for everything outside the markers, so hand-written content survives every distilled-block rebuild untouched. The set curates SDD process knowledge only (`development/*`; pitfalls also covers recurring review findings and team review consensus). Business knowledge is left to external RAG systems: `recording-knowledge` runs a fit check before writing (a recommendation, not a hard block), and `distilling-knowledge` sunsets distilled blocks of out-of-scope topics through the same human gate while preserving hand-written content byte-for-byte. Legacy `promoted-from`/`/promoted` markers are still parsed on read; existing files are rewritten to the new format on their first distill.
 
