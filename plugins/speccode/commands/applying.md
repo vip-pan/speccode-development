@@ -17,7 +17,8 @@ tags: [speccode, workflow, applying, tier1]
    - 读 proposal.md 的 YAML frontmatter `tier:` 字段;缺失或取值非 `1|2|3` → 报错「tier 字段缺失或非法,请修复(重跑 proposing 定层或手动补字段)」并退出,MUST NOT 按默认层级继续。
    - `tier` 非 1:tier ≥ 2 且 `plan/` 不存在 → 报错「本变更定层为 Tier <N>,请先 `/speccode:writing-plans` 生成计划」并退出;tier 为 3 且 `brainstorm/` 不存在 → 报错并引导 `/speccode:brainstorming`;退出。
    - `speccode/changes/<slug>/plan/` 存在任何计划文件 → 报错「本变更已有 plan,请用 `/speccode:subagent-driven-development`(推荐)或 `/speccode:executing-plans` 执行」并退出。
-   - `propose/tasks.md` 不存在或无 `- [ ]` 未勾选条目 → 报错(tasks.md 是本命令唯一执行清单)并退出。
+   - `propose/tasks.md` 不存在 → 报错(tasks.md 是本命令唯一执行清单)并退出。
+   - tasks.md 存在但全部条目已勾选 → 报告「清单已完成」,按「完成后」续跑:未做 code review 则补(BASE 从 git log 中首个实现 commit 的 parent 恢复),已 review 则继续写记忆与收尾路由。
 5. **记录 BASE**:运行 `git rev-parse HEAD`,把输出记为本次实现的 BASE commit(requesting-code-review 的 base)。
 6. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考。
 
@@ -37,6 +38,7 @@ tags: [speccode, workflow, applying, tier1]
 4. **发现前序文档矛盾**(specs delta / proposal / design 与实际可行方案冲突)→ MUST 回写受影响文档使文档集一致,回写随本条 commit 落盘(回写范围不含 frontmatter 元数据)。
 5. **勾选回填**:把该条 `- [ ]` 改为 `- [x]`(tasks.md 是文档,直接编辑;`tick-task` verb 面向 plan 的 `### Task N` 结构,MUST NOT 用于 tasks.md)。已勾选条目重跑时幂等跳过。
 6. **簿记提交**(两个 commit,与 executing-plans 的进度节奏一致):
+   本条无产出文件(如纯验证条目)时跳过第一个 commit,仅做勾选簿记提交,不硬跑 `git commit` 让 "nothing to commit" 以非零退出误报失败。
    ```bash
    git add <本条产出的文件> && git commit -m "<feat|fix|chore|refactor>: <条目语义>"
    git add speccode/changes/<slug>/propose/tasks.md && git commit -m "docs(speccode): tick tasks <N>"

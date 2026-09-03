@@ -45,7 +45,7 @@ tags: [speccode, workflow, propose, specs]
 4. **tasks.md** — 实现步骤清单,`- [ ]` 复选框,按依赖排序分组。
 5. **frontmatter `tier:` 字段**——proposal.md 头部 YAML frontmatter 写入定层确认结果(取值 1|2|3);该字段单写者 = 本命令,其余命令 MUST NOT 修改;tier 只路由流程门禁,不豁免任何质量契约(TDD、code review、全量测试全层适用)。
 
-每写完一个文件展示一行进度("已创建 proposal.md")。全部写完后展示摘要:需求目录路径、四类文档清单、复杂度评估结论。
+每写完一个文件展示一行进度("已创建 proposal.md")。全部写完后展示摘要:需求目录路径、四类文档清单、定层结论(tier)。
 
 ## 落盘即提交(必须)
 
