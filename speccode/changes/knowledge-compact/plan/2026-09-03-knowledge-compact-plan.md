@@ -495,7 +495,7 @@ git commit -m "docs(commands): recording-knowledge hand-section tidy via replace
 - Consumes: Task 6 已使 recording 不再引用 append-hand(命令 prose 无残留)。
 - Produces: `write-knowledge` mode 集合 = `replace | replace-hand | replace-distilled | index`;`append-hand` → `{ok:false,error:'unknown mode: append-hand'}` exit 1。
 
-- [ ] **Step 1: 改测试**(原 `'write-knowledge append-hand appends hand-written section'` 用例整替为)
+- [x] **Step 1: 改测试**(原 `'write-knowledge append-hand appends hand-written section'` 用例整替为)
 
 ```js
 test('write-knowledge append-hand is retired (unknown mode)', () => {
@@ -509,12 +509,12 @@ test('write-knowledge append-hand is retired (unknown mode)', () => {
 });
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `node --test plugins/speccode/tests/cli.test.mjs`
 Expected: 该用例 FAIL(append-hand 仍可用,code 0)。
 
-- [ ] **Step 3: 删实现**(bin VERBS['write-knowledge'] 内 append-hand 分支整体删除)
+- [x] **Step 3: 删实现**(bin VERBS['write-knowledge'] 内 append-hand 分支整体删除)
 
 ```js
     if (mode === 'append-hand') {
@@ -525,12 +525,12 @@ Expected: 该用例 FAIL(append-hand 仍可用,code 0)。
     }
 ```
 
-- [ ] **Step 4: 运行确认通过**
+- [x] **Step 4: 运行确认通过**
 
 Run: `node --test plugins/speccode/tests/cli.test.mjs`
 Expected: 全 PASS。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add plugins/speccode/bin/speccode.mjs plugins/speccode/tests/cli.test.mjs
