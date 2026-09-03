@@ -1,6 +1,6 @@
 ## Purpose
 
-speccode 的端到端 git 工作流:双层分支拓扑(普通需求 trunk → `<type>/<slug>` 开发分支直达;大需求 opt-in 集成分支),21 个 `/speccode:*` slash 命令的行为契约,阻塞等 PR 合并、merge_target 路由合并、状态报告、功能分支命名规则与路径识别对账。
+speccode 的端到端 git 工作流:双层分支拓扑(普通需求 trunk → `<type>/<slug>` 开发分支直达;大需求 opt-in 集成分支),全部 `/speccode:*` slash 命令的行为契约,阻塞等 PR 合并、merge_target 路由合并、状态报告、功能分支命名规则与路径识别对账。
 
 ## Requirements
 
