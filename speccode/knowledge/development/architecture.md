@@ -135,7 +135,7 @@ verb mode 与 lib 函数硬切改名不留别名,避免双词表长期并存(消
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-knowledge-trunk-bootstrap/ -->
-knowledge 命令 trunk 化架构:distilling/recording 改为从 trunk 运行,轻量 bootstrap(`chore/knowledge-*` 分支 + `git checkout -b` + `push -u`),不创建 speccode state、不跑 reconcile、不开 git worktree。落盘 commit 后直通 PR(经 `prtool.createPrArgs`,base=trunk),不阻塞等合并、不跑 finishing-feature。docs-only 改动不再扛 worktree 仪式(构建/基线测试对编辑 markdown 毫无用处)。memory 改 trunk 级:维护摘要写 `.speccode/memory/_knowledge.md`(trunk 级保留键),不再绑 feature F——distilling 跨所有 feature 产物,没有任何 feature「拥有」一次跨 feature 蒸馏。trunk 级 memory 保留键 `_knowledge` 与探索 topic 键 `_exploring/<topic>` 的校验后收口为 lib `validateMemoryBranch`(2026-09-02 起;单堆 `_exploring` 保留读兼容)。lite 而非 heavy:knowledge≠feature,不污染 feature 状态机,`/speccode:status` 不跟踪 knowledge PR(docs,非 feature)。双层拓扑例外(v2 时代为三层):lite 流程绕过开发分支 state,是对分支拓扑不变量的例外;在 knowledge-set 新增 requirement 显式编码此例外,使不变量「所有 tracked 改动经开发分支→trunk PR」的豁免对象明确为 knowledge 维护。续跑检测:trunk 上若已有未完成的 `chore/knowledge-*` 分支→AskUserQuestion 询问续跑/新建。PR 创建前先查该维护分支上是否已有 open PR,已有则跳过创建、复用并报告既有 PR url。
+knowledge 命令 memory trunk 级机制:维护摘要写 `.speccode/memory/_knowledge.md`(trunk 级保留键),不绑任何 feature——distilling 跨所有 feature 产物,没有任何 feature「拥有」一次跨 feature 蒸馏。trunk 级保留键 `_knowledge` 与探索 topic 键 `_exploring/<topic>` 校验收口为 lib `validateMemoryBranch`(单堆 `_exploring` 遗留读兼容)。lite 而非 heavy:knowledge≠feature,`/speccode:status` 不跟踪 knowledge PR(docs,非 feature)。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-plan-progress-tick/ -->
@@ -152,4 +152,8 @@ plan 执行进度勾选架构:plan 文档(`speccode/changes/<slug>/plan/*.md`)�
 
 <!-- distilled-from: archive/2026-09-02-exploring-topic-split/ -->
 **探索记忆按 topic 分文件**:`_exploring` 单堆文件在多需求交错探索时结论无归属,产生错误归属与静默丢失。改为键形式 `_exploring/<topic>`,落盘 `.speccode/memory/_exploring__<topic>.md`(复用 `branchToStateName` 编码,`memoryPath` 零改动);扁平命名,否决目录分层(各 topic 文件生命周期同构:append → rename 消亡,聚合视图属展示层)。**承接桥 = 原子 rename**:`renameMemory('_exploring/<topic>', '<type>/<slug>')` 同目录 renameSync;slug=topic 命名约定承接(否决独立 `--topic` 参数——与 slug 构成双源歧义);目标已存在拒绝并报告,不覆盖不合并(与 reconcile「绝不随意归属」同哲学);承接非强制,未承接 topic 原地保留由 reset 兜底。**校验收口 lib**:read/write-memory 的 branch 校验收口为 `validateMemoryBranch`(保留键 `_knowledge`、`_exploring` 遗留读兼容、`_exploring/<topic>` topic 经 validateSlug、回退 validateBranch);新增 `list-memory`/`rename-memory` verb,命令层不碰文件系统细节。
+<!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-03-knowledge-unified-entry/ -->
+knowledge 命令统一入口架构(0.4.0,取代 0.2.5 trunk-bootstrap):distilling/recording 运行于 state 登记的 `chore/knowledge-*` worktree 分支——trunk 上运行时经 reconcile `features` 筛选未完成分支询问续跑,无候选则引导 `/speccode:creating-worktree` 以 type=chore 创建(基点 MUST `config.trunk`,防护大需求父实体劫持集成基点);收尾经 `/speccode:finishing-worktree`(测试门禁 + PR 路由 + squash 探测 + 切回 merge_target),命令层不再内置 PR 创建/查重。「未完成」判定 MUST 基于 state 查询,git merge 判定(如 `git branch --no-merged`)在 squash-only 合并下对已合并分支永真,禁止依赖。未完成判定语义:分支「未完成」= reconcile 输出 `features` 中该分支存在且 `status ∈ {pending, in_progress, pr_open}`;`completed` 或无登记即完成/不存在。state 是唯一判定来源——squash 合并后 finishing-worktree 已推进/删除 state。
 <!-- /distilled -->

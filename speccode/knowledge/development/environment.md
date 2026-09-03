@@ -69,7 +69,7 @@ Tech Stack:Node ≥24,纯 ESM,零三方依赖,`node:test` + `node:assert/strict`
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-knowledge-trunk-bootstrap/ -->
-Tech Stack:Node ≥ 24,纯 ESM、零第三方依赖(仅 `node:` 内置);无 `package.json`;测试用 `node --test`;命令层 markdown 指令 + CLI verb。仓库根定位:主仓根用 `--git-common-dir`;memory/ 为 trunk 级共享(主仓 `.speccode/memory/`)。PR 创建镜像 finishing-feature §2:命令层 shell out `gh`/`glab`,经 `prtool.createPrArgs` 拼参数;不引入新 verb。
+Tech Stack:Node ≥ 24,纯 ESM、零第三方依赖(仅 `node:` 内置);无 `package.json`;测试用 `node --test`;命令层 markdown 指令 + CLI verb。仓库根定位:主仓根用 `--git-common-dir`;memory/ 为 trunk 级共享(主仓 `.speccode/memory/`)。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-plan-progress-tick/ -->

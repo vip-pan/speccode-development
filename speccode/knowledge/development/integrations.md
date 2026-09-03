@@ -50,7 +50,7 @@ GitNexus 探测签名:`{id:'gitnexus', match:'gitnexus', bin:'gitnexus', dirs:['
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-knowledge-trunk-bootstrap/ -->
-PR 工具集成:`pr_tool` ∈ {gh, glab, none}。命令层 shell out `gh`/`glab` 创建 PR,经 `prtool.createPrArgs` 拼参数(base, head, title, body)。`pr_tool=none`→打印等效命令(如 `gh pr create --base <trunk> --head <分支> --title ...`)并中止,分支已 commit。PR 创建前先查该维护分支上是否已有 open PR,已有则跳过创建、复用并报告既有 PR url。memory 数据模型:feature 级 memory 为 `.speccode/memory/<type>__<slug>.md`(双下划线规则,复用 state 文件命名);trunk 级例外 `.speccode/memory/_knowledge.md` 与探索 topic 文件 `.speccode/memory/_exploring__<topic>.md`(键 `_exploring/<topic>`;单堆 `_exploring.md` 已退役,读兼容保留)。memory 保持 untracked(与 `.speccode/` 其他运行时数据一致);主仓定位使同一 feature 的多个 worktree 共享同一份 memory。
+memory 数据模型:feature 级 memory 为 `.speccode/memory/<type>__<slug>.md`(双下划线规则,复用 state 文件命名);trunk 级例外 `.speccode/memory/_knowledge.md` 与探索 topic 文件 `.speccode/memory/_exploring__<topic>.md`(键 `_exploring/<topic>`;单堆 `_exploring.md` 已退役,读兼容保留)。memory 保持 untracked(与 `.speccode/` 其他运行时数据一致);主仓定位使同一 feature 的多个 worktree 共享同一份 memory。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-09-02-askuserquestion-cr-sanitizer/ -->

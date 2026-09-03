@@ -138,7 +138,7 @@ BREAKING config:既有 config.json `knowledge_tools` 失效,不兼容历史。�
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-knowledge-trunk-bootstrap/ -->
-双层拓扑例外(v2 时代为三层):lite 流程绕过开发分支 state,是对「所有 tracked 改动经开发分支→trunk PR」不变量的显式编码豁免,豁免对象明确为 knowledge 维护。半成品分支堆积:续跑检测降低但未消除(用户总选新建);缓解——bootstrap 前检测未完成 `chore/knowledge-*` 并优先建议续跑;PR 合并后分支可手动删。行为 BREAKING:存量用户若依赖在 worktree 内跑 knowledge 命令,升级后需改流程;CHANGELOG 标 BREAKING。pr_tool=none 中止语义:打印等效命令中止后,用户需手动开 PR;分支已 commit;缓解——打印完整等效命令 + 分支名。命令层 prose 行为(bootstrap/PR 创建/入口拒绝)无单元测试:均为 agent+shell 层,无 verb 可注入,刻意不伪造测试。distilling/recording 的 trunk-bootstrap + pr_tool=none 行为加依赖注入单测被 descoped(终审确认:prose 命令行为无单元测试,与仓库一致;bootstrap/PR 创建/入口拒绝均 agent+shell 层,无 verb 可测,无 verb 可注入,plan 刻意不伪造)。
+命令层 prose 行为(入口引导/收尾衔接)无单元测试:均为 agent+shell 层,无 verb 可注入,刻意不伪造测试(多次终审确认,仓库一致边界)。行为 BREAKING(0.2.5 与 0.4.0 两次)均需 CHANGELOG 显式标注升级路径(0.4.0:在途旧裸分支无 state 不可续跑,新 slug + cherry-pick 恢复)。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-plan-progress-tick/ -->
@@ -164,4 +164,8 @@ GLM 系模型后端在 tool_use 参数发射路径随机注入 CR(U+000D):实证
 
 <!-- distilled-from: archive/2026-09-02-exploring-topic-split/ -->
 **探索 topic 命名碎片化**:同一需求在不同 session 被起不同 topic 名,各持一半结论;缓解 = exploring 出口 append 前必经 `list-memory` 列既有 topic 选既有或新建,分期用共同前缀约定(`<主题>-p1/-p2`)。**type 推断信号变小**:单堆文件切成单 topic 后,推断信号从「整堆」变「单 topic 文件」,小样本推断质量可能下降;既有护栏(推断 MUST 经用户确认,不静默生效)覆盖。
+<!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-03-knowledge-unified-entry/ -->
+绕过统一入口的特权机制积累缺陷债(2026-09-03):0.2.5 知识维护特权机制存活两版暴露三缺陷——①squash-only 下 `git branch --no-merged` 对已合并分支永真(已收尾分支永远被弹「续跑」且 PR 查重不命中)②裸 checkout 切走主工作区 ③跑完不回 trunk;两命令机制段 ~80% 逐字重复。教训:机制例外不是免费的,每份独立实现 = 缺陷面 + 重复税;统一入口 + state 判定一次性消灭全部三个。校验锚点必须与规定产出对账:plan 的 grep 校验期望三连自相矛盾——Step 4 模式(`no-merged\|不阻塞\|…`)命中自己规定的新文本(禁令条款必须点名被禁物 `git branch --no-merged`;建议句含「不阻塞日常开发」);`grep -c` 期望「两文件 0 命中」过宽,命中预存的 trunk 定义行。教训:写「零命中」校验前先对规定的产出文本跑一遍模式;禁令文本引用被禁词是合法命中,判定须用只含真实违规特征的严格审计模式;「0 命中」期望要限定作用域(如命令表单元格)而非全文件。
 <!-- /distilled -->

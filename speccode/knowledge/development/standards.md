@@ -153,7 +153,7 @@ marker 格式固定,promoted 块 body 不得包含 marker 字符串(开注释序
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-knowledge-trunk-bootstrap/ -->
-trunk 入口校验:`git rev-parse --abbrev-ref HEAD` MUST 等于 `config.trunk`,或为 `chore/knowledge-*` 维护分支(续跑)。HEAD 为非 trunk 的 `<type>/<slug>` 功能分支(v3 起 worktree 分支同用此命名,无 `worktree-` 前缀)→ 退出并提示回 trunk。bootstrap 前检测未完成 `chore/knowledge-*` 并优先建议续跑。任何续跑路径 MUST 先经 `feature-progress` 确认该分支未被登记为 speccode feature state;已登记(名字恰好撞上 `chore/knowledge-*` 的功能分支)→ 拒绝并提示回 trunk 另建维护分支。PR 创建前 MUST 先查该维护分支上是否已有 open PR,已有则跳过创建、复用并报告既有 PR url。`pr_tool=none`→打印等效命令并中止,且 MUST NOT 创建 speccode state 或经 finishing-feature。维护摘要 MUST 含 PR url(或等效命令),MUST NOT 写 feature 级 memory。trunk 级 memory 校验收口为 lib `validateMemoryBranch`(`_knowledge` 保留键;`_exploring` 遗留读兼容,新写入用 `_exploring/<topic>`;其余 branch 经 `validateBranch` 校验)。memory 文件命名复用 state 文件的 `type__slug` 双下划线规则;主仓定位使同一 feature 的多个 worktree 共享同一份 memory。BREAKING 需在 CHANGELOG 标注。
+trunk 级 memory 校验收口为 lib `validateMemoryBranch`(`_knowledge` 保留键;`_exploring` 遗留读兼容,新写入用 `_exploring/<topic>`;其余 branch 经 `validateBranch` 校验)。memory 文件命名复用 state 文件的 `type__slug` 双下划线规则;主仓定位使同一 feature 的多个 worktree 共享同一份 memory。维护摘要 MUST 含 PR url(或等效命令),MUST NOT 写 feature 级 memory。BREAKING 需在 CHANGELOG 标注。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-plan-progress-tick/ -->
@@ -174,4 +174,8 @@ README 成熟度信号与双语控成本准则:版本徽章用 shields dynamic/j
 
 <!-- distilled-from: archive/2026-09-02-exploring-topic-split/ -->
 **承接零歧义**:slug=topic 命名约定(否决独立 `--topic` 参数——与 slug 构成双源,不一致时听谁的成为新歧义);rename 承接非强制,未承接 topic 原地保留;rename 目标已存在拒绝并报告,不覆盖不合并(重复创建时骨架应增量维护,而非静默吞掉既有 memory)。**校验内联逻辑收口 lib**:bin 内联白名单逻辑替换为 lib 纯函数 `validateMemoryBranch`,可单测——确定性逻辑下沉铁律的又一实例。**既有测试语义随契约演进**:契约变化时旧用例重构为新契约用例,不是回归而是契约演进。
+<!-- /distilled -->
+
+<!-- distilled-from: archive/2026-09-03-knowledge-unified-entry/ -->
+统一入口准则(2026-09-03):一切开发/维护分支走同一套入口与收尾——trunk 直切 `<type>/<slug>`(creating-worktree 建 worktree + 登记 state)、finishing-worktree 收尾(门禁 + PR 路由 + 切回)、state 是唯一身份锚点。绝不为例外动作(知识维护、docs chore)开特权通道:0.2.5 的知识维护特权机制(裸 bootstrap、无 state、内置直通 PR)存活两版后积累三缺陷并让两命令 ~80% 重复,0.4.0 整体移除。特权 = reconcile 视野外 + 收尾纪律缺席 + 缺陷自行复制。命令间复用手段:prose 引用既有命令(如知识命令引用 creating-worktree/finishing-worktree,收尾路由引用 syncing/archiving),既不内联复刻机制段(第三套实现、重复翻倍)也不下沉 lib(命令编排属交互层,非确定性逻辑,下沉违反分层);被否选项与理由记 design.md Decisions 段。
 <!-- /distilled -->
