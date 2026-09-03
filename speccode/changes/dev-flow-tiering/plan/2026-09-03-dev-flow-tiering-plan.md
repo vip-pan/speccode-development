@@ -277,32 +277,32 @@ git add README.md README_CN.md plugins/speccode/README.md plugins/speccode/READM
 - Consumes: 全部前序任务产出;propose/ delta 真源。
 - Produces: 完成态验证证据。
 
-- [ ] **Step 1: MODIFIED 名称逐字一致**——对 5 个 MODIFIED capability,逐一比对 delta 与主规格的需求标题:
+- [x] **Step 1: MODIFIED 名称逐字一致**——对 5 个 MODIFIED capability,逐一比对 delta 与主规格的需求标题:
 
 Run: `rg -n "^### Requirement:" speccode/spec/{sdd-document-lifecycle,git-workflow-lifecycle,session-memory,hook-event-integration,knowledge-set}/spec.md | rg "proposing 文档生成|writing-plans 输入优先级|命令衔接链|命令清单|finishing-worktree 测试验证与选项菜单|命令读写时机|run-hook verb 与调用节点|蒸馏命令"`
 Expected: 8 条全部命中且与 delta 标题逐字一致
 
-- [ ] **Step 2: delta 结构完整性**——每个 delta 文件每条 requirement 至少一个 Scenario:
+- [x] **Step 2: delta 结构完整性**——每个 delta 文件每条 requirement 至少一个 Scenario:
 
 Run: `for f in speccode/changes/dev-flow-tiering/propose/specs/*/spec.md; do echo "$f: $(rg -c '^### Requirement:' $f) req / $(rg -c '^#### Scenario:' $f) scenarios"; done`
 Expected: 每个文件 scenarios ≥ requirements(逐文件核对)
 
-- [ ] **Step 3: 准入口径一致性**——applying.md / writing-plans.md / proposing.md 三处 tier 语义互洽:
+- [x] **Step 3: 准入口径一致性**——applying.md / writing-plans.md / proposing.md 三处 tier 语义互洽:
 
 Run: `rg -n "tier" plugins/speccode/commands/{applying,writing-plans,proposing}.md | rg -i "准入|门禁|单写者|唯一写"`
 Expected: 三处口径与 delta 真源一致(1 准入 / 2 路由 / 3 单写者)
 
-- [ ] **Step 4: 命令数 = 24**
+- [x] **Step 4: 命令数 = 24**
 
 Run: `ls plugins/speccode/commands/*.md | wc -l`
 Expected: 24
 
-- [ ] **Step 5: 全量测试**
+- [x] **Step 5: 全量测试**
 
 Run: `node --test ./plugins/speccode/tests/*.test.mjs`
 Expected: 全部 pass,0 fail(prose 变更纯回归)
 
-- [ ] **Step 6: 有修复则提交**
+- [x] **Step 6: 有修复则提交**
 
 ```bash
 git add -A && git commit -m "docs(speccode): verify tiered flow consistency"
