@@ -128,27 +128,27 @@ git add plugins/speccode/commands/applying.md && git commit -m "docs(speccode): 
 - Consumes: delta 真源「proposing 文档生成」「轻档 proposing」「定层与 tier 字段」。
 - Produces: frontmatter `tier:` 字段的唯一写点;Task 1/3 读取该字段。
 
-- [ ] **Step 1: 生成四类文档段改造**——「## 生成四类文档」节:
+- [x] **Step 1: 生成四类文档段改造**——「## 生成四类文档」节:
   - 节首句后插入标准档/轻档分支说明:「标准档(delta 非空)生成以下四类;轻档(本次变更无任何 capability 语义变更,如版本发布类 chore)允许省略 design.md 且 specs/ 为空,proposal.md 与 tasks.md 照常生成。」
   - 在第 4 条 tasks.md 说明之后追加第 5 点:「5. **frontmatter `tier:` 字段**——proposal.md 头部 YAML frontmatter 写入定层确认结果(取值 1|2|3);该字段单写者 = 本命令,其余命令 MUST NOT 修改;tier 只路由流程门禁,不豁免任何质量契约(TDD、code review、全量测试全层适用)。」
-- [ ] **Step 2: 复杂度评估段升级为定层三岔**——「## 需求澄清(提问环节)」中「**复杂度评估**」一条替换为:
+- [x] **Step 2: 复杂度评估段升级为定层三岔**——「## 需求澄清(提问环节)」中「**复杂度评估**」一条替换为:
 
   「**定层(建议 + 用户确认)**:文档生成完成后,按复杂度输出三岔定层建议并经 AskUserQuestion 确认(用户可改):**Tier 1**(极小,proposing 产物足以覆盖需求,无 plan 跟进,后续 applying 手动实现)/ **Tier 2**(中小型,大部分场景,后续 writing-plans → SDD 或 executing-plans)/ **Tier 3**(大型或仍有不明确、寻求更优解,后续 brainstorming → writing-plans 硬门禁)。Tier 2/3 建议 MUST 校验 specs/ 下存在非空 delta,否则拒绝该定层(提示降为 Tier 1 或补充 delta)。确认结果写入 proposal.md frontmatter `tier:` 字段。」
 
-- [ ] **Step 3: 下一步引导按层**——「## 下一步引导」替换为:
+- [x] **Step 3: 下一步引导按层**——「## 下一步引导」替换为:
 
   「- Tier 3:建议 `/speccode:brainstorming` 精化设计(会回写本目录文档保持一致;brainstorm 后 MUST writing-plans)。
   - Tier 2:建议 `/speccode:writing-plans` 编写实现计划。
   - Tier 1:建议 `/speccode:applying` 按 tasks.md 逐条手动实现(完成后必经 requesting-code-review)。」
 
-- [ ] **Step 4: 护栏追加**——「## 护栏」加一条:「tier 字段是本命令的唯一写点;轻档判定依据是 specs/ 是否为空,MUST NOT 凭主观体量判断。」
+- [x] **Step 4: 护栏追加**——「## 护栏」加一条:「tier 字段是本命令的唯一写点;轻档判定依据是 specs/ 是否为空,MUST NOT 凭主观体量判断。」
 
-- [ ] **Step 5: 验证**
+- [x] **Step 5: 验证**
 
 Run: `rg -c "定层|Tier 1|Tier 2|Tier 3|tier:" plugins/speccode/commands/proposing.md`
 Expected: 各关键词均 ≥ 1;整体阅读确认三岔确认 + 轻档分支 + frontmatter 落笔三点齐全
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add plugins/speccode/commands/proposing.md && git commit -m "docs(speccode): proposing tiering (tier field, light mode)"
