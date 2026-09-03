@@ -89,7 +89,7 @@ test('parseDistilledBlocks throws on close without open', () => {
 test('replaceDistilledBlocks keeps hand-written lines byte-identical', () => {
   const text = 'hand A\n<!-- distilled-from: cap/old -->\nold body\n<!-- /distilled -->\nhand B';
   const out = replaceDistilledBlocks(text, [{ source: 'cap/old', body: 'new body' }]);
-  assert.equal(out, 'hand A\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\nhand B\n');
+  assert.equal(out, 'hand A\nhand B\n\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\n');
 });
 
 test('replaceDistilledBlocks drops distilled blocks whose source is gone and appends new sources', () => {
@@ -106,7 +106,7 @@ test('replaceDistilledBlocks appends blocks to empty text without leading newlin
 test('replaceDistilledBlocks does not double up trailing newline when source already ends with one', () => {
   const text = 'hand A\n<!-- distilled-from: cap/old -->\nold body\n<!-- /distilled -->\nhand B\n';
   const out = replaceDistilledBlocks(text, [{ source: 'cap/old', body: 'new body' }]);
-  assert.equal(out, 'hand A\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\nhand B\n');
+  assert.equal(out, 'hand A\nhand B\n\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\n');
 });
 
 test('replaceDistilledBlocks throws on malformed existing markers', () => {
@@ -229,13 +229,30 @@ test('parseDistilledBlocks throws on mismatched opening/closing marker formats',
 test('replaceDistilledBlocks rewrites legacy markers to the current format, preserving hand-written bytes', () => {
   const text = 'hand A\n<!-- promoted-from: cap/old -->\nold body\n<!-- /promoted -->\nhand B\n';
   const out = replaceDistilledBlocks(text, [{ source: 'cap/old', body: 'new body' }]);
-  assert.equal(out, 'hand A\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\nhand B\n');
+  assert.equal(out, 'hand A\nhand B\n\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\n');
 });
 
 test('replaceDistilledBlocks drops legacy blocks whose source is gone', () => {
   const text = 'keep\n<!-- promoted-from: gone/ -->\nold\n<!-- /promoted -->\ntail';
   const out = replaceDistilledBlocks(text, []);
   assert.equal(out, 'keep\ntail\n');
+});
+
+test('replaceDistilledBlocks repositions hand-written content before blocks (first-run normalization)', () => {
+  const text = 'hand A\n<!-- distilled-from: cap/one -->\nold\n<!-- /distilled -->\nmiddle\n<!-- distilled-from: cap/two -->\nold2\n<!-- /distilled -->\nhand B\n';
+  const out = replaceDistilledBlocks(text, [
+    { source: 'cap/one', body: 'new one' },
+    { source: 'cap/two', body: 'new two' },
+  ]);
+  assert.equal(out, 'hand A\nmiddle\nhand B\n\n<!-- distilled-from: cap/one -->\nnew one\n<!-- /distilled -->\n\n<!-- distilled-from: cap/two -->\nnew two\n<!-- /distilled -->\n');
+});
+
+test('replaceDistilledBlocks layout normalization is idempotent', () => {
+  const blocks = [{ source: 'cap/one', body: 'b1' }];
+  const once = replaceDistilledBlocks('h\n<!-- distilled-from: cap/one -->\nold\n<!-- /distilled -->\n', blocks);
+  const twice = replaceDistilledBlocks(once, blocks);
+  assert.equal(once, twice);
+  assert.deepEqual(parseDistilledBlocks(once), [{ source: 'cap/one', body: 'b1' }]);
 });
 
 test('distilledMetaPath points at <root>/_distilled.meta.json', () => {

@@ -815,7 +815,7 @@ test('write-knowledge replace-distilled migrates legacy markers and rebuilds onl
     JSON.stringify({ mode: 'replace-distilled', blocks: [{ source: 'cap/old', body: 'new body' }] }));
   assert.equal(code, 0);
   assert.equal(json.ok, true);
-  assert.equal(readFileSync(p, 'utf8'), 'hand A\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\nhand B\n');
+  assert.equal(readFileSync(p, 'utf8'), 'hand A\nhand B\n\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\n');
   rmSync(repo, { recursive: true, force: true });
 });
 
