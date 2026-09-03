@@ -54,7 +54,7 @@ speccode MUST 支持 tracked 知识集目录 `speccode/knowledge/`,包含 `_inde
 
 archive 的"已消费"判定 MUST 基于 `speccode/knowledge/_distilled.meta.json` 的 `consumed_archives` 列表(见"蒸馏消费追踪" requirement);不在该列表的归档包为未消费,须读;已在列表的为已消费,整包跳过(含 propose/design/brainstorm 等子文档)。已消费包的既有蒸馏块 MUST 原样 carry forward 进入候选列表(不重蒸)——因归档包不可变,重蒸仅会产出相同内容,故无信息损失。对所有既有块 MUST 做 source 存在性检查:source 指向的 archive 包已删除 → 标 **stale**;source 包仍在但其知识被新归档包取代 → distiller 在候选列表省略该旧块(→ 删除)或更新其 body,闸门标注 **superseded**(<取代包名>),用户确认。两种"块被移除"语义 MUST 在闸门区分标注,stale 为自动检测、superseded 为 distiller 提议。
 
-蒸馏目标 MUST 为:初始骨架 6 个 development topic ∪ `development/` 下用户自建 topic;蒸馏内容 MUST 限于 SDD 开发过程知识(架构、准则、环境、对接、坑与评审共识、安全)。蒸馏目标之外既存的 topic 文件,其蒸馏块 MUST 在闸门内逐块建议移除(日落),经用户确认后删除;其 hand-written 段 MUST 字节级保留,绝不自动修改。
+蒸馏目标 MUST 为:初始骨架 6 个 development topic ∪ `development/` 下用户自建 topic;蒸馏内容 MUST 限于 SDD 开发过程知识(架构、准则、环境、对接、坑与评审共识、安全)。变更元数据不属于蒸馏对象:归档包内文档的 frontmatter 字段(如 proposal.md 的 `tier:`)MUST NOT 单独成块,MUST NOT 混入正文蒸馏块,SHALL 仅作为理解变更体量与权重的参考上下文。蒸馏目标之外既存的 topic 文件,其蒸馏块 MUST 在闸门内逐块建议移除(日落),经用户确认后删除;其 hand-written 段 MUST 字节级保留,绝不自动修改。
 
 蒸馏成功落盘后 MUST 把本次读过的归档包(含读了无产出的)追记进 `consumed_archives`(去重)。`_distilled.meta.json` 缺失时 MUST 做一次性全量读 archive,并用全部现有归档包种子 `consumed_archives` 创建该 sidecar;此机制同时作为强制全量重蒸的官方逃生口(蒸馏判据变更后删 sidecar 再跑即全量重读+全块重蒸+重种子),不另设 `--full` flag。
 
@@ -87,6 +87,11 @@ archive 的"已消费"判定 MUST 基于 `speccode/knowledge/_distilled.meta.jso
 
 - WHEN 蒸馏块 source 指向的 archive 已不存在
 - THEN 该块标记为 stale,在闸门内展示给用户处置(删除块或改 source)
+
+#### Scenario: frontmatter 元数据不蒸馏
+
+- WHEN 蒸馏读取的归档包 proposal.md 含 frontmatter `tier:` 字段
+- THEN 该字段 MUST NOT 成为独立蒸馏块,MUST NOT 混入正文蒸馏块;仅可作为 distiller 理解变更体量的参考上下文
 
 #### Scenario: 日落移除范围外 topic 的蒸馏块
 
