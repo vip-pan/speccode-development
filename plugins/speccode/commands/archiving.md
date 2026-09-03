@@ -16,14 +16,13 @@ tags: [speccode, workflow, archive]
 
 ## 归档前检查(警告不硬阻断)
 
-1. **任务完成检查**:读 `speccode/changes/<slug>/propose/tasks.md`(及 plan/ 下计划,若存在),统计 `- [ ]` 未完成任务数。
-   - 有未完成 → 展示数量并询问是否继续归档;用户确认才继续。
-   - 无 tasks.md → 跳过该检查。
+1. **任务完成检查(按现存勾选清单计数)**:tasks.md 仍有勾选语义(存在 `- [ ]`)→ 数它的未完成条目;tasks.md 已被 plan 接管(无勾选、含接管标记)或 plan/ 存在 → 数 plan/ 下计划的未完成 step。两处都无勾选语义 → 跳过该检查。有未完成 → 展示数量并询问是否继续归档;用户确认才继续。
 2. **sync 状态评估**:对照 `changes/<slug>/propose/specs/` 的 delta 与 `speccode/spec/` 主规格,判断是否还有未合并的变更(逐 capability:ADDED 是否都在、MODIFIED 是否已应用、REMOVED 是否已删、RENAMED 是否已改名)。
    - 有未合并 → 展示差异摘要,用 AskUserQuestion 提供:「先 syncing(推荐) / 不归档 / 仍然归档」。
      - 先 syncing → 按 `/speccode:syncing` 的流程**同步执行**(不后台化——移动目录会抽掉 syncing 正在读的文件),完成后 MUST 重新逐 capability 复验全部 delta(不只是 syncing 报告触碰的那些);复验不一致 → 报告并停止,不归档。
      - 不归档 → 退出。
      - 仍然归档 → 继续。
+   - `propose/specs/` 为空(轻档,无 delta)→ 判定「无 delta,已同步」,直接进入移动。
    - 已全部合并 → 直接进入移动。
 
 ## 执行归档

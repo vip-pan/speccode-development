@@ -15,6 +15,8 @@ tags: [speccode, workflow, worktree, merge]
 4. 读记忆 `read-memory --branch <F>`。
 5. `--resume`:state 的 `pending_operation.command="finishing-worktree"` 时按 phase 续跑。
 
+- **变更文档存在性检查(Tier 0 防线)**:检查 `speccode/changes/<slug>/` 是否存在(本分支的变更文档);缺失 → 警告「本分支疑似未走文档链(vibe coding),成果将无法回溯」并用 AskUserQuestion 询问是否继续,用户确认才继续,警告不硬阻断。
+
 ## 全量测试门禁
 
 按标记文件探测测试命令(既有探测表);均无 → 询问用户或明确跳过。worktree 内全量运行,失败 → 展示摘要并停止,不呈现合并选项。
