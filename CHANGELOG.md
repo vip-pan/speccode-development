@@ -8,6 +8,27 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-03
+
+> EN: The knowledge set becomes a capability-keyed current-state snapshot — distilled blocks keyed by `cap/<slug>`, upserted and freshness-audited against the specs each run (carry-forward/stale/superseded retire; hand-written sections become gate-driven tidyable via `replace-hand`) — plus a three-tier dev flow (Tier 1/2/3) with the new `applying` command.
+
+### BREAKING
+
+- **知识集能力键制(写入侧)**:蒸馏块 marker 从 `distilled-from: <source>` 改为 `distilled-from: cap/<slug>`(slug 匹配 `^[a-z0-9-]+$`,文件内唯一),块的出处(archive 包名 / spec capability)以纯文本记在 body 内;同能力键 upsert,演进以覆盖表达、退役即删不留墓碑。写侧(`write-knowledge` 的 `replace-distilled`)只接受能力键格式:存量旧 source 块(`archive/<名>/`、`spec/<名>/`)读侧照常解析,升级后首次 `/speccode:distilling-knowledge` 运行经人工闸门映射为能力键(零工具迁移,无需预处理);未经映射的旧 source 块写入被引擎校验拒绝。
+- **`append-hand` 模式退役**:`write-knowledge` 的 `append-hand` 被新 `replace-hand` 模式(手写区整写:新内容 + 整理后既有手写段一次写入,蒸馏块字节级保留)吸收,调用该模式现返回 `unknown mode: append-hand` + exit 1。插件命令层已全部切换,受影响面为裸调该 verb 的外部脚本。
+- **规范布局归位**:任何 `replace-distilled` / `replace-hand` 写入都把文件归位为「手写段在前、蒸馏块在后」(手写内容逐行字节保留、仅位置重排,尾部空行折叠)——升级后首次知识集写入会产生一次性布局重排 diff,之后幂等。
+
+### Added
+
+- **开发流程三层分级(Tier 1/2/3)+ `applying` 命令**(第 24 个命令):proposing 定层写入 proposal.md frontmatter `tier:` 字段;Tier 1(极小)→ `/speccode:applying` 按 tasks.md 勾选清单逐条手动实现(勾选回填 + 簿记 commit);Tier 2(中小型,默认)→ writing-plans → SDD/executing-plans;Tier 3(大型/仍有不明确)→ 先 brainstorming 再 writing-plans。轻档:空 delta(specs/ 为空,如版本发布)专属 Tier 1,design.md 可省。review 无条件化:三条执行路径的完成点都必经 requesting-code-review。
+
+### Changed
+
+- **知识集三机制退役 → 新鲜度审查**:carry-forward、stale-by-source、superseded-by-package 退役,块存废改由每次 distilling 运行的新鲜度审查决定(真值锚 = `speccode/spec/` 主规格;删除/合并必须附理由经人工闸门;闸门 diff 只展示变化块);`consumed_archives` sidecar 降级为纯读成本控制,删除 sidecar 重跑仍是强制全量重读的官方逃生口。
+- **recording-knowledge 手写段可维护**:字节冻结解除 → 闸门驱动可改,每次运行整理本次写入 topic 的手写段(合并重复、删除过时附理由;权威 = 在场用户,不以 spec 为真值)。
+- 本仓 dogfood:知识集经首次闸门迁移 110 块 → 49 块(能力键化 + 同文件同键合并)。
+- 门面与 spec 计数对齐:根 README 9→11 capabilities、命令清单 22→24、plugin-packaging spec 去数字化。
+
 ## [0.4.0] - 2026-09-03
 
 > EN: Knowledge maintenance joins the unified entry — distilling/recording now run on state-registered `chore/knowledge-*` worktree branches and finish via finishing-worktree, killing the squash-only false-"unfinished" bug.
@@ -203,7 +224,8 @@ v2 全量迭代:四层拓扑收敛为三层、SDD 方法论与文档生命周期
 - 「文档剥离四步走」与 finish 阶段 `commit --amend` 折叠:保证 trunk 上功能提交为单一语义 commit,display reset 不误删文档。
 - GitHub / GitLab remote 探测,自动选择 `gh` / `glab` CLI,无 CLI 时降级为打印等效命令。
 
-[Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/vip-pan/speccode-development/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/vip-pan/speccode-development/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/vip-pan/speccode-development/compare/v0.2.6...v0.3.0
 [0.2.6]: https://github.com/vip-pan/speccode-development/compare/v0.2.5...v0.2.6
