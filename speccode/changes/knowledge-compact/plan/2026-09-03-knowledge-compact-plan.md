@@ -109,7 +109,7 @@ git commit -m "feat(knowledge): capability-key validation on the distilled write
 - Consumes: Task 1 的 cap 校验(不变)。
 - Produces: `replaceDistilledBlocks(text, blocks)` 返回规范布局——全部非块内容(按出现顺序逐行保留,尾部空行折叠)在前,蒸馏块(既有块按文件序、新块按入参序)在后,相邻节之间恰好一个空行,结尾单个换行;同一输入重复运行幂等。
 
-- [ ] **Step 1: 写失败测试**(追加;同时更新两处既有期望)
+- [x] **Step 1: 写失败测试**(追加;同时更新两处既有期望)
 
 ```js
 test('replaceDistilledBlocks repositions hand-written content before blocks (first-run normalization)', () => {
@@ -135,12 +135,12 @@ test('replaceDistilledBlocks layout normalization is idempotent', () => {
 - `'does not double up trailing newline...'`:期望改为 `'hand A\nhand B\n\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\n'`(与上一条同形)
 - `cli.test.mjs:809-820` replace-distilled 用例:期望改为 `'hand A\nhand B\n\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\n'`
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `node --test plugins/speccode/tests/knowledge.test.mjs plugins/speccode/tests/cli.test.mjs`
 Expected: 新用例与上述更新的用例 FAIL(旧实现原位保留块)。
 
-- [ ] **Step 3: 写最小实现**(整体替换 replaceDistilledBlocks 主体;校验循环保留 Task 1 版本)
+- [x] **Step 3: 写最小实现**(整体替换 replaceDistilledBlocks 主体;校验循环保留 Task 1 版本)
 
 ```js
 export function replaceDistilledBlocks(text, blocks) {
@@ -209,12 +209,12 @@ export function replaceDistilledBlocks(text, blocks) {
 - `parseDistilledBlocks` 头注释补一句:`// Source values may be legacy provenance strings (archive/<name>/, spec/<name>/) pending first-run capability-key migration — the write side rejects them until mapped.`
 - `listArchiveBundles` 注释中「This is the stale-detection data source: ...」句替换为:`// Consumed-archive tracking is pure read-cost control: it decides which bundles distilling reads this run, nothing else (block freshness is audited against spec/, not bundle existence).`
 
-- [ ] **Step 4: 运行确认通过**
+- [x] **Step 4: 运行确认通过**
 
 Run: `node --test plugins/speccode/tests/knowledge.test.mjs plugins/speccode/tests/cli.test.mjs`
 Expected: 全 PASS(`'drops distilled blocks...'`、`'appends blocks to empty text...'` 用例期望不变即通过——归位后输出恰与原期望一致)。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add plugins/speccode/lib/knowledge.mjs plugins/speccode/tests/knowledge.test.mjs plugins/speccode/tests/cli.test.mjs
