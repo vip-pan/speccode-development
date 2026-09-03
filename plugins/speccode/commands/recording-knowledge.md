@@ -31,9 +31,16 @@ tags: [speccode, workflow, knowledge]
 
 1. **适配判断**:先对内容做归类陈述——属于 SDD 过程知识(开发守则、架构、环境、对接、坑与评审共识、安全等)→ 建议落入的 topic;属于业务知识(领域术语、业务流程、业务历史等)→ 陈述「更像业务知识,建议进外部 RAG 而非知识集」。归类是建议不是硬拦:用户坚持写入时,允许其指定既有 topic 或新建 topic(新建落在 `development/` 下,文件名小写连字符,`.md` 结尾)。pitfalls 语义含评审中反复出现的问题模式与团队评审共识,不单列 review topic。
 2. 展示草稿(写入位置 + 内容 + 归类陈述)→ AskUserQuestion 确认:
-   - 确认 → `write-knowledge --rel <topic路径> --json-stdin`(mode=append-hand,content=内容)原子写(追加为 hand-written 段,不带 marker);
+   - 确认 → 收集「新内容 + 整理后的既有手写段」为完整手写区文本,经 `write-knowledge --rel <topic路径> --json-stdin`(mode=replace-hand,content=完整手写区文本)原子写(手写区整体替换,蒸馏块字节级保留,布局归位为手写段在前);
    - 坚持写入(被建议进 RAG 时)→ 按用户指定的 topic 写入;
    - 修改 → 按反馈调整后重展示。
+
+## 手写段整理
+
+每次运行对**本次写入 topic** 的既有 hand-written 段做整理:
+- 动作限于:合并重复条目、删除过时条目、收紧表述;权威是在场用户——MUST NOT 以 `speccode/spec/` 为真值改写用户知识,不读 spec 做判定;
+- 每个删除/合并项 MUST 附一句理由,与写入草稿一并展示,经闸门确认后随本次写入一并落盘(经 replace-hand 一次写入);
+- 整理不触碰蒸馏块(marker 内内容),不把整理结果写成蒸馏块。
 
 ## 落盘
 
@@ -55,5 +62,5 @@ tags: [speccode, workflow, knowledge]
 
 ## 约束
 
-- 只写 hand-written 段(不写 marker);写蒸馏块是 distilling-knowledge 的职责。
+- 只维护 hand-written 段(写入与整理均经 replace-hand,不写 marker);写蒸馏块是 distilling-knowledge 的职责,蒸馏块字节级保留。
 - 内容不得包含 `<!--` 或 `-->` 字符串。
