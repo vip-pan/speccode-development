@@ -35,7 +35,7 @@
 - Consumes: 既有 `replaceDistilledBlocks(text, blocks)` 签名不变。
 - Produces: 写侧契约——`blocks[].source` MUST 匹配 `^cap\/[a-z0-9-]+$`,否则 `throw Error('knowledge: distilled source must be a capability key (cap/<slug>): <source>')`。读侧(`parseDistilledBlocks`)继续接受任意 source 值(旧 `archive/<名>/`、`spec/<名>/` 与 legacy `promoted-from` 均照常解析)。
 
-- [ ] **Step 1: 写失败测试**(追加到 knowledge.test.mjs 的 replaceDistilledBlocks 测试区末尾)
+- [x] **Step 1: 写失败测试**(追加到 knowledge.test.mjs 的 replaceDistilledBlocks 测试区末尾)
 
 ```js
 test('replaceDistilledBlocks rejects non-cap-key sources on the write side', () => {
@@ -54,12 +54,12 @@ test('replaceDistilledBlocks accepts cap/<kebab-slug> sources', () => {
 });
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `node --test plugins/speccode/tests/knowledge.test.mjs`
 Expected: 新用例 FAIL(rejects 用例不抛错、accepts 用例正常返回——校验尚不存在),既有用例 PASS。
 
-- [ ] **Step 3: 写最小实现**(knowledge.mjs,放在 `SLUG_RE` 附近)
+- [x] **Step 3: 写最小实现**(knowledge.mjs,放在 `SLUG_RE` 附近)
 
 ```js
 const CAP_SOURCE_RE = /^cap\/[a-z0-9-]+$/;
@@ -73,7 +73,7 @@ const CAP_SOURCE_RE = /^cap\/[a-z0-9-]+$/;
     }
 ```
 
-- [ ] **Step 4: 更新既有测试的旧 source 入参**(只改 `blocks` 参数,不改文件文本里的旧 marker——读侧照常)
+- [x] **Step 4: 更新既有测试的旧 source 入参**(只改 `blocks` 参数,不改文件文本里的旧 marker——读侧照常)
 
 `knowledge.test.mjs`:
 - 行 89 区 `'keeps hand-written lines byte-identical'`:`{ source: 'old/' ...}` → `'cap/old'`
@@ -86,12 +86,12 @@ const CAP_SOURCE_RE = /^cap\/[a-z0-9-]+$/;
 
 `cli.test.mjs:809-820`(replace-distilled 用例):`blocks: [{ source: 'old/', body: 'new body' }]` → `source: 'cap/old'`(期望输出本任务暂不改,布局归位在 Task 2)。
 
-- [ ] **Step 5: 运行确认通过**
+- [x] **Step 5: 运行确认通过**
 
 Run: `node --test plugins/speccode/tests/knowledge.test.mjs plugins/speccode/tests/cli.test.mjs`
 Expected: 全 PASS。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add plugins/speccode/lib/knowledge.mjs plugins/speccode/tests/knowledge.test.mjs plugins/speccode/tests/cli.test.mjs
