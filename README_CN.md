@@ -99,7 +99,7 @@ spec 文档在所有分支 tracked,随 PR 链路上 trunk
 | [CHANGELOG](./CHANGELOG.md) | 版本发布记录(Keep a Changelog,全中文) |
 | [CLAUDE.md](./CLAUDE.md) | 开发文档:引擎三层架构、测试约定、speccode 工作流 |
 | `skills/` | 开发工作流 skills(真源)——经 `scripts/install-skills.sh` 安装到 `.claude/skills/`,供 Claude Code 懒加载 |
-| `speccode/spec/` · `speccode/archive/` | SDD 规格主档(9 个 capability)与变更归档——体系自身的活文档 |
+| `speccode/spec/` · `speccode/archive/` | SDD 规格主档(11 个 capability)与变更归档——体系自身的活文档 |
 
 ## 贡献
 
