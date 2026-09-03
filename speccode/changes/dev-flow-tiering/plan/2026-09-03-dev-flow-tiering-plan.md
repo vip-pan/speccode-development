@@ -34,7 +34,7 @@
 - Consumes: delta 真源「applying 手动执行命令」requirement;`speccode:proposing` 的四类文档(tier 字段、tasks.md);`speccode:requesting-code-review`(BASE 契约:调用方记录的 commit)。
 - Produces: Tier 1 执行入口;后续 Task 2/4/11(命名各计划任务号)引用其准入口径。
 
-- [ ] **Step 1: 写入以下完整内容到 `plugins/speccode/commands/applying.md`**
+- [x] **Step 1: 写入以下完整内容到 `plugins/speccode/commands/applying.md`**
 
 ````markdown
 ---
@@ -108,12 +108,12 @@ tags: [speccode, workflow, applying, tier1]
 - 卡住(条目不可实现、验证反复失败、指令不清)就停下求助,不盲猜。
 ````
 
-- [ ] **Step 2: 验证**
+- [x] **Step 2: 验证**
 
 Run: `rg -c "唯一准入 = tier 字段为 1 且无 plan" plugins/speccode/commands/applying.md && rg -c "^#### " plugins/speccode/commands/applying.md`
 Expected: 前者 ≥ 1;后者 ≥ 4(前置/逐条实现/完成后/护栏各节存在由整体阅读复核)
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add plugins/speccode/commands/applying.md && git commit -m "docs(speccode): add applying command (tier 1 manual executor)"
