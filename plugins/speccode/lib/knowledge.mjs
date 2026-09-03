@@ -56,6 +56,10 @@ const DISTILLED_END = '<!-- /distilled -->';
 // next full rebuild (replaceDistilledBlocks rewrites every block it keeps).
 const LEGACY_PROMOTED_START = /^<!-- promoted-from:\s*(.+?)\s*-->$/;
 const LEGACY_PROMOTED_END = '<!-- /promoted -->';
+// Write-side block identity (design D1): a distilled block's source is a
+// capability key. The read side still accepts legacy provenance strings so
+// existing files parse until their gated first-run migration.
+const CAP_SOURCE_RE = /^cap\/[a-z0-9-]+$/;
 
 // Extract distilled blocks as [{source, body}]. Both the current
 // (distilled-from//distilled) and legacy (promoted-from//promoted) marker
@@ -102,6 +106,9 @@ export function parseDistilledBlocks(text) {
 export function replaceDistilledBlocks(text, blocks) {
   const seen = new Set();
   for (const b of blocks) {
+    if (typeof b.source !== 'string' || !CAP_SOURCE_RE.test(b.source)) {
+      throw new Error(`knowledge: distilled source must be a capability key (cap/<slug>): ${b.source}`);
+    }
     if (seen.has(b.source)) throw new Error(`knowledge: duplicate distilled source: ${b.source}`);
     seen.add(b.source);
     const body = String(b.body ?? '');

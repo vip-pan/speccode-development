@@ -810,12 +810,12 @@ test('write-knowledge replace-distilled migrates legacy markers and rebuilds onl
   const repo = makeRepo();
   const p = join(repo, 'speccode', 'knowledge', 'development', 'pitfalls.md');
   mkdirSync(dirname(p), { recursive: true });
-  writeFileSync(p, 'hand A\n<!-- promoted-from: old/ -->\nold body\n<!-- /promoted -->\nhand B\n');
+  writeFileSync(p, 'hand A\n<!-- promoted-from: cap/old -->\nold body\n<!-- /promoted -->\nhand B\n');
   const { code, json } = runCliStdin(repo, 'write-knowledge', '--cwd', repo, '--rel', 'development/pitfalls.md', '--json-stdin',
-    JSON.stringify({ mode: 'replace-distilled', blocks: [{ source: 'old/', body: 'new body' }] }));
+    JSON.stringify({ mode: 'replace-distilled', blocks: [{ source: 'cap/old', body: 'new body' }] }));
   assert.equal(code, 0);
   assert.equal(json.ok, true);
-  assert.equal(readFileSync(p, 'utf8'), 'hand A\n<!-- distilled-from: old/ -->\nnew body\n<!-- /distilled -->\nhand B\n');
+  assert.equal(readFileSync(p, 'utf8'), 'hand A\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\nhand B\n');
   rmSync(repo, { recursive: true, force: true });
 });
 

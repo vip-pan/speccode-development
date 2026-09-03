@@ -87,26 +87,26 @@ test('parseDistilledBlocks throws on close without open', () => {
 });
 
 test('replaceDistilledBlocks keeps hand-written lines byte-identical', () => {
-  const text = 'hand A\n<!-- distilled-from: old/ -->\nold body\n<!-- /distilled -->\nhand B';
-  const out = replaceDistilledBlocks(text, [{ source: 'old/', body: 'new body' }]);
-  assert.equal(out, 'hand A\n<!-- distilled-from: old/ -->\nnew body\n<!-- /distilled -->\nhand B\n');
+  const text = 'hand A\n<!-- distilled-from: cap/old -->\nold body\n<!-- /distilled -->\nhand B';
+  const out = replaceDistilledBlocks(text, [{ source: 'cap/old', body: 'new body' }]);
+  assert.equal(out, 'hand A\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\nhand B\n');
 });
 
 test('replaceDistilledBlocks drops distilled blocks whose source is gone and appends new sources', () => {
   const text = 'keep\n<!-- distilled-from: gone/ -->\nold\n<!-- /distilled -->\ntail';
-  const out = replaceDistilledBlocks(text, [{ source: 'fresh/', body: 'new' }]);
-  assert.equal(out, 'keep\ntail\n\n<!-- distilled-from: fresh/ -->\nnew\n<!-- /distilled -->\n');
+  const out = replaceDistilledBlocks(text, [{ source: 'cap/fresh', body: 'new' }]);
+  assert.equal(out, 'keep\ntail\n\n<!-- distilled-from: cap/fresh -->\nnew\n<!-- /distilled -->\n');
 });
 
 test('replaceDistilledBlocks appends blocks to empty text without leading newline, but with trailing newline', () => {
-  const out = replaceDistilledBlocks('', [{ source: 'x/', body: 'b' }]);
-  assert.equal(out, '<!-- distilled-from: x/ -->\nb\n<!-- /distilled -->\n');
+  const out = replaceDistilledBlocks('', [{ source: 'cap/x', body: 'b' }]);
+  assert.equal(out, '<!-- distilled-from: cap/x -->\nb\n<!-- /distilled -->\n');
 });
 
 test('replaceDistilledBlocks does not double up trailing newline when source already ends with one', () => {
-  const text = 'hand A\n<!-- distilled-from: old/ -->\nold body\n<!-- /distilled -->\nhand B\n';
-  const out = replaceDistilledBlocks(text, [{ source: 'old/', body: 'new body' }]);
-  assert.equal(out, 'hand A\n<!-- distilled-from: old/ -->\nnew body\n<!-- /distilled -->\nhand B\n');
+  const text = 'hand A\n<!-- distilled-from: cap/old -->\nold body\n<!-- /distilled -->\nhand B\n';
+  const out = replaceDistilledBlocks(text, [{ source: 'cap/old', body: 'new body' }]);
+  assert.equal(out, 'hand A\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\nhand B\n');
 });
 
 test('replaceDistilledBlocks throws on malformed existing markers', () => {
@@ -131,32 +131,47 @@ test('replaceDistilledBlocks throws on nested markers surrounded by content', ()
 test('replaceDistilledBlocks throws on duplicate source in blocks (existing block for that source present)', () => {
   const text = 'keep\n<!-- distilled-from: S -->\nold\n<!-- /distilled -->\ntail';
   assert.throws(
-    () => replaceDistilledBlocks(text, [{ source: 'S', body: 'b1' }, { source: 'S', body: 'b2' }]),
-    /knowledge: duplicate distilled source: S/,
+    () => replaceDistilledBlocks(text, [{ source: 'cap/x', body: 'b1' }, { source: 'cap/x', body: 'b2' }]),
+    /knowledge: duplicate distilled source: cap\/x/,
   );
 });
 
 test('replaceDistilledBlocks throws on duplicate source in blocks (no existing block for that source)', () => {
   assert.throws(
-    () => replaceDistilledBlocks('hand-written only, no markers', [{ source: 'S', body: 'b1' }, { source: 'S', body: 'b2' }]),
-    /knowledge: duplicate distilled source: S/,
+    () => replaceDistilledBlocks('hand-written only, no markers', [{ source: 'cap/x', body: 'b1' }, { source: 'cap/x', body: 'b2' }]),
+    /knowledge: duplicate distilled source: cap\/x/,
   );
 });
 
 test('replaceDistilledBlocks throws when a body contains a distilled marker string', () => {
   assert.throws(
-    () => replaceDistilledBlocks('', [{ source: 'x/', body: 'oops <!-- /distilled --> mid-body' }]),
+    () => replaceDistilledBlocks('', [{ source: 'cap/x', body: 'oops <!-- /distilled --> mid-body' }]),
     /knowledge: body contains marker string/,
   );
   assert.throws(
-    () => replaceDistilledBlocks('', [{ source: 'y/', body: 'oops <!-- distilled-from: z/ -->' }]),
+    () => replaceDistilledBlocks('', [{ source: 'cap/y', body: 'oops <!-- distilled-from: z/ -->' }]),
     /knowledge: body contains marker string/,
   );
 });
 
 test('replaceDistilledBlocks treats a missing body as an explicit empty string, not the literal "undefined"', () => {
-  const out = replaceDistilledBlocks('', [{ source: 'x/' }]);
-  assert.equal(out, '<!-- distilled-from: x/ -->\n\n<!-- /distilled -->\n');
+  const out = replaceDistilledBlocks('', [{ source: 'cap/x' }]);
+  assert.equal(out, '<!-- distilled-from: cap/x -->\n\n<!-- /distilled -->\n');
+});
+
+test('replaceDistilledBlocks rejects non-cap-key sources on the write side', () => {
+  for (const bad of ['old/', 'archive/2026-08-14-knowledge-set/', 'spec/knowledge-set/', 'x', 'cap/Knowledge-Set', 'cap/a_b', 'cap/a b', 'cap/', 'cap//a', '']) {
+    assert.throws(
+      () => replaceDistilledBlocks('hand\n', [{ source: bad, body: 'b' }]),
+      /capability key/,
+      JSON.stringify(bad),
+    );
+  }
+});
+
+test('replaceDistilledBlocks accepts cap/<kebab-slug> sources', () => {
+  const out = replaceDistilledBlocks('', [{ source: 'cap/knowledge-set', body: 'b' }]);
+  assert.equal(out, '<!-- distilled-from: cap/knowledge-set -->\nb\n<!-- /distilled -->\n');
 });
 
 test('buildIndex renders sections with topic lines', () => {
@@ -212,9 +227,9 @@ test('parseDistilledBlocks throws on mismatched opening/closing marker formats',
 });
 
 test('replaceDistilledBlocks rewrites legacy markers to the current format, preserving hand-written bytes', () => {
-  const text = 'hand A\n<!-- promoted-from: old/ -->\nold body\n<!-- /promoted -->\nhand B\n';
-  const out = replaceDistilledBlocks(text, [{ source: 'old/', body: 'new body' }]);
-  assert.equal(out, 'hand A\n<!-- distilled-from: old/ -->\nnew body\n<!-- /distilled -->\nhand B\n');
+  const text = 'hand A\n<!-- promoted-from: cap/old -->\nold body\n<!-- /promoted -->\nhand B\n';
+  const out = replaceDistilledBlocks(text, [{ source: 'cap/old', body: 'new body' }]);
+  assert.equal(out, 'hand A\n<!-- distilled-from: cap/old -->\nnew body\n<!-- /distilled -->\nhand B\n');
 });
 
 test('replaceDistilledBlocks drops legacy blocks whose source is gone', () => {
