@@ -627,17 +627,17 @@ git commit -m "docs(knowledge): recording tidy pass via replace-hand"
 - Consumes: 全部前序任务。
 - Produces: 可交接 syncing → archiving → finishing-worktree 的绿色分支。
 
-- [ ] **Step 1: 全量测试**
+- [x] **Step 1: 全量测试**
 
 Run: `node --test ./plugins/speccode/tests/*.test.mjs`
 Expected: 全 PASS(266 既有 + 本计划新增用例,零 fail)。
 
-- [ ] **Step 2: 退役术语全局清零核查**(命令/README/命令 prose 层;archive/ 与 spec delta 中的历史表述不在此列)
+- [x] **Step 2: 退役术语全局清零核查**(命令/README/命令 prose 层;archive/ 与 spec delta 中的历史表述不在此列)
 
 Run: `grep -rn -i "carry.forward\|carry forward" plugins/speccode/commands/ plugins/speccode/README.md plugins/speccode/README_CN.md; grep -n "stale" plugins/speccode/commands/distilling-knowledge.md plugins/speccode/commands/recording-knowledge.md`
 Expected: 无输出(grep 退出码 1)。
 
-- [ ] **Step 3: 交接**——引导执行 `/speccode:requesting-code-review`(BASE = propose 提交 f7eb1fd),通过后 `/speccode:syncing`(把 delta 合入 `speccode/spec/knowledge-set/spec.md`)→ `/speccode:archiving` → `/speccode:finishing-worktree`(单 PR 上 trunk)。CHANGELOG 由发布纪律统一处理(speccode-workflow skill),不在本计划内。
+- [x] **Step 3: 交接**——引导执行 `/speccode:requesting-code-review`(BASE = propose 提交 f7eb1fd),通过后 `/speccode:syncing`(把 delta 合入 `speccode/spec/knowledge-set/spec.md`)→ `/speccode:archiving` → `/speccode:finishing-worktree`(单 PR 上 trunk)。CHANGELOG 由发布纪律统一处理(speccode-workflow skill),不在本计划内。
 
 ---
 
