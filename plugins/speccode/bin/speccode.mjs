@@ -11,7 +11,7 @@ import { detectCodeIntelTools, resolveWorktreeDir, worktreeDirIgnoreState } from
 import { sddWorkspace, taskBrief, reviewPackage, tickTask } from '../lib/sdd.mjs';
 import { buildHookPayload, runHook } from '../lib/hooks.mjs';
 import { listMemory, readMemory, renameMemory, writeMemory, validateMemoryBranch } from '../lib/memory.mjs';
-import { assertSafeRel, buildIndex, knowledgeRoot, listTopics, parseDistilledBlocks, replaceDistilledBlocks, writeKnowledge, archiveRoot, distilledMetaPath, readConsumedArchives, addConsumedArchives, listArchiveBundles, unconsumedArchives } from '../lib/knowledge.mjs';
+import { assertSafeRel, buildIndex, knowledgeRoot, listTopics, parseDistilledBlocks, replaceHandBlocks, replaceDistilledBlocks, writeKnowledge, archiveRoot, distilledMetaPath, readConsumedArchives, addConsumedArchives, listArchiveBundles, unconsumedArchives } from '../lib/knowledge.mjs';
 
 function readStdin() {
   return readFileSync(0, 'utf8');
@@ -338,6 +338,12 @@ const VERBS = {
       if (!Array.isArray(blocks)) return { ok: false, error: 'mode replace-distilled requires blocks: [{source, body}]' };
       const existing = existsSync(target) ? readFileSync(target, 'utf8') : '';
       writeKnowledge(root, safe.rel, replaceDistilledBlocks(existing, blocks));
+      return { ok: true, path: safe.rel };
+    }
+    if (mode === 'replace-hand') {
+      if (typeof content !== 'string') return { ok: false, error: 'mode replace-hand requires content: string' };
+      const existing = existsSync(target) ? readFileSync(target, 'utf8') : '';
+      writeKnowledge(root, safe.rel, replaceHandBlocks(existing, content));
       return { ok: true, path: safe.rel };
     }
     if (mode === 'index') {

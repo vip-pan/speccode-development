@@ -819,6 +819,29 @@ test('write-knowledge replace-distilled migrates legacy markers and rebuilds onl
   rmSync(repo, { recursive: true, force: true });
 });
 
+test('write-knowledge replace-hand replaces hand region, keeps distilled blocks', () => {
+  const repo = makeRepo();
+  const p = join(repo, 'speccode', 'knowledge', 'development', 'pitfalls.md');
+  mkdirSync(dirname(p), { recursive: true });
+  writeFileSync(p, 'hand A\n<!-- distilled-from: cap/x -->\nbody\n<!-- /distilled -->\nhand B\n');
+  const { code, json } = runCliStdin(repo, 'write-knowledge', '--cwd', repo, '--rel', 'development/pitfalls.md', '--json-stdin',
+    JSON.stringify({ mode: 'replace-hand', content: '## 手写\n整理后内容\n' }));
+  assert.equal(code, 0);
+  assert.equal(json.ok, true);
+  assert.equal(readFileSync(p, 'utf8'), '## 手写\n整理后内容\n\n<!-- distilled-from: cap/x -->\nbody\n<!-- /distilled -->\n');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('write-knowledge replace-hand rejects missing content', () => {
+  const repo = makeRepo();
+  const { code, json } = runCliStdin(repo, 'write-knowledge', '--cwd', repo, '--rel', 'development/pitfalls.md', '--json-stdin',
+    JSON.stringify({ mode: 'replace-hand' }));
+  assert.equal(code, 1);
+  assert.equal(json.ok, false);
+  assert.match(json.error, /replace-hand requires content/);
+  rmSync(repo, { recursive: true, force: true });
+});
+
 test('write-knowledge rejects unsafe rel with exit 1', () => {
   const repo = makeRepo();
   const { code, json } = runCliStdin(repo, 'write-knowledge', '--cwd', repo, '--rel', '../evil.md', '--json-stdin',
