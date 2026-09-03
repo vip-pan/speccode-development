@@ -6,11 +6,11 @@ speccode 的端到端 git 工作流:双层分支拓扑(普通需求 trunk → `<
 
 ### Requirement: 命令清单
 
-speccode SHALL 暴露以下 22 个 slash 命令:`init`、`exploring`、`creating-feature`、`creating-worktree`、`proposing`、`brainstorming`、`writing-plans`、`applying`、`executing-plans`、`subagent-driven-development`、`dispatching-parallel-agents`、`test-driven-development`、`systematic-debugging`、`requesting-code-review`、`receiving-code-review`、`verification-before-completion`、`syncing`、`archiving`、`finishing-worktree`、`finishing-feature`、`status`、`reset`。其中 `creating-feature` 与 `finishing-feature` SHALL 为大需求 opt-in 命令(创建/收尾集成分支),普通需求路径 SHALL 只经 `creating-worktree` 与 `finishing-worktree`;`applying` SHALL 为 Tier 1(极小型)变更的手动执行入口,准入契约见 development-flow-tiering。
+speccode SHALL 暴露以下 24 个 slash 命令:`init`、`exploring`、`creating-feature`、`creating-worktree`、`proposing`、`brainstorming`、`writing-plans`、`applying`、`executing-plans`、`subagent-driven-development`、`dispatching-parallel-agents`、`test-driven-development`、`systematic-debugging`、`requesting-code-review`、`receiving-code-review`、`verification-before-completion`、`syncing`、`archiving`、`distilling-knowledge`、`recording-knowledge`、`finishing-worktree`、`finishing-feature`、`status`、`reset`。其中 `creating-feature` 与 `finishing-feature` SHALL 为大需求 opt-in 命令(创建/收尾集成分支),普通需求路径 SHALL 只经 `creating-worktree` 与 `finishing-worktree`;`applying` SHALL 为 Tier 1(极小型)变更的手动执行入口,准入契约见 development-flow-tiering;`distilling-knowledge` 与 `recording-knowledge` 的行为契约在 knowledge-set capability 定义,此处仅登记其清单身份。
 
 #### Scenario: 命令全部可用
 - **WHEN** speccode 已正确初始化(`.speccode/config.json` 存在)
-- **THEN** 用户 MUST 能通过 `/speccode:<name>` 形式调用上述全部 22 个命令
+- **THEN** 用户 MUST 能通过 `/speccode:<name>` 形式调用上述全部 24 个命令
 
 #### Scenario: 旧命令不复存在
 - **WHEN** 检查命令清单
