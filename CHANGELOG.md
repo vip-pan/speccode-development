@@ -224,7 +224,8 @@ v2 全量迭代:四层拓扑收敛为三层、SDD 方法论与文档生命周期
 - 「文档剥离四步走」与 finish 阶段 `commit --amend` 折叠:保证 trunk 上功能提交为单一语义 commit,display reset 不误删文档。
 - GitHub / GitLab remote 探测,自动选择 `gh` / `glab` CLI,无 CLI 时降级为打印等效命令。
 
-[Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/vip-pan/speccode-development/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/vip-pan/speccode-development/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/vip-pan/speccode-development/compare/v0.2.6...v0.3.0
 [0.2.6]: https://github.com/vip-pan/speccode-development/compare/v0.2.5...v0.2.6
