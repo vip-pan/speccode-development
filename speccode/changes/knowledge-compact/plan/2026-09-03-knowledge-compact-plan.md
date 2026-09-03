@@ -338,7 +338,7 @@ git commit -m "feat(knowledge): replaceHandBlocks — full hand-region rebuild p
 - Consumes: Task 3 的 `replaceHandBlocks(existing, content)`。
 - Produces: CLI 契约——`write-knowledge --rel <rel> --json-stdin`,stdin `{"mode":"replace-hand","content":"..."}`;成功 `{ok:true,path}`;`content` 缺失/非字符串 → `{ok:false,error:'mode replace-hand requires content: string'}` exit 1;content 含 marker 字符串 → 透传 lib 抛错 `{ok:false,error:'knowledge: content contains marker string'}` exit 1。Task 6 的 recording-knowledge 命令消费此模式。
 
-- [ ] **Step 1: 写失败测试**(追加到 cli.test.mjs write-knowledge 测试区)
+- [x] **Step 1: 写失败测试**(追加到 cli.test.mjs write-knowledge 测试区)
 
 ```js
 test('write-knowledge replace-hand replaces hand region, keeps distilled blocks', () => {
@@ -365,12 +365,12 @@ test('write-knowledge replace-hand rejects missing content', () => {
 });
 ```
 
-- [ ] **Step 2: 运行确认失败**
+- [x] **Step 2: 运行确认失败**
 
 Run: `node --test plugins/speccode/tests/cli.test.mjs`
 Expected: 新用例 FAIL(`unknown mode: replace-hand`)。
 
-- [ ] **Step 3: 写最小实现**
+- [x] **Step 3: 写最小实现**
 
 `bin/speccode.mjs:14` import 名单追加 `replaceHandBlocks`(按字母序插入 `replaceDistilledBlocks` 前)。VERBS['write-knowledge'] 内、`replace-distilled` 分支之后插入:
 
@@ -383,12 +383,12 @@ Expected: 新用例 FAIL(`unknown mode: replace-hand`)。
     }
 ```
 
-- [ ] **Step 4: 运行确认通过**
+- [x] **Step 4: 运行确认通过**
 
 Run: `node --test plugins/speccode/tests/cli.test.mjs`
 Expected: 全 PASS。
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add plugins/speccode/bin/speccode.mjs plugins/speccode/tests/cli.test.mjs
