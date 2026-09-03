@@ -590,7 +590,7 @@ git commit -m "docs(readme): knowledge set as capability-keyed current-state sna
 - Consumes: Task 1-5 的引擎与命令(新规则首跑);`read-knowledge --blocks` / `write-knowledge mode=replace-distilled` / `mode=index`。
 - Produces: 本仓知识集全面能力键化——后续 distilling 运行恢复常规增量。
 
-- [ ] **Step 1: 按 Task 5 重写后的命令语义执行 distilling 流程**——读 `speccode/spec/` 全量 + `read-consumed-archives`(现 sidecar 已消费至 #41,#42/#43 归档包为本次增量);对 6 个 development topic 的全部既有块做新鲜度审查。映射规则(每块提议,闸门逐项确认,可改判):
+- [x] **Step 1: 按 Task 5 重写后的命令语义执行 distilling 流程**——读 `speccode/spec/` 全量 + `read-consumed-archives`(现 sidecar 已消费至 #41,#42/#43 归档包为本次增量);对 6 个 development topic 的全部既有块做新鲜度审查。映射规则(每块提议,闸门逐项确认,可改判):
   - 分支拓扑/worktree/对账/状态/pending_operation/children → `cap/git-workflow-lifecycle`
   - 知识集机制/memory 数据模型 → `cap/session-memory` 或 `cap/knowledge-set`(按块主题)
   - SDD 文档链路/plan checkbox/brainstorm 回写/命令衔接 → `cap/sdd-document-lifecycle`
@@ -598,20 +598,20 @@ git commit -m "docs(readme): knowledge set as capability-keyed current-state sna
   - README/文档门面/CLAUDE.md/visual companion → 无对应 capability,用 `cap/documentation-facade`
   - **同文件同能力键 MUST 合并为一块**(upsert 语义,后者并入前者;例:architecture.md 中 2026-08-14-knowledge-set 与 2026-08-15-knowledge-command-rename、2026-08-15-knowledge-set-refocus、2026-08-16-distill-incremental-archive、2026-08-16-knowledge-trunk-bootstrap、2026-09-03-knowledge-unified-entry 六块同属 `cap/knowledge-set` → 合并为一块当前态快照,出处以括注记在 body)
   - 描述已退役机制的知识块(如「stale vs superseded」判定、display 层坑、docstrip)→ 保留历史教训价值的并入对应能力块,纯机制描述的提议删除(附理由);**「stale vs superseded」块本身按探索结论预告退役**
-- [ ] **Step 2: 闸门确认后逐 topic 写入**(经 `write-knowledge mode=replace-distilled`,blocks 全部 cap 键;手写段自动归位前置)+ `_index.md` 重建(mode=index,实扫)
-- [ ] **Step 3: 验证**
+- [x] **Step 2: 闸门确认后逐 topic 写入**(经 `write-knowledge mode=replace-distilled`,blocks 全部 cap 键;手写段自动归位前置)+ `_index.md` 重建(mode=index,实扫)
+- [x] **Step 3: 验证**
 
 Run: `grep -rn "distilled-from: archive" speccode/knowledge/ ; grep -rc "distilled-from: cap/" speccode/knowledge/development/ ; node --test ./plugins/speccode/tests/*.test.mjs`
 Expected: 第一条无输出(旧 source 清零);第二条各文件计数 ≥1;测试全绿。抽查任一文件头部为手写段、其后为蒸馏块。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add speccode/knowledge/
 git commit -m "docs(knowledge): migrate to capability-keyed snapshot (first gate-run)"
 ```
 
-- [ ] **Step 5: replace-hand 实战验证**(tasks 清单要求的 recording 整理验证):对 `development/pitfalls.md` 手写段(「## 手写踩坑」两条)跑一次 recording-knowledge——整理陈述(如无整理诉求则仅重写为同内容),经 `write-knowledge mode=replace-hand` 落盘,确认蒸馏块区与提交前逐字节一致。验证后按原样提交:
+- [x] **Step 5: replace-hand 实战验证**(tasks 清单要求的 recording 整理验证):对 `development/pitfalls.md` 手写段(「## 手写踩坑」两条)跑一次 recording-knowledge——整理陈述(如无整理诉求则仅重写为同内容),经 `write-knowledge mode=replace-hand` 落盘,确认蒸馏块区与提交前逐字节一致。验证后按原样提交:
 
 ```bash
 git add speccode/knowledge/
