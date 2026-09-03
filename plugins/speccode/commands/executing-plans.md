@@ -28,6 +28,7 @@ tags: [speccode, workflow, plan, execute]
 1. 确认已在 speccode worktree 中(否则先 `/speccode:creating-worktree`);未经用户明确同意,MUST NOT 在 main/master 上开始
 2. **绑定功能分支**:运行 `speccode.mjs reconcile --cwd .`,用返回的 features 找到当前 worktree 所属的功能分支 F;找不到 → 报错"当前 worktree 无法关联任何 active feature",退出。
 3. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续——memory 上下文 MUST 参与第 1 步的批判性审查。
+4. **记录 BASE**:开始执行前 MUST 运行 `git rev-parse HEAD` 记录当前 commit,完成后 code review 以它为 BASE。
 
 ### 第 1 步:加载并审查 Plan
 
@@ -64,6 +65,7 @@ tags: [speccode, workflow, plan, execute]
 ### 第 3 步:完成开发
 
 所有任务完成并验证后:
+- **code review(必经)**:全部任务完成并验证后 MUST 调用 `/speccode:requesting-code-review` 派发审查(BASE 用入口绑定第 4 步记录的 commit;未记录则用分支起点 `git merge-base <trunk> HEAD`);审查反馈按 `/speccode:receiving-code-review` 核实处理。**review 未通过前 MUST NOT 进入收尾路由(syncing/archiving)。**
 - **写记忆**:把本命令产出的执行进度摘要(完成的任务、验证结果,经用户确认或按本命令内置判据)追加到本 feature 的 memory。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,摘要含单引号也会破壳):
   ```bash
   speccode.mjs write-memory --cwd . --branch <F> --json-stdin <<'EOF'

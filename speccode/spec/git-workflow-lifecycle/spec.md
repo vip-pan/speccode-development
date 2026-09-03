@@ -6,11 +6,11 @@ speccode 的端到端 git 工作流:双层分支拓扑(普通需求 trunk → `<
 
 ### Requirement: 命令清单
 
-speccode SHALL 暴露以下 21 个 slash 命令:`init`、`exploring`、`creating-feature`、`creating-worktree`、`proposing`、`brainstorming`、`writing-plans`、`executing-plans`、`subagent-driven-development`、`dispatching-parallel-agents`、`test-driven-development`、`systematic-debugging`、`requesting-code-review`、`receiving-code-review`、`verification-before-completion`、`syncing`、`archiving`、`finishing-worktree`、`finishing-feature`、`status`、`reset`。其中 `creating-feature` 与 `finishing-feature` SHALL 为大需求 opt-in 命令(创建/收尾集成分支),普通需求路径 SHALL 只经 `creating-worktree` 与 `finishing-worktree`。
+speccode SHALL 暴露以下 22 个 slash 命令:`init`、`exploring`、`creating-feature`、`creating-worktree`、`proposing`、`brainstorming`、`writing-plans`、`applying`、`executing-plans`、`subagent-driven-development`、`dispatching-parallel-agents`、`test-driven-development`、`systematic-debugging`、`requesting-code-review`、`receiving-code-review`、`verification-before-completion`、`syncing`、`archiving`、`finishing-worktree`、`finishing-feature`、`status`、`reset`。其中 `creating-feature` 与 `finishing-feature` SHALL 为大需求 opt-in 命令(创建/收尾集成分支),普通需求路径 SHALL 只经 `creating-worktree` 与 `finishing-worktree`;`applying` SHALL 为 Tier 1(极小型)变更的手动执行入口,准入契约见 development-flow-tiering。
 
 #### Scenario: 命令全部可用
 - **WHEN** speccode 已正确初始化(`.speccode/config.json` 存在)
-- **THEN** 用户 MUST 能通过 `/speccode:<name>` 形式调用上述全部 21 个命令
+- **THEN** 用户 MUST 能通过 `/speccode:<name>` 形式调用上述全部 22 个命令
 
 #### Scenario: 旧命令不复存在
 - **WHEN** 检查命令清单
@@ -161,7 +161,11 @@ speccode SHALL 管理双层分支拓扑:trunk 主干(默认 `config.trunk`,`spec
 
 ### Requirement: finishing-worktree 测试验证与选项菜单
 
-`/speccode:finishing-worktree` 在执行任何合并路径前 MUST 运行全量测试,测试失败 MUST 停止且不呈现合并选项。合并路径 MUST 按 state 的 `merge_target` 路由:`merge_target` 为非 trunk 分支(集成分支)时 MUST 走本地 squash 路径(合并到该集成分支、复跑全量测试、本分支 state 置 `completed`——父实体 children 仅身份登记 MUST NOT 被写、收尾切到该分支 `fetch & pull`),MUST NOT 呈现 PR 菜单;`merge_target` 为 trunk 时菜单 MUST 恰好为三项:「PR + 等待合并」「PR + 不等待」「保留 worktree」。丢弃路径 MUST NOT 出现在菜单中,仅当用户显式要求丢弃时进入,且 MUST 先展示分支名、完整 commit 列表与 worktree 路径,再要求用户逐字输入 `discard` 确认。本地 squash 路径在合并完成后 MUST 对合并结果复跑全量测试,失败 MUST 停止(此时未推送,现场可恢复)。
+`/speccode:finishing-worktree` 在执行任何合并路径前 MUST 检查当前分支 `speccode/changes/<slug>/` 的存在性:缺失 MUST 警告(该分支疑似未走文档链,成果无法回溯)并经用户确认才继续,警告不硬阻断。随后 MUST 运行全量测试,测试失败 MUST 停止且不呈现合并选项。合并路径 MUST 按 state 的 `merge_target` 路由:`merge_target` 为非 trunk 分支(集成分支)时 MUST 走本地 squash 路径(合并到该集成分支、复跑全量测试、本分支 state 置 `completed`——父实体 children 仅身份登记 MUST NOT 被写、收尾切到该分支 `fetch & pull`),MUST NOT 呈现 PR 菜单;`merge_target` 为 trunk 时菜单 MUST 恰好为三项:「PR + 等待合并」「PR + 不等待」「保留 worktree」。丢弃路径 MUST NOT 出现在菜单中,仅当用户显式要求丢弃时进入,且 MUST 先展示分支名、完整 commit 列表与 worktree 路径,再要求用户逐字输入 `discard` 确认。本地 squash 路径在合并完成后 MUST 对合并结果复跑全量测试,失败 MUST 停止(此时未推送,现场可恢复)。
+
+#### Scenario: 变更文档缺失警告
+- **WHEN** finishing-worktree 检测到当前分支的 speccode/changes/<slug>/ 不存在
+- **THEN** MUST 警告并询问用户是否继续合并,用户确认才继续;MUST NOT 静默合并
 
 #### Scenario: 测试失败即停
 - **WHEN** 全量测试存在失败

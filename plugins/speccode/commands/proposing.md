@@ -27,11 +27,13 @@ tags: [speccode, workflow, propose, specs]
 在写文档前,先把探索结论对齐成可落地的需求:
 - 从会话上下文梳理 exploring 结论;上下文不足时,一次一个问题地询问(目的、约束、成功标准),优先选择题。
 - 主动探索需求漏洞:边界场景、错误处理、与既有功能的交互。
-- **复杂度评估**:若需求跨多模块、存在多种可行方案、或有明显不确定性 → 告知用户"复杂度较高,建议先用 `/speccode:brainstorming` 精化设计",由用户决定先脑暴还是继续直接写文档。
+- **定层(建议 + 用户确认)**:文档生成完成后,按复杂度输出三岔定层建议并经 AskUserQuestion 确认(用户可改):**Tier 1**(极小,proposing 产物足以覆盖需求,无 plan 跟进,后续 applying 手动实现)/ **Tier 2**(中小型,大部分场景,后续 writing-plans → SDD 或 executing-plans)/ **Tier 3**(大型或仍有不明确、寻求更优解,后续 brainstorming → writing-plans 硬门禁)。Tier 2/3 建议 MUST 校验 specs/ 下存在非空 delta,否则拒绝该定层(提示降为 Tier 1 或补充 delta)。确认结果写入 proposal.md frontmatter `tier:` 字段。
 
 ## 生成四类文档
 
 在 `speccode/changes/<slug>/propose/` 下生成(目录不存在则创建):
+
+标准档(delta 非空)生成以下四类;轻档(本次变更无任何 capability 语义变更,如版本发布类 chore)允许省略 design.md 且 specs/ 为空,proposal.md 与 tasks.md 照常生成。
 
 1. **proposal.md** — Why(1-2 句问题/机会)/ What Changes(具体改动点列表,BREAKING 标注)/ Capabilities(新增或修改的能力清单,kebab-case)/ Impact(受影响的代码、系统)。
 2. **design.md** — Context(现状与约束)/ Goals / Non-Goals / Decisions(关键技术选择,含被否备选与理由)/ Risks(风险 → 缓解)/ Open Questions(可无)。内容简单时允许精简,但 Decisions 不得为空壳。
@@ -41,8 +43,9 @@ tags: [speccode, workflow, propose, specs]
    - MODIFIED/REMOVED 的名称必须与既有主规格(`speccode/spec/<capability>/spec.md`,若存在)逐字一致
    - 新增 capability(主规格尚不存在)的 delta SHOULD 带 `## Purpose` 段,供 syncing 播种新建主规格;修改既有 capability 的 delta 不带。
 4. **tasks.md** — 实现步骤清单,`- [ ]` 复选框,按依赖排序分组。
+5. **frontmatter `tier:` 字段**——proposal.md 头部 YAML frontmatter 写入定层确认结果(取值 1|2|3);该字段单写者 = 本命令,其余命令 MUST NOT 修改;tier 只路由流程门禁,不豁免任何质量契约(TDD、code review、全量测试全层适用)。
 
-每写完一个文件展示一行进度("已创建 proposal.md")。全部写完后展示摘要:需求目录路径、四类文档清单、复杂度评估结论。
+每写完一个文件展示一行进度("已创建 proposal.md")。全部写完后展示摘要:需求目录路径、四类文档清单、定层结论(tier)。
 
 ## 落盘即提交(必须)
 
@@ -72,11 +75,13 @@ EOF
 
 ## 下一步引导
 
-- 复杂度高的需求:建议 `/speccode:brainstorming` 精化设计(会回写本目录文档保持一致)。
-- 复杂度可控:建议 `/speccode:writing-plans` 直接编写实现计划。
+- Tier 3:建议 `/speccode:brainstorming` 精化设计(会回写本目录文档保持一致;brainstorm 后 MUST writing-plans)。
+- Tier 2:建议 `/speccode:writing-plans` 编写实现计划。
+- Tier 1:建议 `/speccode:applying` 按 tasks.md 逐条手动实现(完成后必经 requesting-code-review)。
 
 ## 护栏
 
 - 文档是 delta 不是主规格;不直接改 `speccode/spec/`(那是 syncing 的职责)。
 - 提问优先选择题;一次一个问题;不确定就先问,不盲目猜测。
 - 冲突检查未过不写文档;落盘必提交,不把未提交的文档留给下一命令。
+- tier 字段是本命令的唯一写点;轻档判定依据是 specs/ 是否为空,MUST NOT 凭主观体量判断。

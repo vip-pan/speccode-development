@@ -21,7 +21,7 @@ speccode 是一个 Claude Code 流程编排插件,用一组 `/speccode:*` slash 
 ## 目录
 
 1. [speccode 是什么](#1-speccode-是什么)
-2. [23 个命令快速参考表](#2-23-个命令快速参考表)
+2. [24 个命令快速参考表](#2-24-个命令快速参考表)
 3. [双层分支拓扑图](#3-双层分支拓扑图)
 4. [开发流程](#4-开发流程)
 5. [文档目录](#5-文档目录)
@@ -35,7 +35,7 @@ speccode 是一个 Claude Code 流程编排插件,用一组 `/speccode:*` slash 
 13. [未解决问题](#13-未解决问题)
 14. [⚠ 重要警告](#14-⚠-重要警告)
 
-## 2. 23 个命令快速参考表
+## 2. 24 个命令快速参考表
 
 生命周期:
 
@@ -54,9 +54,10 @@ speccode 是一个 Claude Code 流程编排插件,用一组 `/speccode:*` slash 
 
 | 命令 | 作用 | 前置(运行分支) |
 |---|---|---|
-| `/speccode:proposing` | 落地 proposal/design/specs/tasks 四类文档到 `speccode/changes/<slug>/propose/`;复杂度评估建议 brainstorming | `<type>/<slug>` 开发分支 |
+| `/speccode:proposing` | 落地 proposal/design/specs/tasks 四类文档到 `speccode/changes/<slug>/propose/`;出口定层(Tier 1/2/3)写入 proposal.md frontmatter `tier:` 字段;轻档(空 specs delta)可省 design.md/specs/ | `<type>/<slug>` 开发分支 |
 | `/speccode:brainstorming` | 苏格拉底式设计精化,设计落 `brainstorm/` 并回写 propose/ 保持一致 | `<type>/<slug>` 开发分支 |
 | `/speccode:writing-plans` | 详细实现计划(brainstorm/ 优先,propose/ 兜底),落 `plan/` | `<type>/<slug>` 开发分支 |
+| `/speccode:applying` | Tier 1 变更的手动执行:按 tasks.md 逐条实现(无 plan),勾选回填 + 簿记 commit,完成后必经 code review | `<type>/<slug>` 开发分支 |
 | `/speccode:syncing` | 增量变更合并进 `speccode/spec/` 主规格(brainstorm 残余吸收,幂等) | `<type>/<slug>` 开发分支 |
 | `/speccode:archiving` | 归档:changes/<slug>/ 移入 `speccode/archive/<YYYY-MM-DD>-<slug>/` | `<type>/<slug>` 开发分支 |
 
@@ -89,7 +90,7 @@ origin/<trunk> (主干;spec 文档 tracked)
    ├──────────────┬──────────────┐
    ▼              ▼              ▼
 feature/a       feature/b      feature/c   ← 开发分支 <type>/<slug>(无 worktree- 前缀)
-   │  文档流(proposing→brainstorming→writing-plans→…→syncing→archiving)在此层进行
+   │  文档流(proposing→brainstorming→writing-plans→applying→…→syncing→archiving)在此层进行
    └── /speccode:finishing-worktree(merge_target=trunk:测试门禁 + PR)合并回 trunk ──┘
    │
    ▼
@@ -130,10 +131,10 @@ origin/<trunk>  (大需求一次落地)
 1. `/speccode:exploring` —— 在 trunk 上探索需求,结论留在会话上下文(写按 topic 分文件的 `_exploring/<topic>` memory);出口做**需求形态确认**三岔:单普通需求 / 多个独立普通需求 / 大需求(集成)。
 2. (仅大需求 opt-in)`/speccode:creating-feature` —— 从 trunk 切出集成分支,登记父实体 state;普通需求跳过本步。
 3. `/speccode:creating-worktree` —— 普通需求从 trunk、大需求从集成分支切出开发分支,跑基线测试。
-4. `/speccode:proposing` —— 落地 proposal/design/specs/tasks 四类文档。
-5. (复杂时)`/speccode:brainstorming` —— 设计精化并回写 propose/。
-6. `/speccode:writing-plans` —— 产出详细实现计划。
-7. `/speccode:subagent-driven-development` 或 `/speccode:executing-plans` —— 执行计划(过程内含 `/speccode:dispatching-parallel-agents`、`/speccode:systematic-debugging`、`/speccode:verification-before-completion`、`/speccode:test-driven-development` 等方法论命令按需调用)。
+4. `/speccode:proposing` —— 落地 proposal/design/specs/tasks 四类文档;出口为变更定层(Tier 1 极小 / Tier 2 中小型 / Tier 3 复杂,写入 proposal.md frontmatter `tier:` 字段)并路由后续链路;轻档(空 specs delta)可省 design.md/specs/。
+5. (Tier 3)`/speccode:brainstorming` —— 设计精化并回写 propose/。
+6. (Tier 2/3)`/speccode:writing-plans` —— 产出详细实现计划。
+7. `/speccode:applying`(Tier 1:按 tasks.md 逐条手动实现)或 `/speccode:subagent-driven-development` / `/speccode:executing-plans` —— 执行(过程内含 `/speccode:dispatching-parallel-agents`、`/speccode:systematic-debugging`、`/speccode:verification-before-completion`、`/speccode:test-driven-development` 等方法论命令按需调用)。
 8. `/speccode:requesting-code-review` —— 派发审查子代理;反馈用 `/speccode:receiving-code-review` 处理。
 9. `/speccode:syncing` —— delta 合并进主规格。
 10. `/speccode:archiving` —— 归档 changes/<slug>/。
@@ -147,7 +148,7 @@ speccode 的 spec 文档统一放在仓库的 `speccode/` 目录,**在所有分�
 ```
 speccode/
 ├── changes/<slug>/          # 进行中的需求文档
-│   ├── propose/             # proposal.md / design.md / specs/ / tasks.md(proposing 产出)
+│   ├── propose/             # proposal.md / design.md / specs/ / tasks.md(proposing 产出;轻档时 design.md/specs/ 可省)
 │   ├── brainstorm/          # 设计精化文档(brainstorming 产出)
 │   └── plan/                # 实现计划(writing-plans 产出)
 ├── spec/<capability>/       # 主规格(syncing 合并 delta 后的落地处)
@@ -160,7 +161,7 @@ speccode/
 
 约定:
 
-- **落盘即 commit**:proposing / brainstorming / writing-plans / syncing / archiving / distilling-knowledge / recording-knowledge 每一步产出文档后立即提交,文档历史与代码历史同分支同行。
+- **落盘即 commit**:proposing / brainstorming / writing-plans / applying(逐条簿记 commit)/ syncing / archiving / distilling-knowledge / recording-knowledge 每一步产出文档后立即提交,文档历史与代码历史同分支同行。
 - **同 feature 多轮重建不冲突**:changes/<slug>/ 归档后目录释放,同一 slug 可再次 proposing 开新一轮;未归档重建时 proposing 会询问「续写 / 先归档 / 取消」。
 - **知识集:distilled 与 hand-written 分层**:`knowledge/` 下每个 topic 文件可混合两类内容。`distilling-knowledge` 把 `spec/`(全量读)与 `archive/`(**增量**——只读未消费归档包,经 `_distilled.meta.json` 追踪;已消费包整包跳过、其蒸馏块原样 carry forward 不重蒸,因归档包不可变)蒸馏为**蒸馏块(distilled blocks)**,用 `<!-- distilled-from: <source> --> ... <!-- /distilled -->` 标记包裹,每个 topic 的蒸馏块每次运行全量重建(来源已消失的块标 stale;被新包取代的块标 superseded,二者均经闸门;删 `_distilled.meta.json` 强制全量重蒸作逃生口,不设 `--full`);`recording-knowledge` 则在这些标记之外追加自由格式的**手写(hand-written)**内容。重建对标记之外的一切内容逐字节保留,故手写内容在每次蒸馏块重建后原样存活。知识集只策展 SDD 过程知识(`development/*`;pitfalls 兼收评审中反复出现的问题模式与团队评审共识)。业务知识交由外部 RAG 系统:`recording-knowledge` 写入前做适配判断(建议而非硬拦),`distilling-knowledge` 对范围外 topic 的蒸馏块经同一人工闸门日落,hand-written 段逐字节保留。读侧兼容旧 `promoted-from`/`/promoted` marker,存量文件随首次蒸馏自动重写为新格式。
 
