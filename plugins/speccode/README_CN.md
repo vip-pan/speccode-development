@@ -64,8 +64,8 @@ speccode 是一个 Claude Code 流程编排插件,用一组 `/speccode:*` slash 
 
 | 命令 | 作用 | 前置(运行分支) |
 |---|---|---|
-| `/speccode:distilling-knowledge` | 从 spec/(全量)+ archive/(**增量**:只读未消费归档包,经 `knowledge/_distilled.meta.json` 追踪;已消费包整包跳过、其蒸馏块原样 carry forward 不重蒸)蒸馏 knowledge/ 各 topic 的 distilled 段;闸门区分 stale(包已删)与 superseded(被新包取代);只蒸 SDD 过程知识,范围外 topic 经闸门日落;删 sidecar 即强制全量重蒸(不设 `--full`);人工闸门后落盘,落盘即提交 | trunk 分支 |
-| `/speccode:recording-knowledge` | 知识直接记录进 hand-written 段(适配判断:过程知识收录,业务知识建议进外部 RAG;草稿 → 人工闸门 → 原子写),落盘即提交 | trunk 分支 |
+| `/speccode:distilling-knowledge` | 从 spec/(全量)+ archive/(**增量**:只读未消费归档包,经 `knowledge/_distilled.meta.json` 追踪;已消费包整包跳过、其蒸馏块原样 carry forward 不重蒸)蒸馏 knowledge/ 各 topic 的 distilled 段;闸门区分 stale(包已删)与 superseded(被新包取代);只蒸 SDD 过程知识,范围外 topic 经闸门日落;删 sidecar 即强制全量重蒸(不设 `--full`);人工闸门后落盘,落盘即提交 | chore/knowledge-* worktree 分支(creating-worktree 统一入口、finishing-worktree 统一收尾)|
+| `/speccode:recording-knowledge` | 知识直接记录进 hand-written 段(适配判断:过程知识收录,业务知识建议进外部 RAG;草稿 → 人工闸门 → 原子写),落盘即提交 | chore/knowledge-* worktree 分支(统一入口/收尾)|
 
 方法论:
 
@@ -216,7 +216,7 @@ CR 导致提问乱码。清洗逻辑位于 `lib/sanitize.mjs`(纯函数、有单
 speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>__<slug>.md`。
 
 - **untracked,多 worktree 共享**:memory 路径解析自**主仓根**的 `.speccode/`(与 config/state 一致),同一 feature 的多个 worktree 读写同一份文件;目录由插件自写 `.gitignore` 自忽略,不污染 `git status`。
-- **按 topic 分文件的探索记忆与 `_knowledge.md` 是 trunk 级例外**:exploring 在 trunk 上进行、不属于任何 feature,其结论写入 `memory/_exploring__<topic>.md`(每个 topic 一个文件;分期需求用 `<主题>-p1` 这类共同前缀);探索结论的承接宿主是 creating-worktree(普通需求/子需求,命中 slug 即原子 rename 迁移)与 creating-feature(大需求父 topic)。knowledge 系列命令同样从 trunk 跑,其维护摘要写入 `memory/_knowledge.md`。
+- **按 topic 分文件的探索记忆与 `_knowledge.md` 是 trunk 级例外**:exploring 在 trunk 上进行、不属于任何 feature,其结论写入 `memory/_exploring__<topic>.md`(每个 topic 一个文件;分期需求用 `<主题>-p1` 这类共同前缀);探索结论的承接宿主是 creating-worktree(普通需求/子需求,命中 slug 即原子 rename 迁移)与 creating-feature(大需求父 topic)。knowledge 系列命令经 creating-worktree 统一入口在 `chore/knowledge-*` worktree 分支上运行、经 finishing-worktree 统一收尾,其维护摘要仍写入 `memory/_knowledge.md`。
 - **命令入口读、出口写**:SDD 各命令开始时读本 feature 的 memory 恢复上下文,结束时把结论/决定/待办写回。
 - **长会话主动书写三判据**:① 一个阶段完成(如 propose 落盘、计划评审通过);② 上下文显著增长(关键决策增多);③ 经历 compact / 会话恢复后——命中任一即应主动写 memory,而不是等命令出口。
 
