@@ -93,7 +93,7 @@ git commit -m "docs(knowledge): distilling-knowledge adopts unified worktree ent
 - Consumes: 同 Task 1(creating-worktree / finishing-worktree / reconcile / write-memory)。
 - Produces: recording-knowledge 命令的新前置与新收尾文本(slug 默认值与 distilling 不同)。
 
-- [ ] **Step 1: 重写首行运行位置声明**
+- [x] **Step 1: 重写首行运行位置声明**
 
 将首段末尾的:
 
@@ -107,7 +107,7 @@ git commit -m "docs(knowledge): distilling-knowledge adopts unified worktree ent
 **应在 state 登记的 `chore/knowledge-*` worktree 分支上运行**(trunk 上运行时由本命令引导建分支,见 §3)。
 ```
 
-- [ ] **Step 2: 重写前置 §2-3(state 引导,slug 默认值不同)**
+- [x] **Step 2: 重写前置 §2-3(state 引导,slug 默认值不同)**
 
 将前置 §2(锚点「`git rev-parse --abbrev-ref HEAD` MUST 等于 `config.trunk`」)与 §3(锚点「`git branch --list 'chore/knowledge-*' --no-merged`」)整体替换为:
 
@@ -124,7 +124,7 @@ git commit -m "docs(knowledge): distilling-knowledge adopts unified worktree ent
 
 删除原 §3 全部特权机制语句(范围同 Task 1 Step 2)。原前置 §4-§5(read-knowledge / 骨架创建)内容不变,编号顺延。
 
-- [ ] **Step 3: 重写落盘段(直通 PR → finishing-worktree 引导)**
+- [x] **Step 3: 重写落盘段(直通 PR → finishing-worktree 引导)**
 
 将落盘段 item 3(**直通 PR**,锚点「创建前 MUST **查重**」)整段替换为:
 
@@ -134,12 +134,12 @@ git commit -m "docs(knowledge): distilling-knowledge adopts unified worktree ent
 
 将原 item 4(memory)触发条件句「PR 创建/复用(或 `pr_tool=none` 打印等效命令)**之后**」改为「finishing-worktree 收尾取得 PR url(或等效命令)**之后**」,其余不变;原 item 5(报告)同步改来源。
 
-- [ ] **Step 4: 校验特权条款零残留**
+- [x] **Step 4: 校验特权条款零残留**
 
 Run: `grep -n "no-merged\|不阻塞\|MUST NOT 创建\|checkout -b\|不运行 reconcile\|不开 git worktree\|不调用 finishing" plugins/speccode/commands/recording-knowledge.md`
 Expected: 零命中(exit 1)
 
-- [ ] **Step 5: 提交**
+- [x] **Step 5: 提交**
 
 ```bash
 git add plugins/speccode/commands/recording-knowledge.md
