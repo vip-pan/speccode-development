@@ -97,9 +97,11 @@ export function parseDistilledBlocks(text) {
 // current or legacy format — is replaced by the new block with the same
 // source, or dropped when its source is gone; kept and new blocks are always
 // written in the CURRENT format, so a legacy-marked file migrates on its
-// first rebuild. New sources are appended at the end (preceded by a blank
-// line). Everything outside markers passes through untouched, so hand-written
-// content is preserved byte-for-byte (split/join is lossless).
+// first rebuild. The layout is canonical: the hand-written section comes
+// first (its lines kept in order, byte-for-byte, only repositioned; trailing
+// blank lines collapse into the section separators), followed by the
+// distilled blocks — kept ones in file order, new sources in argument order —
+// with exactly one blank line between adjacent sections.
 //
 // `blocks` is validated up front: a duplicate `source` would silently drop
 // one gate-confirmed block (whichever the write path or the append loop
@@ -163,6 +165,48 @@ export function replaceDistilledBlocks(text, blocks) {
   // separators so a second run is byte-identical (idempotent).
   const handText = hand.join('\n').replace(/\n+$/, '');
   const sections = hand.length > 0 ? [handText, ...blockOut] : blockOut;
+  const joined = sections.join('\n\n');
+  return joined === '' || joined.endsWith('\n') ? joined : `${joined}\n`;
+}
+
+// Full rebuild of the hand-written region (design D4): replace everything
+// outside distilled blocks with `content`, preserving every distilled block
+// byte-for-byte (legacy format included — no migration here) and emitting
+// the canonical layout. `content` must not contain marker strings, or the
+// rebuilt file would be unparseable (same D5 guard as distilled bodies).
+export function replaceHandBlocks(text, content) {
+  const hand = String(content ?? '');
+  if (hand.includes('<!--') || hand.includes('-->')) {
+    throw new Error('knowledge: content contains marker string');
+  }
+  const lines = text === '' ? [] : String(text).split('\n');
+  const blockOut = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const isNew = DISTILLED_START.exec(line);
+    const m = isNew || LEGACY_PROMOTED_START.exec(line);
+    if (m) {
+      const end = isNew ? DISTILLED_END : LEGACY_PROMOTED_END;
+      let j = i + 1;
+      while (j < lines.length && lines[j].trim() !== end) {
+        if (DISTILLED_START.exec(lines[j]) || LEGACY_PROMOTED_START.exec(lines[j])) {
+          throw new Error('knowledge: nested distilled marker');
+        }
+        j += 1;
+      }
+      if (j >= lines.length) throw new Error('knowledge: unclosed distilled marker');
+      blockOut.push(lines.slice(i, j + 1).join('\n'));
+      i = j + 1;
+      continue;
+    }
+    if (line.trim() === DISTILLED_END || line.trim() === LEGACY_PROMOTED_END) {
+      throw new Error('knowledge: closing distilled marker without opening');
+    }
+    i += 1;
+  }
+  const handText = hand.replace(/\n+$/, '');
+  const sections = handText !== '' ? [handText, ...blockOut] : blockOut;
   const joined = sections.join('\n\n');
   return joined === '' || joined.endsWith('\n') ? joined : `${joined}\n`;
 }

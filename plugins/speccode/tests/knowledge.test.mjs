@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, realpathSync, rmSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { knowledgeRoot, assertSafeRel, listTopics, parseDistilledBlocks, replaceDistilledBlocks, buildIndex, writeKnowledge, distilledMetaPath, readConsumedArchives, writeConsumedArchives, addConsumedArchives, archiveRoot, listArchiveBundles, unconsumedArchives } from '../lib/knowledge.mjs';
+import { knowledgeRoot, assertSafeRel, listTopics, parseDistilledBlocks, replaceDistilledBlocks, replaceHandBlocks, buildIndex, writeKnowledge, distilledMetaPath, readConsumedArchives, writeConsumedArchives, addConsumedArchives, archiveRoot, listArchiveBundles, unconsumedArchives } from '../lib/knowledge.mjs';
 import { makeRepo } from './helpers/tmprepo.mjs';
 
 test('knowledgeRoot resolves to <worktree-root>/speccode/knowledge', () => {
@@ -253,6 +253,36 @@ test('replaceDistilledBlocks layout normalization is idempotent', () => {
   const twice = replaceDistilledBlocks(once, blocks);
   assert.equal(once, twice);
   assert.deepEqual(parseDistilledBlocks(once), [{ source: 'cap/one', body: 'b1' }]);
+});
+
+test('replaceHandBlocks replaces hand region and preserves distilled blocks byte-identical', () => {
+  const text = 'hand A\n<!-- distilled-from: cap/x -->\nbody\n<!-- /distilled -->\nhand B\n';
+  const out = replaceHandBlocks(text, 'new hand\n');
+  assert.equal(out, 'new hand\n\n<!-- distilled-from: cap/x -->\nbody\n<!-- /distilled -->\n');
+});
+
+test('replaceHandBlocks preserves legacy-format blocks unmigrated', () => {
+  const out = replaceHandBlocks('<!-- promoted-from: old/ -->\nbody\n<!-- /promoted -->\n', 'hand\n');
+  assert.equal(out, 'hand\n\n<!-- promoted-from: old/ -->\nbody\n<!-- /promoted -->\n');
+});
+
+test('replaceHandBlocks with no existing blocks writes content alone', () => {
+  assert.equal(replaceHandBlocks('# old\n', '# new\n'), '# new\n');
+});
+
+test('replaceHandBlocks with empty content removes the hand region', () => {
+  const out = replaceHandBlocks('hand\n<!-- distilled-from: cap/x -->\nb\n<!-- /distilled -->\n', '');
+  assert.equal(out, '<!-- distilled-from: cap/x -->\nb\n<!-- /distilled -->\n');
+});
+
+test('replaceHandBlocks rejects content containing marker strings', () => {
+  assert.throws(() => replaceHandBlocks('', 'a <!-- b'), /marker string/);
+  assert.throws(() => replaceHandBlocks('', 'a --> b'), /marker string/);
+});
+
+test('replaceHandBlocks throws on malformed markers', () => {
+  assert.throws(() => replaceHandBlocks('<!-- distilled-from: cap/x -->\nno end', 'h'));
+  assert.throws(() => replaceHandBlocks('<!-- /distilled -->\n', 'h'));
 });
 
 test('distilledMetaPath points at <root>/_distilled.meta.json', () => {
