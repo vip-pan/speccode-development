@@ -115,7 +115,7 @@ knowledge 根解析用当前 worktree 根(`--show-toplevel`),刻意区别于主�
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-15-knowledge-command-rename/ -->
-命令命名应见名知义、术语栈同词根:命令名 ↔ 块术语 ↔ marker ↔ verb mode ↔ lib 函数一致。动名词构词对齐 23 命令主流约定(`creating-feature`/`finishing-feature`/`proposing`/`syncing`/`archiving`),避免裸动词与动宾混用构词。
+命令命名应见名知义、术语栈同词根:命令名 ↔ 块术语 ↔ marker ↔ verb mode ↔ lib 函数一致。动名词构词对齐全部命令的主流约定(`creating-feature`/`finishing-feature`/`proposing`/`syncing`/`archiving`),避免裸动词与动宾混用构词。
 
 marker 迁移策略:写侧只产新格式,读侧永久双格式兼容旧格式,存量文件随首次全量重建自然迁移,无需专门迁移脚本。双格式解析时新旧混排按出现顺序统一进块列表,同一文件 start/end 格式必须匹配。
 

@@ -146,7 +146,7 @@ plan checkbox 从不被回写:writing-plans 在 plan 文档用 `- [ ]` checkbox 
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-readme-optimization/ -->
-遗留的 spec 内在矛盾:「命令命名空间」requirement 逐字列举 23 个命令名,与「文档版本信息不漂移」的『命令总数 MUST NOT 写死字面量』纪律相互抵触;readme-optimization 仅修正 21→23 stale,矛盾本身留待后续单独 spec 演进,新增命令时两个 requirement 会再撞。
+遗留的 spec 内在矛盾:「命令命名空间」requirement 逐字列举全部命令名,与「文档版本信息不漂移」的『命令总数 MUST NOT 写死字面量』纪律相互抵触;readme-optimization 仅修正 21→23 stale,矛盾本身留待后续单独 spec 演进,新增命令时两个 requirement 会再撞。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-09-02-askuserquestion-cr-sanitizer/ -->
