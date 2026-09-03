@@ -84,11 +84,11 @@ speccode 插件根 SHALL 位于仓库的 `plugins/speccode/`，并 MUST 含 `.cl
 
 ### Requirement: 命令命名空间
 
-speccode 的 23 个 slash 命令 SHALL 通过 `plugin.json` 的 `name: "speccode"` 自动获得 `/speccode:` 前缀命名空间,命令 markdown 位于 `plugins/speccode/commands/`(扁平 `.md`),SHALL NOT 通过 `commands/speccode/` 子目录前缀实现命名空间。
+speccode 的全部 slash 命令 SHALL 通过 `plugin.json` 的 `name: "speccode"` 自动获得 `/speccode:` 前缀命名空间,命令 markdown 位于 `plugins/speccode/commands/`(扁平 `.md`),SHALL NOT 通过 `commands/speccode/` 子目录前缀实现命名空间。
 
 #### Scenario: 安装后命令命名空间
 - **WHEN** 用户安装 speccode 插件后列出可用命令
-- **THEN** 23 个命令以 `/speccode:` 前缀形式出现:`init`、`exploring`、`creating-feature`、`creating-worktree`、`proposing`、`brainstorming`、`writing-plans`、`executing-plans`、`subagent-driven-development`、`dispatching-parallel-agents`、`test-driven-development`、`systematic-debugging`、`requesting-code-review`、`receiving-code-review`、`verification-before-completion`、`syncing`、`archiving`、`finishing-worktree`、`finishing-feature`、`status`、`reset`、`recording-knowledge`、`distilling-knowledge`
+- **THEN** 24 个命令以 `/speccode:` 前缀形式出现:`init`、`exploring`、`creating-feature`、`creating-worktree`、`proposing`、`brainstorming`、`writing-plans`、`applying`、`executing-plans`、`subagent-driven-development`、`dispatching-parallel-agents`、`test-driven-development`、`systematic-debugging`、`requesting-code-review`、`receiving-code-review`、`verification-before-completion`、`syncing`、`archiving`、`finishing-worktree`、`finishing-feature`、`status`、`reset`、`recording-knowledge`、`distilling-knowledge`
 
 #### Scenario: 旧知识命令名不再出现
 - **WHEN** 用户安装含本变更的版本后列出可用命令
@@ -115,12 +115,12 @@ speccode 的 23 个 slash 命令 SHALL 通过 `plugin.json` 的 `name: "speccode
 仓库 SHALL 维护三层文档,职责如下:
 
 - 根 `README.md`(英文,`marketplace 用户门面`)与根 `README_CN.md`(简体中文,结构一致):两版 SHALL 各含——一句话定位 + badges(含 license、平台、stars;含**动态版本徽章**:经 shields.io `dynamic/json` 从 raw `plugins/speccode/.claude-plugin/plugin.json` 读取 `$.version`,MUST NOT 硬编码版本字面量;含 **CI 状态徽章**链接 `.github/workflows/test.yml`)+ 痛点(Why,可表为 ✅ 可扫读清单)+ 体验 demo + Quickstart 最小闭环(**前置 Prerequisites 一行**:Node ≥ 24 + 可选 gh/glab)+ 命令速览 + 三层分支拓扑图 + 对比定位(可表为**特性矩阵**:行=能力,列=speccode/superpowers/spec-kit/手工约定)+ 理念 + 文档地图 + 贡献方式(可指向根 `CONTRIBUTING.md`)+ License 节;marketplace 描述与插件列表 MUST 保留;两版 SHALL 在文档前部互相提供语言切换链接;中文版为英文版的全量翻译,结构(段)一一对应。
-- `plugins/speccode/README.md`(英文)与 `plugins/speccode/README_CN.md`(简体中文,`插件设计文档`):两版 SHALL 含 23 命令表 / 三层分支拓扑图 / R1-R13 风险 / 0.1→0.2 迁移对照表;两版节号编号 SHALL 一致(§1-14);两版 SHALL 在 §1 之后含 **Table of Contents**(锚点列表,覆盖 §1-14);两版 SHALL 在文档前部声明「用户门面见根 README」指针且指向**对应语言**的根 README;依赖要求(git / gh / glab / Node ≥ 24)SHALL 前置到文档前部;两版 SHALL 在文档前部互相提供语言切换链接。
+- `plugins/speccode/README.md`(英文)与 `plugins/speccode/README_CN.md`(简体中文,`插件设计文档`):两版 SHALL 含 24 命令表 / 三层分支拓扑图 / R1-R13 风险 / 0.1→0.2 迁移对照表;两版节号编号 SHALL 一致(§1-14);两版 SHALL 在 §1 之后含 **Table of Contents**(锚点列表,覆盖 §1-14);两版 SHALL 在文档前部声明「用户门面见根 README」指针且指向**对应语言**的根 README;依赖要求(git / gh / glab / Node ≥ 24)SHALL 前置到文档前部;两版 SHALL 在文档前部互相提供语言切换链接。
 - `CLAUDE.md`(开发文档):SHALL 说明根 README 与插件 README 的分工(含中英文四文件映射);SHALL 含发布纪律指针(plugin.json version bump 必须同步 CHANGELOG.md);SHALL 含「多语言维护」说明——两版文档 SHALL 结构对齐(段/节为锚),任何内容改动 MUST 同步全部语言版本;SHALL NOT 硬编码测试用例数量。
 
 #### Scenario: 四 README 文件各司其职
 - **WHEN** 检查仓库根 README.md、README_CN.md、plugins/speccode/README.md、plugins/speccode/README_CN.md、CLAUDE.md
-- **THEN** 根两版含 marketplace 描述与插件列表;插件两版含 23 命令表与三层拓扑图;CLAUDE.md 含引擎三层架构与测试命令,且无对 `.claude/speccode/` 旧路径的引用
+- **THEN** 根两版含 marketplace 描述与插件列表;插件两版含 24 命令表与三层拓扑图;CLAUDE.md 含引擎三层架构与测试命令,且无对 `.claude/speccode/` 旧路径的引用
 
 #### Scenario: 根 README 两版门面要素齐全且结构一致
 - **WHEN** 检查仓库根 README.md 与 README_CN.md
@@ -140,7 +140,7 @@ speccode 的 23 个 slash 命令 SHALL 通过 `plugin.json` 的 `name: "speccode
 
 #### Scenario: 用户文档与 v2 一致
 - **WHEN** 检查 `plugins/speccode/README.md` 与 `plugins/speccode/README_CN.md`
-- **THEN** 两版命令表 MUST 为 23 个新命令,拓扑图 MUST 为 trunk/feature/worktree 三层,且 MUST 含 0.1→0.2 迁移对照表,不存在 display / `-complete` 分支的现行行为描述
+- **THEN** 两版命令表 MUST 为 24 个命令,拓扑图 MUST 为 trunk/feature/worktree 三层,且 MUST 含 0.1→0.2 迁移对照表,不存在 display / `-complete` 分支的现行行为描述
 
 ### Requirement: 仓库层重命名
 

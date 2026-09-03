@@ -44,7 +44,7 @@
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-11-memory-append-newline/ -->
-**条目分隔责任下放给调用方是结构性陷阱**:21 个命令文档的 heredoc 示例天然产生"前条无尾换行 + 新条无头换行"组合,靠每个调用点自觉加 \n 已被打破过一次。引擎兜底后命令文档不写换行约定也天然安全。
+**条目分隔责任下放给调用方是结构性陷阱**:各命令文档的 heredoc 示例天然产生"前条无尾换行 + 新条无头换行"组合,靠每个调用点自觉加 \n 已被打破过一次。引擎兜底后命令文档不写换行约定也天然安全。
 
 **spec 与实现漂移**:条款仍写"append 模式的读-改-写"而实现早已改为单次 O_APPEND——此类漂移在勘探时一并核实归位。
 <!-- /distilled -->
@@ -146,7 +146,7 @@ plan checkbox 从不被回写:writing-plans 在 plan 文档用 `- [ ]` checkbox 
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-16-readme-optimization/ -->
-遗留的 spec 内在矛盾:「命令命名空间」requirement 逐字列举 23 个命令名,与「文档版本信息不漂移」的『命令总数 MUST NOT 写死字面量』纪律相互抵触;readme-optimization 仅修正 21→23 stale,矛盾本身留待后续单独 spec 演进,新增命令时两个 requirement 会再撞。
+遗留的 spec 内在矛盾:「命令命名空间」requirement 逐字列举全部命令名,与「文档版本信息不漂移」的『命令总数 MUST NOT 写死字面量』纪律相互抵触;readme-optimization 仅修正 21→23 stale,矛盾本身留待后续单独 spec 演进,新增命令时两个 requirement 会再撞。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-09-02-askuserquestion-cr-sanitizer/ -->

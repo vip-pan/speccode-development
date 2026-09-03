@@ -35,7 +35,7 @@
 
 **append 条目边界规则**:既有内容非空且不以换行结尾、且追加内容不以换行开头时,在边界插入恰好一个换行(作为同一次追加写的一部分);其余情况原样追加,不做更多规范化。分隔判定需先读现有内容,读-写之间理论上可被并发追加穿插——代价至多一条粘连行(装饰性),绝不丢数据;O_APPEND 不丢写 invariant 保持。
 
-**边界责任归属**:条目分隔由引擎保证,调用方传纯内容,不依赖每个调用点自觉。把分隔责任下放给 21 个命令文档靠纪律维护是结构性陷阱,已被打破过一次。
+**边界责任归属**:条目分隔由引擎保证,调用方传纯内容,不依赖每个调用点自觉。把分隔责任下放给每个命令文档靠纪律维护是结构性陷阱,已被打破过一次。
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-11-orphan-false-alarm/ -->
@@ -115,7 +115,7 @@ knowledge 根解析用当前 worktree 根(`--show-toplevel`),刻意区别于主�
 <!-- /distilled -->
 
 <!-- distilled-from: archive/2026-08-15-knowledge-command-rename/ -->
-命令命名应见名知义、术语栈同词根:命令名 ↔ 块术语 ↔ marker ↔ verb mode ↔ lib 函数一致。动名词构词对齐 23 命令主流约定(`creating-feature`/`finishing-feature`/`proposing`/`syncing`/`archiving`),避免裸动词与动宾混用构词。
+命令命名应见名知义、术语栈同词根:命令名 ↔ 块术语 ↔ marker ↔ verb mode ↔ lib 函数一致。动名词构词对齐全部命令的主流约定(`creating-feature`/`finishing-feature`/`proposing`/`syncing`/`archiving`),避免裸动词与动宾混用构词。
 
 marker 迁移策略:写侧只产新格式,读侧永久双格式兼容旧格式,存量文件随首次全量重建自然迁移,无需专门迁移脚本。双格式解析时新旧混排按出现顺序统一进块列表,同一文件 start/end 格式必须匹配。
 
