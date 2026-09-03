@@ -193,18 +193,18 @@ git add plugins/speccode/commands/writing-plans.md && git commit -m "docs(specco
 - Consumes: delta 真源「review 无条件化」「命令衔接链」;requesting-code-review 的 BASE 契约。
 - Produces: 三条执行路径一致的 review 终点。
 
-- [ ] **Step 1: executing-plans.md**——「### 第 3 步:完成开发」中「写记忆」之前插入:
+- [x] **Step 1: executing-plans.md**——「### 第 3 步:完成开发」中「写记忆」之前插入:
 
   「- **code review(必经)**:全部任务完成并验证后 MUST 调用 `/speccode:requesting-code-review` 派发审查(BASE 用第 1 步加载 plan 前记录的 commit;开始执行时未记录则用 plan 簿记 commit 之前的 head);审查反馈按 `/speccode:receiving-code-review` 核实处理。**review 未通过前 MUST NOT 进入收尾路由(syncing/archiving)。**」
 
-- [ ] **Step 2: subagent-driven-development.md**——「## 何时使用」决策树中 `"Manual execution or brainstorm first"` 相关说明处补充:无 plan 的出口在 speccode 分级体系下 = Tier 1 的 `/speccode:applying`(准入:tier 字段为 1 且无 plan)或 Tier 3 的先 `/speccode:brainstorming`;文字与图节点 label 都要体现(图节点可改为 "applying (tier 1) or brainstorm first")。
+- [x] **Step 2: subagent-driven-development.md**——「## 何时使用」决策树中 `"Manual execution or brainstorm first"` 相关说明处补充:无 plan 的出口在 speccode 分级体系下 = Tier 1 的 `/speccode:applying`(准入:tier 字段为 1 且无 plan)或 Tier 3 的先 `/speccode:brainstorming`;文字与图节点 label 都要体现(图节点可改为 "applying (tier 1) or brainstorm first")。
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 Run: `rg -c "requesting-code-review" plugins/speccode/commands/executing-plans.md && rg -c "applying" plugins/speccode/commands/subagent-driven-development.md`
 Expected: 前者 ≥ 1,后者 ≥ 1
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add plugins/speccode/commands/executing-plans.md plugins/speccode/commands/subagent-driven-development.md && git commit -m "docs(speccode): review routing for executing-plans, sdd no-plan exit to applying"
