@@ -8,6 +8,23 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-03
+
+> EN: Knowledge maintenance joins the unified entry — distilling/recording now run on state-registered `chore/knowledge-*` worktree branches and finish via finishing-worktree, killing the squash-only false-"unfinished" bug.
+
+### BREAKING
+
+- **知识维护迁入统一入口**:distilling-knowledge / recording-knowledge 不再从 trunk 裸 bootstrap `chore/knowledge-*` 维护分支(0.2.5 的 trunk 直通机制移除);改为运行于 state 登记的 `chore/knowledge-*` worktree 分支(trunk 上运行时由命令引导经 `/speccode:creating-worktree` 以 type=`chore` 创建),收尾经 `/speccode:finishing-worktree`(测试门禁 + 按 `merge_target` 的 PR 路由 + squash 探测 + 切回 merge_target)取代内置非阻塞直通 PR。升级时在途的旧裸维护分支无 state 登记,新版不识别、不可续跑——用新 slug 建分支后 cherry-pick 在途提交。知识维护现需过测试门禁(纯 docs 变更即绿)。
+- 引导创建时防护大需求父实体劫持:creating-worktree 检测到父实体并提议集成基点时,知识命令 MUST 坚持基点 trunk(知识维护不挂在任何大需求下)。
+
+### Fixed
+
+- **squash-only 合并下的「未完成」误判**:`git branch --no-merged` 对 squash 合并过的分支永真,导致已收尾的维护分支被永远视为未完成、每次运行弹续跑询问且 PR 查重无法命中;「未完成」判定改为 state 查询(status ∈ {pending, in_progress, pr_open}),squash 合并后 state 已推进/删除,误报消失。
+
+### Changed
+
+- knowledge-set 主规格「知识维护分支与直通 PR」requirement 重写(7 scenarios,含 squash 误报回归锚点),经 syncing 合入;README ×2(中英)同步两命令运行位置描述。
+
 ## [0.3.0] - 2026-09-03
 
 > EN: Two-layer branch topology (v3) — the default feature layer is removed: dev branches cut straight from trunk, integration branches become opt-in for large requirements.
@@ -186,7 +203,8 @@ v2 全量迭代:四层拓扑收敛为三层、SDD 方法论与文档生命周期
 - 「文档剥离四步走」与 finish 阶段 `commit --amend` 折叠:保证 trunk 上功能提交为单一语义 commit,display reset 不误删文档。
 - GitHub / GitLab remote 探测,自动选择 `gh` / `glab` CLI,无 CLI 时降级为打印等效命令。
 
-[Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/vip-pan/speccode-development/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/vip-pan/speccode-development/compare/v0.2.6...v0.3.0
 [0.2.6]: https://github.com/vip-pan/speccode-development/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/vip-pan/speccode-development/compare/v0.2.4...v0.2.5
