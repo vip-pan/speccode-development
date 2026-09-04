@@ -221,7 +221,7 @@ git commit -m "docs(readme): add The Basic Workflow numbered steps (EN/CN)"
 **Interfaces:**
 - Consumes: 无。Produces: 普通需求路径演示(spec delta「体验 demo(普通需求路径)」落地)。
 
-- [ ] **Step 1: EN console 块替换为**
+- [x] **Step 1: EN console 块替换为**
 
 ````markdown
 ```console
@@ -240,7 +240,7 @@ $ /speccode:finishing-worktree
 ```
 ````
 
-- [ ] **Step 2: CN console 块替换为**
+- [x] **Step 2: CN console 块替换为**
 
 ````markdown
 ```console
@@ -259,12 +259,12 @@ $ /speccode:finishing-worktree
 ```
 ````
 
-- [ ] **Step 3: 校验**
+- [x] **Step 3: 校验**
 
 Run: `grep -n 'creating-feature\|finishing-feature\|merged back into feature\|merged to trunk' README.md README_CN.md`
 Expected: 零输出(demo 段不再含 opt-in 命令与 v2 文案;贡献段的 creating-feature 提及属 Task 8 处理,若此时仍命中,记录待 Task 8 清零)。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add README.md README_CN.md
