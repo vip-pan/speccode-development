@@ -343,7 +343,7 @@ git commit -m "docs(readme): windows line in prerequisites, quickstart via creat
 **Interfaces:**
 - Consumes: 无。Produces: 双层拓扑图(spec delta「双层分支拓扑图」落地)。
 
-- [ ] **Step 1: EN 整节替换为**
+- [x] **Step 1: EN 整节替换为**
 
 `````markdown
 ## Two-Layer Branch Topology
@@ -364,7 +364,7 @@ origin/trunk ── integration branch ──┬── feature/s1 ── finishi
 See [plugin README §3](./plugins/speccode/README.md) for the full topology and key points.
 `````
 
-- [ ] **Step 2: CN 整节替换为**
+- [x] **Step 2: CN 整节替换为**
 
 `````markdown
 ## 双层分支拓扑
@@ -385,12 +385,12 @@ origin/trunk ── 集成分支 ──┬── feature/s1 ── finishing-wor
 完整拓扑与要点见 [插件 README §3](./plugins/speccode/README_CN.md)。
 `````
 
-- [ ] **Step 3: 校验**
+- [x] **Step 3: 校验**
 
 Run: `grep -n 'Three-Layer\|三层分支拓扑\|worktree-a' README.md README_CN.md`
 Expected: 零输出。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add README.md README_CN.md
