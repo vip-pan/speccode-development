@@ -36,7 +36,7 @@
 - Consumes: 无(首任务)
 - Produces: `plugins/speccode/skills/<name>/SKILL.md` × 24,frontmatter 只含 `description`;`plugins/speccode/commands/` 目录消失。后续所有任务以 skills/ 路径为真源。
 
-- [ ] **Step 1: 建目录并 git mv 24 个文件(保 rename 历史)**
+- [x] **Step 1: 建目录并 git mv 24 个文件(保 rename 历史)**
 
 在 worktree 根执行:
 
@@ -51,7 +51,7 @@ done
 
 mv 后 `git status` 应显示 24 条 `renamed:` 记录。
 
-- [ ] **Step 2: frontmatter 删 category/tags(仅这两类行)**
+- [x] **Step 2: frontmatter 删 category/tags(仅这两类行)**
 
 ```bash
 sed -i '' '/^category: /d;/^tags: /d' plugins/speccode/skills/*/SKILL.md
@@ -59,11 +59,11 @@ sed -i '' '/^category: /d;/^tags: /d' plugins/speccode/skills/*/SKILL.md
 
 (已核对:category/tags 行全部位于各文件 frontmatter 第 3-4 行,正文无以 `category: ` / `tags: ` 开头的行,sed 行首锚定安全。)
 
-- [ ] **Step 2b: 更新 tests/cli.test.mjs 6 处读路径(执行期范围修正,人类伙伴 2026-09-04 确认折入本提交)**
+- [x] **Step 2b: 更新 tests/cli.test.mjs 6 处读路径(执行期范围修正,人类伙伴 2026-09-04 确认折入本提交)**
 
 6 处 `join(__dirname, '..', 'commands', '<name>.md')` 改为 `join(__dirname, '..', 'skills', '<name>', 'SKILL.md')`(行 1000 executing-plans / 1008 subagent-driven-development / 1018+1025 init / 1033 六命令数组 / 1083 syncing;数组条目 `'<name>.md'` 改为 `'<name>'`)。断言内容零改动(命令正文未变,断言语义不变)。
 
-- [ ] **Step 3: 验证结构与 frontmatter**
+- [x] **Step 3: 验证结构与 frontmatter**
 
 ```bash
 find plugins/speccode/skills -name SKILL.md | wc -l
@@ -75,7 +75,7 @@ head -4 plugins/speccode/skills/exploring/SKILL.md
 
 Expected: 第一条输出 `24`;`commands/ 已移除`;grep 残留检查无输出;description 计数 `24`;exploring 头 4 行为 `---` + description + `---`。
 
-- [ ] **Step 4: 运行全量测试(基线不变)**
+- [x] **Step 4: 运行全量测试(基线不变)**
 
 ```bash
 node --test ./plugins/speccode/tests/*.test.mjs 2>&1 | tail -3
@@ -83,7 +83,7 @@ node --test ./plugins/speccode/tests/*.test.mjs 2>&1 | tail -3
 
 Expected: `fail 0`(引擎零波及确认)。
 
-- [ ] **Step 5: 提交(mv 与 frontmatter 收敛同一提交,design D4)**
+- [x] **Step 5: 提交(mv 与 frontmatter 收敛同一提交,design D4)**
 
 ```bash
 git add -A plugins/speccode
@@ -241,6 +241,14 @@ grep -n 'commands/' CHANGELOG.md
 ```
 
 Expected: 仅命中 `[0.5.1]` 及更早历史小节(`[0.6.0]` 新小节按 Task 6 措辞书写,不视为残留)。
+
+补验路径拼接形态(Task 1 审查发现的 grep 盲区——带斜杠模式匹配不到 `join(..., 'commands', ...)`):
+
+```bash
+grep -rn "'commands'" --include='*.mjs' plugins/ scripts/
+```
+
+Expected: 无输出。
 
 - [ ] **Step 2: 全量测试**
 
