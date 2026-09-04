@@ -231,12 +231,14 @@ git commit -m "docs(knowledge): sync command-layer snapshot to skills/ layout"
 - Consumes: Task 1-4 的全部产出
 - Produces: 「全仓无 commands/ 路径残留」的验证证据(供 code review 与 finishing-worktree 引用)
 
-- [ ] **Step 1: 全仓 grep commands/ 清扫**
+- [ ] **Step 1: 全仓 grep commands/ 清扫(执行期修正:排除清单增补 `speccode/spec/`)**
+
+> 主规格 `speccode/spec/` 的 commands/ 表述属 pre-syncing 预期态:本变更的 delta(propose/specs/plugin-packaging/spec.md,4 条 MODIFIED)恰覆盖主规格全部 5 处命中,由收尾链路的 `/speccode:syncing` 合并消除;终局零残留校验由 syncing 自带的全仓 grep 承担(禁区 = 旧名仅允许命中 archive/、CHANGELOG 历史小节)。本步清扫因此排除 `speccode/spec/`。
 
 ```bash
 grep -rn 'commands/' --include='*.md' --include='*.mjs' --include='*.json' --include='*.sh' --include='*.yml' \
   CLAUDE.md README.md README_CN.md CONTRIBUTING.md plugins/ scripts/ speccode/ .github/ .claude-plugin/ \
-  | grep -v 'speccode/archive/\|speccode/changes/\|speccode/knowledge/_index.md'
+  | grep -v 'speccode/archive/\|speccode/changes/\|speccode/spec/\|speccode/knowledge/_index.md'
 ```
 
 Expected: 无输出(README×4 重验防漂移;CONTRIBUTING.md 若含 commands/ 路径,停下报告)。另验 CHANGELOG 历史小节合法残留:
