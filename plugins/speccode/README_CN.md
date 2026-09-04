@@ -21,7 +21,7 @@ speccode 是一个 Claude Code 流程编排插件,用一组 `/speccode:*` slash 
 ## 目录
 
 1. [speccode 是什么](#1-speccode-是什么)
-2. [24 个命令快速参考表](#2-24-个命令快速参考表)
+2. [命令快速参考表](#2-命令快速参考表)
 3. [双层分支拓扑图](#3-双层分支拓扑图)
 4. [开发流程](#4-开发流程)
 5. [文档目录](#5-文档目录)
@@ -35,7 +35,7 @@ speccode 是一个 Claude Code 流程编排插件,用一组 `/speccode:*` slash 
 13. [未解决问题](#13-未解决问题)
 14. [⚠ 重要警告](#14-⚠-重要警告)
 
-## 2. 24 个命令快速参考表
+## 2. 命令快速参考表
 
 生命周期:
 
@@ -65,8 +65,8 @@ speccode 是一个 Claude Code 流程编排插件,用一组 `/speccode:*` slash 
 
 | 命令 | 作用 | 前置(运行分支) |
 |---|---|---|
-| `/speccode:distilling-knowledge` | 从 spec/(全量读——新鲜度锚点)+ archive/(**增量**:只读未消费归档包,经 `knowledge/_distilled.meta.json` 追踪,纯读成本控制)蒸馏 knowledge/ 各 topic;每次运行都把既有蒸馏块对照当前 spec 做新鲜度审查;蒸馏块以能力为键(`<!-- distilled-from: cap/<slug> -->`,每文件每能力一块,upsert——后蒸覆盖先蒸;退役知识经闸门附理由删除,不留墓碑);旧来源块首次运行时经闸门映射为能力键;只蒸 SDD 过程知识,范围外 topic 经闸门日落;删 sidecar 即强制重读全部归档(不设 `--full`);人工闸门后落盘,落盘即提交 | chore/knowledge-* worktree 分支(creating-worktree 统一入口、finishing-worktree 统一收尾)|
-| `/speccode:recording-knowledge` | 知识直接记录进 hand-written 段(适配判断:过程知识收录,业务知识建议进外部 RAG;草稿 → 人工闸门 → 经 `replace-hand` 原子整写,distilled 块逐字节保留;每次运行同时整理该 topic 既有 hand-written 段——合并/删除附理由,裁决权归当下用户),落盘即提交 | chore/knowledge-* worktree 分支(统一入口/收尾)|
+| `/speccode:distilling-knowledge` | 从 spec/(全量读——新鲜度锚点)+ archive/(**增量**,经 `knowledge/_distilled.meta.json` 追踪)蒸馏 knowledge/ 各 topic;蒸馏块以能力为键、每次运行 upsert,且逐块对照当前 spec 做新鲜度审查;人工闸门后落盘,落盘即提交 | chore/knowledge-* worktree 分支(creating-worktree 统一入口、finishing-worktree 统一收尾)|
+| `/speccode:recording-knowledge` | 知识直接记录进 hand-written 段(适配判断:过程知识收录,业务知识建议进外部 RAG;草稿 → 人工闸门 → 经 `replace-hand` 原子整写,distilled 块逐字节保留;每次运行同时整理该 topic 既有 hand-written 段),落盘即提交 | chore/knowledge-* worktree 分支(统一入口/收尾)|
 
 方法论:
 

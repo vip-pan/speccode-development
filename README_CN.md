@@ -1,33 +1,52 @@
 # speccode
 
-基于 Claude Code 的整套 SDD(规格驱动开发)与自动化开发体系——不只是插件,而是一套完整方法论:多需求并行开发、spec 文档仓内托管、PR 流程标准化,外加自托管工具链 dogfood 整条工作流。`speccode` 插件(24 个 `/speccode:*` 命令)是把 SDD 方法论(探索/文档/计划/子代理执行/评审)固化成默认路径的运行时;本仓库还托管规格主档(`speccode/spec/`)、每次变更的归档,以及自动化本仓库自身开发的开发工作流 skills。
+**基于 Claude Code 的整套 SDD(规格驱动开发)与自动化开发体系** —— 多需求并行开发、spec 文档仓内托管、PR 流程标准化,由全套 `/speccode:*` 命令固化为默认路径。本仓库 dogfood 全部成果:规格主档、每次变更的归档、自动化仓库自身开发的开发工作流 skills,全部仓内托管。
 
 [English](README.md) | [简体中文](README_CN.md)
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![platform: macOS/Linux](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)]() [![version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/vip-pan/speccode-development/main/plugins/speccode/.claude-plugin/plugin.json&query=$.version&label=version&color=blue)](https://github.com/vip-pan/speccode-development/releases) [![tests](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml/badge.svg)](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml) [![GitHub stars](https://img.shields.io/github/stars/vip-pan/speccode-development)]()
 
+## 安装
+
+```bash
+/plugin marketplace add vip-pan/speccode-development
+/plugin install speccode@speccode-development
+```
+
+依赖 [Node.js ≥ 24](#前置依赖) 与 `git`。安装后命令以 `/speccode:` 前缀出现,如 `/speccode:init`、`/speccode:status`、`/speccode:finishing-worktree`。
+
 ## 为什么用 speccode
 
-- ✅ **多需求并行** —— trunk / feature / worktree 三层拓扑,对账算法自动归属每个 worktree,多 feature、多 worktree 并行施工互不干扰。
+- ✅ **多需求并行** —— 双层拓扑:开发分支(`<type>/<slug>`,git worktree)从 trunk 一步直达;对账算法自动归属每个 worktree,多需求并行施工互不干扰。
 - ✅ **文档仓内托管** —— spec 文档(`speccode/changes → spec/ → archive/`)所有分支 tracked、落盘即提交,随 PR 链路上 trunk。
-- ✅ **流程标准化** —— 24 命令 + hooks(14 个生命周期事件)+ 跨会话 memory,团队约定变成可执行原语。
+- ✅ **流程标准化** —— 全套 `/speccode:*` 命令 + 生命周期 hooks(封闭枚举)+ 跨会话 memory,团队约定变成可执行原语。
 - ✅ **自托管自动化开发** —— 本仓库用 speccode 开发自身(dogfood):每次变更走完整 SDD 链路,规格主档与归档仓内托管,开发工作流 skills 自动化仓库自身流程。一个可运行的自动化开发体系样板,而不只是一个待安装的插件。
+
+## 基础工作流
+
+1. **exploring** —— 在 trunk 上把需求聊清楚,出口判定形态(单需求 / 多个独立 / 大需求)。
+2. **creating-worktree** —— 从 trunk 一步切出开发分支(git worktree),基线测试全绿。
+3. **proposing** —— 落地 proposal / design / specs / tasks 四类文档,落盘即提交,出口定层。
+4. **applying**(极小需求)或 **writing-plans + subagent-driven-development / executing-plans** —— 实现。
+5. **requesting-code-review** —— 派发审查子代理,技术化处理反馈。
+6. **syncing → archiving** —— delta 并入规格主档,归档本次变更。
+7. **finishing-worktree** —— 测试门禁,PR → trunk。(大需求:本地 squash 汇入 opt-in 集成分支,终局 finishing-feature。)
 
 ## 看它干活
 
 ```console
 $ /speccode:init                      # 探测远端/主干/代码智能工具,写 .speccode/config.json
 ✓ config 就绪: trunk=main, remote=origin, pr_tool=gh
-$ /speccode:creating-feature chore/payment-api
-✓ 功能分支已建并推送,state 已登记
 $ /speccode:creating-worktree
-✓ worktree 已切出,基线测试全通过
+✓ feature/demo-api 已切出到独立 worktree,基线测试全通过
 $ /speccode:proposing
 ✓ proposal/design/specs/tasks 四类文档落盘即提交
+$ /speccode:applying                  # Tier 1:按 tasks.md 逐条实现
+✓ 条目实现、勾选、簿记提交完成
+$ /speccode:requesting-code-review
+✓ 审查通过
 $ /speccode:finishing-worktree
-✓ 测试门禁通过,成果合并回 feature
-$ /speccode:finishing-feature
-✓ 单 PR → trunk 已合并,回到 main
+✓ 测试门禁通过,PR 已开往 trunk
 ```
 
 ## 前置依赖
@@ -35,23 +54,18 @@ $ /speccode:finishing-feature
 - **Node.js ≥ 24** —— 引擎运行于 Node(纯 ESM、零第三方依赖)
 - `git`
 - `gh` CLI(GitHub)或 `glab` CLI(GitLab)—— 可选;未安装时 `pr_tool` 自动降级为 `none`,命令会打印等价命令供你手动执行
+- **Windows 不支持** —— 仅 macOS / Linux
 
 ## Quickstart (5 分钟最小闭环)
 
-1. 安装插件:
+1. 先[安装](#安装)插件。
+2. 在你的项目里运行 `/speccode:init` 初始化配置。
+3. 运行 `/speccode:creating-worktree` 切出首个开发分支(git worktree),基线测试转绿。
+4. 运行 `/speccode:status` 查看全貌。
 
-   ```bash
-   /plugin marketplace add vip-pan/speccode-development
-   /plugin install speccode@speccode-development
-   ```
+从需求到 PR 的完整路径见[基础工作流](#基础工作流)。
 
-2. 运行 `/speccode:init` 初始化配置。
-3. `/speccode:creating-feature` 建首个功能分支,`/speccode:creating-worktree` 切出开发 worktree。
-4. `/speccode:status` 查看全貌。
-
-安装后命令以 `/speccode:` 前缀出现,如 `/speccode:init`、`/speccode:status`、`/speccode:finishing-feature`。
-
-## 24 个命令速览
+## 命令速览
 
 | 组 | 命令 |
 |---|---|
@@ -64,26 +78,33 @@ $ /speccode:finishing-feature
 
 流程按需求体量分三层:极小需求可走 Tier 1(proposing 后由 `/speccode:applying` 按 tasks.md 逐条手动实现),中小型走 writing-plans + SDD/executing-plans,复杂需求先 brainstorming。
 
-## 三层分支拓扑
+## 双层分支拓扑
 
 ```
-origin/trunk ── feature/<slug> ──┬── worktree-a(并行施工)
-                                 └── worktree-b(并行施工)
-spec 文档在所有分支 tracked,随 PR 链路上 trunk
+普通需求(默认):
+origin/trunk ──┬── feature/a(开发分支 = git worktree)── finishing-worktree:测试门禁 → PR → trunk
+               ├── feature/b(并行)                    ── ─┘
+               └── ...
+     speccode/ 规格文档在所有分支 tracked,随 PR 链路上 trunk
+
+大需求(opt-in):
+origin/trunk ── 集成分支 ──┬── feature/s1 ── finishing-worktree:本地 squash
+                          └── feature/s2 ── ─┘
+                               finishing-feature:children 全 completed → 单 PR → trunk
 ```
 
 完整拓扑与要点见 [插件 README §3](./plugins/speccode/README_CN.md)。
 
 ## 和谁比
 
-| 能力 | speccode | [superpowers](https://github.com/obra/superpowers) | [spec-kit](https://github.com/github/spec-kit) | 手工约定 |
-|---|---|---|---|---|
-| 三层分支拓扑 + 对账 | ✅ | — | — | — |
-| spec 文档仓内托管(全分支 tracked) | ✅ | — | 部分 | — |
-| Claude Code 原生插件 | ✅ | ✅ | —(跨 agent CLI) | — |
-| SDD 方法论(探索/文档/计划/执行/评审) | ✅(自包含移植) | ✅(来源) | — | — |
-| 生命周期 hooks + 跨会话 memory | ✅ | — | — | — |
-| PR/MR 流程标准化 | ✅ | — | — | — |
+| 能力 | speccode | [superpowers](https://github.com/obra/superpowers) | [spec-kit](https://github.com/github/spec-kit) | [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) | 手工约定 |
+|---|---|---|---|---|---|
+| 双层分支拓扑 + 对账(多 worktree 并行) | ✅ | — | — | — | — |
+| spec 文档仓内托管(全分支 tracked) | ✅ | — | 部分 | 部分 | — |
+| Claude Code 原生插件 | ✅ | ✅ | —(跨 agent CLI) | —(npx 安装器) | — |
+| SDD 方法论(探索/文档/计划/执行/评审) | ✅(自包含移植) | ✅(来源) | — | ✅(自有体系) | — |
+| 生命周期 hooks + 跨会话 memory | ✅ | — | — | — | — |
+| PR/MR 流程标准化 | ✅ | — | — | — | — |
 
 手工约定把「文档放哪 / 从哪个分支切 / PR 谁开」留给人脑,speccode 把三者固化为默认路径。
 
@@ -95,11 +116,15 @@ spec 文档在所有分支 tracked,随 PR 链路上 trunk
 
 | 文档 | 内容 |
 |---|---|
-| [插件 README](./plugins/speccode/README_CN.md) | 24 命令详表、三层拓扑、R1-R13 风险、0.1→0.2 迁移(插件设计文档) |
+| [插件 README](./plugins/speccode/README_CN.md) | 全套命令详表、双层拓扑、R1-R13 风险、0.1→0.2 迁移(插件设计文档) |
 | [CHANGELOG](./CHANGELOG.md) | 版本发布记录(Keep a Changelog,全中文) |
 | [CLAUDE.md](./CLAUDE.md) | 开发文档:引擎三层架构、测试约定、speccode 工作流 |
 | `support/` | 开发工作流 skill(真源)与辅助脚本——`speccode-workflow` 经 `support/install-skills.sh` 安装到 `.claude/skills/`,供 Claude Code 懒加载 |
-| `speccode/spec/` · `speccode/archive/` | SDD 规格主档(11 个 capability)与变更归档——体系自身的活文档 |
+| `speccode/spec/` · `speccode/archive/` | SDD 规格主档与变更归档——体系自身的活文档 |
+
+## ⚠ 执行 `git clean` 前必读
+
+`.speccode/` 目录按设计不被 git 跟踪、**不会**被加入 `.gitignore` —— `git clean -fdx`(乃至 `-fd`)会删除你的 speccode 配置、分支状态与会话记忆。建议先 dry-run(`git clean -n`)或显式排除该路径。详见[插件 README §14](./plugins/speccode/README_CN.md)。
 
 ## 贡献
 
