@@ -30,7 +30,7 @@
 **Interfaces:**
 - Produces: `## Install`(EN)/ `## 安装`(CN)节及其锚点 `#install` / `#安装`(Task 5 的 Quickstart 引用);命令速览标题 `## Commands at a Glance` / `## 命令速览`。
 
-- [ ] **Step 1: 改 EN——intro 段替换(第 3 行整段)**
+- [x] **Step 1: 改 EN——intro 段替换(第 3 行整段)**
 
 将现有 `An end-to-end SDD ... own development.` 一整段(以 "An end-to-end" 开头至 "...own development." 结束的单段落)替换为:
 
@@ -38,7 +38,7 @@
 **An end-to-end SDD (Spec-Driven Development) and automated development system built on Claude Code** — parallel multi-requirement development, in-repo spec document hosting, and a standardized PR flow, crystallized into a default path by the full `/speccode:*` command set. This repo dogfoods all of it: the spec master, every archived change, and the workflow skills that automate the repo's own development live in-repo.
 ````
 
-- [ ] **Step 2: 改 EN——badges 行(第 7 行)之后插入 Install 节**
+- [x] **Step 2: 改 EN——badges 行(第 7 行)之后插入 Install 节**
 
 ````markdown
 
@@ -52,11 +52,11 @@
 Requires [Node.js ≥ 24](#prerequisites) and `git`. After installation, commands appear under the `/speccode:` prefix, e.g. `/speccode:init`, `/speccode:status`, `/speccode:finishing-worktree`.
 ````
 
-- [ ] **Step 3: 改 EN——命令速览标题**
+- [x] **Step 3: 改 EN——命令速览标题**
 
 `## 24 Commands at a Glance` → `## Commands at a Glance`(表格与后续两行不动)。
 
-- [ ] **Step 4: 改 CN——intro 段替换(第 3 行整段)**
+- [x] **Step 4: 改 CN——intro 段替换(第 3 行整段)**
 
 将现有 `基于 Claude Code 的整套 SDD(规格驱动开发)与自动化开发体系——不只是插件,而是一套完整方法论:...` 整段替换为:
 
@@ -64,7 +64,7 @@ Requires [Node.js ≥ 24](#prerequisites) and `git`. After installation, command
 **基于 Claude Code 的整套 SDD(规格驱动开发)与自动化开发体系** —— 多需求并行开发、spec 文档仓内托管、PR 流程标准化,由全套 `/speccode:*` 命令固化为默认路径。本仓库 dogfood 全部成果:规格主档、每次变更的归档、自动化仓库自身开发的开发工作流 skills,全部仓内托管。
 ````
 
-- [ ] **Step 5: 改 CN——badges 行之后插入安装节**
+- [x] **Step 5: 改 CN——badges 行之后插入安装节**
 
 ````markdown
 
@@ -78,16 +78,16 @@ Requires [Node.js ≥ 24](#prerequisites) and `git`. After installation, command
 依赖 [Node.js ≥ 24](#前置依赖) 与 `git`。安装后命令以 `/speccode:` 前缀出现,如 `/speccode:init`、`/speccode:status`、`/speccode:finishing-worktree`。
 ````
 
-- [ ] **Step 6: 改 CN——命令速览标题**
+- [x] **Step 6: 改 CN——命令速览标题**
 
 `## 24 个命令速览` → `## 命令速览`。
 
-- [ ] **Step 7: 校验**
+- [x] **Step 7: 校验**
 
 Run: `grep -n '24' README.md README_CN.md | grep -v 'Node.js ≥ 24' | grep -v 'Node.js **≥ 24**'`
 Expected: 零输出(badge URL 与 Node 下限以外的「24」全部清零;CN 前置依赖行写作 `**Node.js ≥ 24**`,若 grep 语法未命中属正常,以人工过一遍剩余命中均为 URL/版本下限为准)。
 
-- [ ] **Step 8: 提交**
+- [x] **Step 8: 提交**
 
 ```bash
 git add README.md README_CN.md
