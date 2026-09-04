@@ -37,16 +37,16 @@
 ```console
 $ /speccode:init                      # 探测远端/主干/代码智能工具,写 .speccode/config.json
 ✓ config 就绪: trunk=main, remote=origin, pr_tool=gh
-$ /speccode:creating-feature chore/payment-api
-✓ 功能分支已建并推送,state 已登记
 $ /speccode:creating-worktree
-✓ worktree 已切出,基线测试全通过
+✓ feature/demo-api 已切出到独立 worktree,基线测试全通过
 $ /speccode:proposing
 ✓ proposal/design/specs/tasks 四类文档落盘即提交
+$ /speccode:applying                  # Tier 1:按 tasks.md 逐条实现
+✓ 条目实现、勾选、簿记提交完成
+$ /speccode:requesting-code-review
+✓ 审查通过
 $ /speccode:finishing-worktree
-✓ 测试门禁通过,成果合并回 feature
-$ /speccode:finishing-feature
-✓ 单 PR → trunk 已合并,回到 main
+✓ 测试门禁通过,PR 已开往 trunk
 ```
 
 ## 前置依赖

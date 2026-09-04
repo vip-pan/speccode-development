@@ -35,18 +35,18 @@ Requires [Node.js ≥ 24](#prerequisites) and `git`. After installation, command
 ## See It in Action
 
 ```console
-$ /speccode:init                      # probe remote/trunk/code intelligence tooling, write .speccode/config.json
+$ /speccode:init                      # probe remote/trunk/code intelligence, write .speccode/config.json
 ✓ config ready: trunk=main, remote=origin, pr_tool=gh
-$ /speccode:creating-feature chore/payment-api
-✓ feature branch created and pushed, state registered
 $ /speccode:creating-worktree
-✓ worktree checked out, baseline tests all pass
+✓ feature/demo-api checked out in its own worktree, baseline tests all pass
 $ /speccode:proposing
 ✓ proposal/design/specs/tasks committed on save
+$ /speccode:applying                  # Tier 1: implement tasks.md item-by-item
+✓ tasks implemented, ticked, and committed
+$ /speccode:requesting-code-review
+✓ review passed
 $ /speccode:finishing-worktree
-✓ test gate passed, changes merged back into feature
-$ /speccode:finishing-feature
-✓ single PR merged to trunk, back on main
+✓ test gate passed, PR opened → trunk
 ```
 
 ## Prerequisites
