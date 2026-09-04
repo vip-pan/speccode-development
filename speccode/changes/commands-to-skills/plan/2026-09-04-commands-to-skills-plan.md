@@ -179,7 +179,7 @@ git commit -m "docs(CLAUDE): point command layer at skills/ layout"
 - Consumes: Task 1-3 的新布局事实
 - Produces: 知识集现行快照与本变更一致(现行快照被本变更证伪,随变更改——0.5.1 同型先例)
 
-- [ ] **Step 1: 改 standards.md「命令 markdown 规范」行**
+- [x] **Step 1: 改 standards.md「命令 markdown 规范」行**
 
 把该行(以「**命令 markdown 规范**:全程中文交互;frontmatter 为 description + 非标遗留 category/tags」开头)整行替换为:
 
@@ -189,11 +189,11 @@ git commit -m "docs(CLAUDE): point command layer at skills/ layout"
 
 行尾「(出自 …)」出处括号整段保留原文,并在末尾追加:`;0.6.0 由 commands-to-skills 变更修正`(0.5.1 同型先例的追加方式)。注意:替换文本 MUST NOT 含字面 `commands/`(Task 5 的全仓清扫禁区要求)。
 
-- [ ] **Step 1b: 改 standards.md 行 58 触点枚举(执行期范围补正)**
+- [x] **Step 1b: 改 standards.md 行 58 触点枚举(执行期范围补正)**
 
 把行 58「改名触点清单化」中的 `lib/bin/tests/commands/README×4/CHANGELOG/spec Purpose` 改为 `lib/bin/tests/skills/README×4/CHANGELOG/spec Purpose`(仅这个词;该行若有「(出自 …)」出处括号,末尾追加 `;0.6.0 由 commands-to-skills 变更修正`,与行 22 同型)。
 
-- [ ] **Step 2: 改 environment.md「组件(commands/bin 等)」措辞**
+- [x] **Step 2: 改 environment.md「组件(commands/bin 等)」措辞**
 
 把:
 
@@ -207,7 +207,7 @@ git commit -m "docs(CLAUDE): point command layer at skills/ layout"
 组件(skills/bin 等)在插件根而非 .claude-plugin/ 内
 ```
 
-- [ ] **Step 3: 验证知识集无字面 commands/ 残留**
+- [x] **Step 3: 验证知识集无字面 commands/ 残留**
 
 ```bash
 grep -rn 'commands/' speccode/knowledge/
@@ -215,7 +215,7 @@ grep -rn 'commands/' speccode/knowledge/
 
 Expected: 无输出。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add speccode/knowledge/development/standards.md speccode/knowledge/development/environment.md
