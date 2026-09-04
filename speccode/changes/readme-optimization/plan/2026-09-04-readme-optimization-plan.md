@@ -303,8 +303,10 @@ For the full path from requirement to PR, see [The Basic Workflow](#the-basic-wo
 
 - [x] **Step 3: CN 前置依赖末尾追加一行**
 
+> 回写修订(终审后):「Windows 暂不支持」→「Windows 不支持」——终审指出「暂」隐含将来支持,与 spec delta 场景字面「MUST 含 **Windows 不支持**一行」、EN 版 "Windows is not supported" 及插件 README R8(不在目标范围内)三方冲突。此为 plan 文本错误,delta 与 EN 均为权威。
+
 ````markdown
-- **Windows 暂不支持** —— 仅 macOS / Linux
+- **Windows 不支持** —— 仅 macOS / Linux
 ````
 
 - [x] **Step 4: CN Quickstart 整节替换为**
