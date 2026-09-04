@@ -997,7 +997,7 @@ test('tick-task verb errors when task N absent', () => {
 });
 
 test('executing-plans.md documents the tick-task completion step', () => {
-  const md = readFileSync(join(__dirname, '..', 'commands', 'executing-plans.md'), 'utf8');
+  const md = readFileSync(join(__dirname, '..', 'skills', 'executing-plans', 'SKILL.md'), 'utf8');
   assert.ok(md.includes('tick-task'), 'executing-plans must reference tick-task verb');
   assert.ok(md.includes('docs(speccode): tick task'), 'executing-plans must commit the tick');
   // 幂等路径:ticked 为空时不能硬跑 git commit(nothing to commit → exit 1)
@@ -1005,7 +1005,7 @@ test('executing-plans.md documents the tick-task completion step', () => {
 });
 
 test('subagent-driven-development.md documents the tick-task completion step', () => {
-  const md = readFileSync(join(__dirname, '..', 'commands', 'subagent-driven-development.md'), 'utf8');
+  const md = readFileSync(join(__dirname, '..', 'skills', 'subagent-driven-development', 'SKILL.md'), 'utf8');
   assert.ok(md.includes('tick-task'), 'subagent-driven-development must reference tick-task');
   assert.ok(md.includes('docs(speccode): tick task'), 'must commit the tick');
   // 时序约束:勾选须在审查通过后,不进 review-package diff
@@ -1015,22 +1015,22 @@ test('subagent-driven-development.md documents the tick-task completion step', (
 });
 
 test('init.md writes the code_intel_tools config field (renamed from knowledge_tools)', () => {
-  const md = readFileSync(join(__dirname, '..', 'commands', 'init.md'), 'utf8');
+  const md = readFileSync(join(__dirname, '..', 'skills', 'init', 'SKILL.md'), 'utf8');
   assert.ok(md.includes('"code_intel_tools": []'), 'init.md must write the empty code_intel_tools default with the new field name');
   assert.ok(md.includes('code_intel_tools'), 'init.md must document code_intel_tools in the config v2 field set');
   assert.ok(!md.includes('knowledge_tools'), 'init.md must not retain the old knowledge_tools field name');
 });
 
 test('init.md calls the renamed detect-code-intel-tools verb', () => {
-  const md = readFileSync(join(__dirname, '..', 'commands', 'init.md'), 'utf8');
+  const md = readFileSync(join(__dirname, '..', 'skills', 'init', 'SKILL.md'), 'utf8');
   assert.ok(md.includes('detect-code-intel-tools'), 'init.md must call detect-code-intel-tools');
   assert.ok(!md.includes('detect-knowledge-tools'), 'init.md must not retain the old detect-knowledge-tools verb call');
 });
 
 test('code_intel_tools 6 命令 prose: 每命令用 code_intel_tools/代码智能工具 措辞,不留 知识库工具咨询 措辞', () => {
-  const files = ['exploring.md', 'proposing.md', 'brainstorming.md', 'distilling-knowledge.md', 'init.md', 'reset.md'];
+  const files = ['exploring', 'proposing', 'brainstorming', 'distilling-knowledge', 'init', 'reset'];
   for (const f of files) {
-    const md = readFileSync(join(__dirname, '..', 'commands', f), 'utf8');
+    const md = readFileSync(join(__dirname, '..', 'skills', f, 'SKILL.md'), 'utf8');
     assert.ok(
       md.includes('code_intel_tools') || md.includes('代码智能工具'),
       `${f} 必须含 code_intel_tools 字段引用或"代码智能工具"措辞`
@@ -1080,7 +1080,7 @@ test('tick-task verb is idempotent and leaves the plan byte-identical on re-run'
 });
 
 test('syncing.md documents capability RENAME handling via rename-from metadata', () => {
-  const md = readFileSync(join(__dirname, '..', 'commands', 'syncing.md'), 'utf8');
+  const md = readFileSync(join(__dirname, '..', 'skills', 'syncing', 'SKILL.md'), 'utf8');
   assert.ok(md.includes('capability RENAME'), 'syncing.md must document capability RENAME handling');
   assert.ok(md.includes('rename-from'), 'syncing.md must document the rename-from delta metadata convention');
   // 具体动作与幂等语义:必须给出 git mv 与重复 syncing 的幂等保证
