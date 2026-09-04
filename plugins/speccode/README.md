@@ -21,7 +21,7 @@ speccode is a Claude Code workflow orchestration plugin that turns the practices
 ## Table of Contents
 
 1. [What is speccode](#1-what-is-speccode)
-2. [24-Command Quick Reference](#2-24-command-quick-reference)
+2. [Command Quick Reference](#2-command-quick-reference)
 3. [Two-Layer Branch Topology](#3-two-layer-branch-topology)
 4. [Development Workflow](#4-development-workflow)
 5. [Documentation Layout](#5-documentation-layout)
@@ -35,7 +35,7 @@ speccode is a Claude Code workflow orchestration plugin that turns the practices
 13. [Open Issues](#13-open-issues)
 14. [⚠ Important Warning](#14-⚠-important-warning)
 
-## 2. 24-Command Quick Reference
+## 2. Command Quick Reference
 
 Lifecycle:
 
@@ -65,8 +65,8 @@ Knowledge:
 
 | Command | Purpose | Prerequisite (branch to run on) |
 |---|---|---|
-| `/speccode:distilling-knowledge` | Distill the `speccode/knowledge/` topic files from `spec/` (full read — the freshness anchor) + `archive/` (**incremental**: only unconsumed archive bundles, tracked via `knowledge/_distilled.meta.json`, pure read-cost control); every existing block is freshness-audited against the current specs on each run; blocks are keyed by capability (`<!-- distilled-from: cap/<slug> -->`, one per capability per file, upsert — later knowledge overrides earlier; retired knowledge is deleted with a reason via the gate, no tombstones); legacy-source blocks are mapped to capability keys through the gate on first run; SDD process knowledge only, out-of-scope topics sunset via the gate; delete the sidecar to force a full archive re-read (no `--full` flag); human gate before write; commits on save | chore/knowledge-* worktree branch (unified creating-worktree entry, finishing-worktree finish) |
-| `/speccode:recording-knowledge` | Record knowledge directly into hand-written sections (fit check: process knowledge stays, business knowledge is pointed to external RAG; draft → human gate → atomic write via `replace-hand`, distilled blocks preserved byte-for-byte; also tidies the topic's existing hand-written section each run — merge/delete with reasons, authority is the present user); commits on save | chore/knowledge-* worktree branch (unified entry/finish) |
+| `/speccode:distilling-knowledge` | Distill the `speccode/knowledge/` topic files from `spec/` (full read — the freshness anchor) + `archive/` (**incremental**, tracked via `knowledge/_distilled.meta.json`); distilled blocks are keyed by capability and upserted each run, every block freshness-audited against the current specs; human gate before write; commits on save | chore/knowledge-* worktree branch (unified creating-worktree entry, finishing-worktree finish) |
+| `/speccode:recording-knowledge` | Record knowledge directly into hand-written sections (fit check: process knowledge stays, business knowledge is pointed to external RAG; draft → human gate → atomic `replace-hand` write, distilled blocks preserved byte-for-byte); also tidies the topic's existing hand-written section each run; commits on save | chore/knowledge-* worktree branch (unified entry/finish) |
 
 Methodology:
 
