@@ -5,7 +5,7 @@
 - 0.5.1(PR #48)删除了 24 个命令 frontmatter 的非标 `name`,修复 VS Code 菜单显示 `/speccode:SpecCode: X` 且选中报 Unknown command 的问题;但 `category`/`tags` 仍是非标遗留,commands/ 平面 `.md` 布局是官方不再主推的面。
 - 官方对新插件建议「Use skills/ for new plugins」;skill 专有字段(`paths`、`when_to_use`、`context` 等)只在 skills/ 布局下可用。
 - 本机参照:superpowers 插件纯 `skills/<name>/SKILL.md` 布局正常工作(其 frontmatter 保留 `name` + `description`)。
-- 命令正文对 `references/` 的引用全部为 `${CLAUDE_PLUGIN_ROOT}/references/...` 绝对引用(5 个命令文件),引擎/tests/bin 零引用 commands/ ——迁移纯结构+文档,零逻辑波及。
+- 命令正文对 `references/` 的引用全部为 `${CLAUDE_PLUGIN_ROOT}/references/...` 绝对引用(5 个命令文件),引擎/tests/bin 零引用 commands/ ——迁移纯结构+文档,零逻辑波及。(执行期修正:`tests/cli.test.mjs` 有 6 处 `join(__dirname, '..', 'commands', '<name>.md')` 路径拼接形态硬编码——带斜杠的 grep 模式匹配不到,探索结论「tests 零引用」系盲区;已确认随 Task 1 改为 skills 路径,断言语义不变,见 D6。)
 
 ## Goals
 
@@ -17,7 +17,7 @@
 ## Non-Goals
 
 - 不改任何命令正文语义/流程指令(除 syncing.md 内部 grep 清单路径 1 处)
-- 不动引擎 lib/、bin/、tests/(零引用已复核)
+- 不动引擎 lib/、bin/;tests/ 仅改 `cli.test.mjs` 6 处读路径(D6),不改任何断言
 - 不引入 `paths`/`when_to_use`/`context` 等 skill 专有字段(留作后续演进)
 - 不做 README×4 改动(无 commands/ 路径引用,「24 commands」概念性表述语义不变)
 
@@ -28,6 +28,7 @@
 - **D3 接受模型自动调用,不设 `disable-model-invocation`**(用户 2026-09-04 确认):commands 仅用户显式调用,skills 还可被模型按 description 自动触发;24 个命令的 description 本就写明触发时机,自动调用是回归 skill 主流形态的增益(如 test-driven-development 在写代码时自动加载),用户显式调用语义不变。拒绝理由(被否):保持纯用户驱动语义的收益不足以抵消与主流形态的分叉。
 - **D4 `git mv` + frontmatter 重写同一提交**:diff 小,git rename 检测应能识别(相似度阈值);即便个别文件识别失败也只是历史可读性差异,非功能风险。
 - **D5 迁移一次性全量完成**(拒绝分批/双目录过渡期):24 个命令是一个整体面,双目录过渡期会制造「两个真源」状态;0.6.0 单版本切换干净。
+- **D6 测试路径修复折入 Task 1 同一提交**(人类伙伴 2026-09-04 确认;拒绝 Task 5 兜底/独立后续提交):`tests/cli.test.mjs` 的 6 处命令文件读路径是迁移爆炸半径的一部分,同提交保证门禁每个提交全绿、迁移原子;拒绝理由(被否):中间任何提交套件变红都破坏 bisect 与测试纪律。
 
 ## Risks
 

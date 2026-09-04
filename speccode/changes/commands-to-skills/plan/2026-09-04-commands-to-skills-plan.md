@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Node ≥ 24;本仓库无 `package.json`,纯 ESM、零第三方依赖——不引入任何新依赖。
-- 本变更零引擎代码改动:`plugins/speccode/lib/`、`bin/`、`tests/` MUST NOT 被触碰;全量测试基线 MUST 保持全绿。
+- 本变更零引擎逻辑改动:`plugins/speccode/lib/`、`bin/` MUST NOT 被触碰;`tests/cli.test.mjs` 有 6 处 `join(__dirname, '..', 'commands', '<name>.md')` 路径拼接形态的硬编码(执行期发现:探索 grep 模式 `commands/` 带斜杠,匹配不到该形态),随 Task 1 更新为 `join(__dirname, '..', 'skills', '<name>', 'SKILL.md')`(仅路径,断言语义不变);全量测试基线 MUST 保持全绿。
 - 全量测试命令必须用 glob 形式:`node --test ./plugins/speccode/tests/*.test.mjs`(裸目录形式在 Node v24 报 MODULE_NOT_FOUND)。
 - 调用名不变:24 个命令迁移后仍以 `/speccode:<name>` 调用(`<name>` = skills/ 下目录名 = 原 commands/ 下文件名)。
 - frontmatter 契约:每个 SKILL.md 只含 `description` 一个字段;无 `name`/`category`/`tags`。
@@ -30,6 +30,7 @@
 **Files:**
 - Move: `plugins/speccode/commands/<name>.md`(24 个,逐一列出见 Step 1 通配)→ `plugins/speccode/skills/<name>/SKILL.md`
 - Modify(移动中顺带):每个 SKILL.md frontmatter 删 `category:` 与 `tags:` 两行
+- Modify(执行期范围修正,人类伙伴已确认):`plugins/speccode/tests/cli.test.mjs` 6 处读路径(行 1000/1008/1018/1025/1033/1083),`join(__dirname, '..', 'commands', '<name>.md')` → `join(__dirname, '..', 'skills', '<name>', 'SKILL.md')`,断言零改动
 
 **Interfaces:**
 - Consumes: 无(首任务)
@@ -57,6 +58,10 @@ sed -i '' '/^category: /d;/^tags: /d' plugins/speccode/skills/*/SKILL.md
 ```
 
 (已核对:category/tags 行全部位于各文件 frontmatter 第 3-4 行,正文无以 `category: ` / `tags: ` 开头的行,sed 行首锚定安全。)
+
+- [ ] **Step 2b: 更新 tests/cli.test.mjs 6 处读路径(执行期范围修正,人类伙伴 2026-09-04 确认折入本提交)**
+
+6 处 `join(__dirname, '..', 'commands', '<name>.md')` 改为 `join(__dirname, '..', 'skills', '<name>', 'SKILL.md')`(行 1000 executing-plans / 1008 subagent-driven-development / 1018+1025 init / 1033 六命令数组 / 1083 syncing;数组条目 `'<name>.md'` 改为 `'<name>'`)。断言内容零改动(命令正文未变,断言语义不变)。
 
 - [ ] **Step 3: 验证结构与 frontmatter**
 

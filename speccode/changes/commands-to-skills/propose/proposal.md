@@ -14,6 +14,7 @@ tier: 2
 - frontmatter 重写:只留 `description`;删非标遗留 `category`/`tags`(`name` 已于 0.5.1 删,不回填)
 - 语义变化(用户已确认接受):skills 可被模型按 description 自动调用,不再仅限用户显式 `/speccode:<name>`;不设 `disable-model-invocation`
 - 命令正文内部引用 1 处更新(syncing.md 全仓 grep 清单中的 `plugins/speccode/commands/`)
+- `tests/cli.test.mjs` 6 处命令文件读路径更新为 skills/ 布局(执行期发现:路径为 `join(..., 'commands', '<name>.md')` 拼接形态,探索 grep 模式 `commands/` 带斜杠匹配不到;仅改路径,断言语义不变——2026-09-04 人类伙伴确认折入 Task 1 同一提交)
 - CLAUDE.md 命令交互层表述更新(1 处)
 - spec delta:plugin-packaging 布局/裸调/源码跟踪/命名空间 4 条 MODIFIED + skill frontmatter 契约 1 条 ADDED
 - 知识集 standards.md / environment.md 对应行同步修正(现行快照被本变更证伪)
@@ -27,5 +28,5 @@ tier: 2
 
 - 插件打包结构(skills/ 取代 commands/,目录式布局)
 - 文档:CLAUDE.md、知识集、CHANGELOG
-- **零波及**(已复核):引擎 lib/、bin/、tests/(无引用,测试基线不变)、references/(命令正文全部经 `${CLAUDE_PLUGIN_ROOT}/references/...` 绝对引用)、README×4(无路径引用)
+- **零波及**(2026-09-04 修正):引擎 lib/、bin/(零引用)、references/(命令正文全部经 `${CLAUDE_PLUGIN_ROOT}/references/...` 绝对引用)、README×4(无路径引用);tests/ 仅 `cli.test.mjs` 6 处读路径需随迁移更新(见 What Changes)
 - 用户侧:安装 0.6.0 后 slash 菜单仍为 24 项 `/speccode:<name>` 形态;新增性能为模型自动调用
