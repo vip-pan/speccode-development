@@ -16,7 +16,7 @@ description: 本仓库(speccode 插件)自身的开发工作流与发布纪律�
 → [Tier 2/3:/speccode:writing-plans → /speccode:subagent-driven-development 或 /speccode:executing-plans 二选一
    | Tier 1:/speccode:applying 按 tasks.md 逐条实现]
 → (有落地文档:/speccode:syncing(delta 合并进 speccode/spec/)→ /speccode:archiving,顺序硬约束)
-→ /speccode:finishing-worktree(按 merge_target 路由:trunk 目标 → 单 PR 直通 trunk)
+→ /speccode:finishing-worktree(按 merge_target 路由:trunk 目标 → 单 PR 直通 trunk;集成分支目标 → 本地 squash 汇入)
 ```
 
 - **大需求 opt-in**:两端加 `/speccode:creating-feature`(切集成分支 + 登记父实体 state)与 `/speccode:finishing-feature`(children 全 completed 门禁,集成分支 → trunk 终局单 PR);普通需求不经过这两个命令。
