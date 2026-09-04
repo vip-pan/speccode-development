@@ -282,13 +282,13 @@ git commit -m "docs(readme): demo plays the normal-requirement path (EN/CN)"
 **Interfaces:**
 - Consumes: Task 1 的 `#install` / `#安装` 锚点;Task 3 的 `#the-basic-workflow` / `#基础工作流` 锚点。
 
-- [ ] **Step 1: EN Prerequisites 末尾追加一行**
+- [x] **Step 1: EN Prerequisites 末尾追加一行**
 
 ````markdown
 - **Windows is not supported** — macOS / Linux only
 ````
 
-- [ ] **Step 2: EN Quickstart 整节替换为**
+- [x] **Step 2: EN Quickstart 整节替换为**
 
 ````markdown
 ## Quickstart (5-Minute Minimal Loop)
@@ -301,13 +301,13 @@ git commit -m "docs(readme): demo plays the normal-requirement path (EN/CN)"
 For the full path from requirement to PR, see [The Basic Workflow](#the-basic-workflow).
 ````
 
-- [ ] **Step 3: CN 前置依赖末尾追加一行**
+- [x] **Step 3: CN 前置依赖末尾追加一行**
 
 ````markdown
 - **Windows 暂不支持** —— 仅 macOS / Linux
 ````
 
-- [ ] **Step 4: CN Quickstart 整节替换为**
+- [x] **Step 4: CN Quickstart 整节替换为**
 
 ````markdown
 ## Quickstart (5 分钟最小闭环)
@@ -320,12 +320,12 @@ For the full path from requirement to PR, see [The Basic Workflow](#the-basic-wo
 从需求到 PR 的完整路径见[基础工作流](#基础工作流)。
 ````
 
-- [ ] **Step 5: 校验**
+- [x] **Step 5: 校验**
 
 Run: `grep -n 'creating-feature' README.md README_CN.md | grep -v 'how we compare\|和谁比'`
 Expected: Quickstart/Prerequisites 无 creating-feature(Creating 前的任务完成前,贡献段可能仍命中一次,Task 8 清零)。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add README.md README_CN.md
