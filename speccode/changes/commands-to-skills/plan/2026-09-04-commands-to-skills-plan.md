@@ -284,7 +284,7 @@ find plugins/speccode/skills -name SKILL.md | wc -l   # 24
 - Consumes: Task 1-5 的全部产出(发版描述事实来源)
 - Produces: version `0.6.0` 与 CHANGELOG `[0.6.0]` 小节同提交(版本发布纪律)
 
-- [ ] **Step 1: CHANGELOG 新增 [0.6.0] 小节**
+- [x] **Step 1: CHANGELOG 新增 [0.6.0] 小节**
 
 在 `## [Unreleased]` 之后、`## [0.5.1]` 之前插入(日期用执行当日):
 
@@ -300,7 +300,7 @@ find plugins/speccode/skills -name SKILL.md | wc -l   # 24
 - 命令正文对 `references/` 的引用全部为 `${CLAUDE_PLUGIN_ROOT}/references/...` 绝对路径,迁移零波及;引擎与测试零改动,测试基线不变。
 ```
 
-- [ ] **Step 2: 底部比较链接**
+- [x] **Step 2: 底部比较链接**
 
 在链接表 `[0.5.1]:` 行的上一行插入:
 
@@ -308,18 +308,18 @@ find plugins/speccode/skills -name SKILL.md | wc -l   # 24
 [0.6.0]: https://github.com/vip-pan/speccode-development/compare/v0.5.1...v0.6.0
 ```
 
-- [ ] **Step 3: plugin.json bump**
+- [x] **Step 3: plugin.json bump**
 
 `plugins/speccode/.claude-plugin/plugin.json` 中 `"version": "0.5.1"` → `"version": "0.6.0"`。
 
-- [ ] **Step 4: 验证同提交一致性**
+- [x] **Step 4: 验证同提交一致性**
 
 ```bash
 grep -n '"version"' plugins/speccode/.claude-plugin/plugin.json   # 0.6.0
 grep -n '## \[0.6.0\]' CHANGELOG.md                              # 小节存在
 ```
 
-- [ ] **Step 5: 提交(同一提交)**
+- [x] **Step 5: 提交(同一提交)**
 
 ```bash
 git add CHANGELOG.md plugins/speccode/.claude-plugin/plugin.json
