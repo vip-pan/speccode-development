@@ -231,7 +231,7 @@ git commit -m "docs(knowledge): sync command-layer snapshot to skills/ layout"
 - Consumes: Task 1-4 的全部产出
 - Produces: 「全仓无 commands/ 路径残留」的验证证据(供 code review 与 finishing-worktree 引用)
 
-- [ ] **Step 1: 全仓 grep commands/ 清扫(执行期修正:排除清单增补 `speccode/spec/`)**
+- [x] **Step 1: 全仓 grep commands/ 清扫(执行期修正:排除清单增补 `speccode/spec/`)**
 
 > 主规格 `speccode/spec/` 的 commands/ 表述属 pre-syncing 预期态:本变更的 delta(propose/specs/plugin-packaging/spec.md,4 条 MODIFIED)恰覆盖主规格全部 5 处命中,由收尾链路的 `/speccode:syncing` 合并消除;终局零残留校验由 syncing 自带的全仓 grep 承担(禁区 = 旧名仅允许命中 archive/、CHANGELOG 历史小节)。本步清扫因此排除 `speccode/spec/`。
 
@@ -257,7 +257,7 @@ grep -rn "'commands'" --include='*.mjs' plugins/ scripts/
 
 Expected: 无输出。
 
-- [ ] **Step 2: 全量测试**
+- [x] **Step 2: 全量测试**
 
 ```bash
 node --test ./plugins/speccode/tests/*.test.mjs 2>&1 | tail -3
@@ -265,7 +265,7 @@ node --test ./plugins/speccode/tests/*.test.mjs 2>&1 | tail -3
 
 Expected: `fail 0`。
 
-- [ ] **Step 3: 结构终验**
+- [x] **Step 3: 结构终验**
 
 ```bash
 ls plugins/speccode/                      # bin hooks lib references skills tests README.md README_CN.md .claude-plugin(无 commands)
