@@ -98,14 +98,14 @@ Test-driven · systematic over improvisation · reduce complexity · evidence ov
 | [Plugin README](./plugins/speccode/README.md) | 24-command reference, three-layer topology, R1-R13 risks, 0.1 → 0.2 migration (plugin design document) |
 | [CHANGELOG](./CHANGELOG.md) | Release history (Keep a Changelog, all in Chinese) |
 | [CLAUDE.md](./CLAUDE.md) | Development documentation: three-layer engine architecture, testing conventions, speccode workflow |
-| `skills/` | Development-workflow skills (true source) — installed to `.claude/skills/` via `scripts/install-skills.sh` for Claude Code lazy-loading |
+| `support/` | Dev-workflow skill (true source) and helper scripts — `speccode-workflow` installed to `.claude/skills/` via `support/install-skills.sh` for Claude Code lazy-loading |
 | `speccode/spec/` · `speccode/archive/` | SDD spec master (11 capabilities) and archived change records — the system's own living documentation |
 
 ## Contributing
 
-This repo is dogfooded by speccode itself — see [CONTRIBUTING.md](./CONTRIBUTING.md) for the full workflow. Spec changes go through the `speccode/changes/` workflow, so contributing means walking the same workflow (exploring → creating-feature → … → finishing-feature). PRs to speccode, written with speccode, are welcome.
+This repo is dogfooded by speccode itself — see [CONTRIBUTING.md](./CONTRIBUTING.md) for the full workflow. Spec changes go through the `speccode/changes/` workflow, so contributing means walking the same workflow (exploring → creating-worktree → proposing → implementation → review → syncing → archiving → finishing-worktree). PRs to speccode, written with speccode, are welcome.
 
-After cloning, run `bash scripts/install-skills.sh` to install this repo's development-workflow skill into `.claude/skills/` (keeps the `speccode-workflow` skill — the v2 native chain, dogfood conventions, and release discipline — available to Claude Code sessions in this repo).
+After cloning, run `bash support/install-skills.sh` to install this repo's development-workflow skill into `.claude/skills/` (keeps the `speccode-workflow` skill — the double-layer native chain, dogfood conventions, and release discipline — available to Claude Code sessions in this repo).
 
 ## License
 

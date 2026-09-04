@@ -98,14 +98,14 @@ spec 文档在所有分支 tracked,随 PR 链路上 trunk
 | [插件 README](./plugins/speccode/README_CN.md) | 24 命令详表、三层拓扑、R1-R13 风险、0.1→0.2 迁移(插件设计文档) |
 | [CHANGELOG](./CHANGELOG.md) | 版本发布记录(Keep a Changelog,全中文) |
 | [CLAUDE.md](./CLAUDE.md) | 开发文档:引擎三层架构、测试约定、speccode 工作流 |
-| `skills/` | 开发工作流 skills(真源)——经 `scripts/install-skills.sh` 安装到 `.claude/skills/`,供 Claude Code 懒加载 |
+| `support/` | 开发工作流 skill(真源)与辅助脚本——`speccode-workflow` 经 `support/install-skills.sh` 安装到 `.claude/skills/`,供 Claude Code 懒加载 |
 | `speccode/spec/` · `speccode/archive/` | SDD 规格主档(11 个 capability)与变更归档——体系自身的活文档 |
 
 ## 贡献
 
-本仓库由 speccode 自托管开发——完整流程见 [CONTRIBUTING.md](./CONTRIBUTING.md)。spec 变更走 `speccode/changes/` 工作流,贡献即走同一条 workflow(exploring → creating-feature → … → finishing-feature)。欢迎用 speccode 给 speccode 提 PR。
+本仓库由 speccode 自托管开发——完整流程见 [CONTRIBUTING.md](./CONTRIBUTING.md)。spec 变更走 `speccode/changes/` 工作流,贡献即走同一条 workflow(exploring → creating-worktree → proposing → 实现 → 评审 → syncing → archiving → finishing-worktree)。欢迎用 speccode 给 speccode 提 PR。
 
-clone 后运行 `bash scripts/install-skills.sh`,把本仓库的开发工作流 skill 安装到 `.claude/skills/`(让 `speccode-workflow` skill——v2 原生链路、dogfood 约定、发布纪律——对本仓库的 Claude Code 会话可用)。
+clone 后运行 `bash support/install-skills.sh`,把本仓库的开发工作流 skill 安装到 `.claude/skills/`(让 `speccode-workflow` skill——双层原生链路、dogfood 约定、发布纪律——对本仓库的 Claude Code 会话可用)。
 
 ## License
 
