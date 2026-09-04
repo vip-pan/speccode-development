@@ -33,7 +33,7 @@ node plugins/speccode/bin/speccode.mjs <verb> --cwd . [--flags]
 
 无 lint / build 步骤。
 
-本仓库自身的开发工作流(v2 原生链路、dogfood 约定、发布纪律)以 skill 形式维护:真源在 `skills/speccode-workflow/SKILL.md`(进 git),经 `bash scripts/install-skills.sh` 安装到 `.claude/skills/`(本机,供 Claude Code 懒加载)。首次 clone 或 skills/ 有改动后重跑该脚本同步。
+本仓库自身的开发工作流(原生链路、dogfood 约定、发布纪律)以 skill 形式维护:真源在 `support/speccode-workflow/SKILL.md`(进 git),经 `bash support/install-skills.sh` 安装到 `.claude/skills/`(本机,供 Claude Code 懒加载)。首次 clone 或 support/ 有改动后重跑该脚本同步。
 
 ## 架构:双层分支拓扑 + 代码三层分工,必须理解的分工
 
