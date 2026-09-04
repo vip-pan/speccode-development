@@ -469,10 +469,9 @@ git commit -m "docs(readme): comparison matrix gains BMAD column, two-layer row 
 `| `speccode/spec/` · `speccode/archive/` | SDD spec master (11 capabilities) and archived change records — the system's own living documentation |` →
 `| `speccode/spec/` · `speccode/archive/` | SDD spec master and archive of every change — the system's own living documentation |`
 
-- [ ] **Step 2: EN 贡献段流程链替换**
+- [ ] **Step 2: EN 贡献段流程链——已由上游修复,核对即跳过**
 
-`(exploring → creating-feature → … → finishing-feature)` →
-`(exploring → creating-worktree → … → finishing-worktree; large requirements opt in to an integration branch via creating-feature / finishing-feature)`
+> 回写修订(执行期):上游 #50(fe1747e)已把贡献段链路改为普通链路(exploring → creating-worktree → … → finishing-worktree),本步骤原计划的替换(creating-feature 链 → 普通链)已无事可做,执行时核对现状并跳过,不再添加 opt-in 注记(上游已选详细链路表述,追加属范围蔓延)。
 
 - [ ] **Step 3: CN 文档地图两行替换**
 
@@ -482,10 +481,9 @@ git commit -m "docs(readme): comparison matrix gains BMAD column, two-layer row 
 `| `speccode/spec/` · `speccode/archive/` | SDD 规格主档(11 个 capability)与变更归档——体系自身的活文档 |` →
 `| `speccode/spec/` · `speccode/archive/` | SDD 规格主档与变更归档——体系自身的活文档 |`
 
-- [ ] **Step 4: CN 贡献段流程链替换**
+- [ ] **Step 4: CN 贡献段流程链——已由上游修复,核对即跳过**
 
-`(exploring → creating-feature → … → finishing-feature)` →
-`(exploring → creating-worktree → … → finishing-worktree;大需求经 creating-feature / finishing-feature opt-in 集成分支)`
+> 回写修订(执行期):同 Step 2,CN 版贡献段链路已由上游 #50 修复,核对现状并跳过。
 
 - [ ] **Step 5: 校验**
 
