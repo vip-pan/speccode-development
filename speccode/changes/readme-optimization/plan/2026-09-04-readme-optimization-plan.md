@@ -408,7 +408,7 @@ git commit -m "docs(readme): two-layer topology section (EN/CN)"
 **Interfaces:**
 - Consumes: design.md D5 的 BMAD 保守标注(2026-09-04 基于其 README 主页核对)。
 
-- [ ] **Step 1: EN 表格替换为**
+- [x] **Step 1: EN 表格替换为**
 
 ````markdown
 | Capability | speccode | [superpowers](https://github.com/obra/superpowers) | [spec-kit](https://github.com/github/spec-kit) | [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) | ad-hoc |
@@ -423,7 +423,7 @@ git commit -m "docs(readme): two-layer topology section (EN/CN)"
 
 表格后原有收束句(`Where ad-hoc conventions leave ...`)不动。
 
-- [ ] **Step 2: CN 表格替换为**
+- [x] **Step 2: CN 表格替换为**
 
 ````markdown
 | 能力 | speccode | [superpowers](https://github.com/obra/superpowers) | [spec-kit](https://github.com/github/spec-kit) | [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) | 手工约定 |
@@ -438,12 +438,12 @@ git commit -m "docs(readme): two-layer topology section (EN/CN)"
 
 表格后原有收束句(`手工约定把「文档放哪 / 从哪个分支切 / PR 谁开」留给人脑...`)不动。
 
-- [ ] **Step 3: 校验**
+- [x] **Step 3: 校验**
 
 Run: `grep -n 'BMAD' README.md README_CN.md | wc -l` 与 `grep -n 'Three-layer branch topology\|三层分支拓扑 + 对账' README.md README_CN.md`
 Expected: BMAD 每版 2 命中(列头链接 + 表格单元为空则 1 命中,以人工确认列头存在为准);行 1 旧措辞零输出。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add README.md README_CN.md
