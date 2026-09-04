@@ -6,7 +6,7 @@
 
 **Goal:** 把 24 个 `plugins/speccode/commands/<name>.md` 迁移为官方主推的 `plugins/speccode/skills/<name>/SKILL.md` 布局,frontmatter 收敛为只含 `description`,发版 0.6.0。
 
-**Architecture:** 纯文档/结构迁移,零引擎代码改动(lib/bin/tests 已复核零引用)。任务序列 = ①git mv + frontmatter 收敛(同一提交,保 rename 检测)→ ②命令正文内部引用 → ③CLAUDE.md → ④知识集快照修正 → ⑤全仓验证清扫 → ⑥CHANGELOG + plugin.json 发版。每个任务的「测试」是精确的 grep/ls/全量测试基线命令(TDD 红绿循环不适用于无代码的 prose/结构变更)。
+**Architecture:** 纯文档/结构迁移,零引擎代码改动(lib/bin 零引用;tests 有 6 处读路径随 Task 1 更新,断言语义不变)。任务序列 = ①git mv + frontmatter 收敛(同一提交,保 rename 检测)→ ②命令正文内部引用 → ③CLAUDE.md → ④知识集快照修正 → ⑤全仓验证清扫 → ⑥CHANGELOG + plugin.json 发版。每个任务的「测试」是精确的 grep/ls/全量测试基线命令(TDD 红绿循环不适用于无代码的 prose/结构变更)。
 
 **Tech Stack:** git(mv/rename)、BSD sed(macOS `sed -i ''`)、node --test(glob 形式)。
 
