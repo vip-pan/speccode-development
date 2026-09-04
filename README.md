@@ -78,12 +78,19 @@ See [plugin README §2 command table](./plugins/speccode/README.md) for each com
 
 The flow is tiered by requirement size: tiny changes can take Tier 1 (after proposing, `/speccode:applying` implements tasks.md item-by-item by hand), small-to-medium ones go `writing-plans` + SDD/`executing-plans`, and complex ones brainstorm first.
 
-## Three-Layer Branch Topology
+## Two-Layer Branch Topology
 
 ```
-origin/trunk ── feature/<slug> ──┬── worktree-a (parallel work)
-                                 └── worktree-b (parallel work)
-spec documents are tracked on all branches and ride the PR chain up to trunk
+normal requirement (default):
+origin/trunk ──┬── feature/a  (dev branch = git worktree) ── finishing-worktree: test gate → PR → trunk
+               ├── feature/b  (parallel)                    ── ─┘
+               └── ...
+     speccode/ spec documents are tracked on every branch and ride the PR chain up to trunk
+
+large requirement (opt-in):
+origin/trunk ── integration branch ──┬── feature/s1 ── finishing-worktree: local squash
+                                     └── feature/s2 ── ─┘
+                                          finishing-feature: children all completed → single PR → trunk
 ```
 
 See [plugin README §3](./plugins/speccode/README.md) for the full topology and key points.

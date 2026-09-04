@@ -78,12 +78,19 @@ $ /speccode:finishing-worktree
 
 流程按需求体量分三层:极小需求可走 Tier 1(proposing 后由 `/speccode:applying` 按 tasks.md 逐条手动实现),中小型走 writing-plans + SDD/executing-plans,复杂需求先 brainstorming。
 
-## 三层分支拓扑
+## 双层分支拓扑
 
 ```
-origin/trunk ── feature/<slug> ──┬── worktree-a(并行施工)
-                                 └── worktree-b(并行施工)
-spec 文档在所有分支 tracked,随 PR 链路上 trunk
+普通需求(默认):
+origin/trunk ──┬── feature/a(开发分支 = git worktree)── finishing-worktree:测试门禁 → PR → trunk
+               ├── feature/b(并行)                    ── ─┘
+               └── ...
+     speccode/ 规格文档在所有分支 tracked,随 PR 链路上 trunk
+
+大需求(opt-in):
+origin/trunk ── 集成分支 ──┬── feature/s1 ── finishing-worktree:本地 squash
+                          └── feature/s2 ── ─┘
+                               finishing-feature:children 全 completed → 单 PR → trunk
 ```
 
 完整拓扑与要点见 [插件 README §3](./plugins/speccode/README_CN.md)。
