@@ -17,9 +17,9 @@
 
 ## 为什么用 speccode
 
-- ✅ **多需求并行** —— trunk / feature / worktree 三层拓扑,对账算法自动归属每个 worktree,多 feature、多 worktree 并行施工互不干扰。
+- ✅ **多需求并行** —— 双层拓扑:开发分支(`<type>/<slug>`,git worktree)从 trunk 一步直达;对账算法自动归属每个 worktree,多需求并行施工互不干扰。
 - ✅ **文档仓内托管** —— spec 文档(`speccode/changes → spec/ → archive/`)所有分支 tracked、落盘即提交,随 PR 链路上 trunk。
-- ✅ **流程标准化** —— 24 命令 + hooks(14 个生命周期事件)+ 跨会话 memory,团队约定变成可执行原语。
+- ✅ **流程标准化** —— 全套 `/speccode:*` 命令 + 生命周期 hooks(封闭枚举)+ 跨会话 memory,团队约定变成可执行原语。
 - ✅ **自托管自动化开发** —— 本仓库用 speccode 开发自身(dogfood):每次变更走完整 SDD 链路,规格主档与归档仓内托管,开发工作流 skills 自动化仓库自身流程。一个可运行的自动化开发体系样板,而不只是一个待安装的插件。
 
 ## 看它干活

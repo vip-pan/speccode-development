@@ -17,9 +17,9 @@ Requires [Node.js ≥ 24](#prerequisites) and `git`. After installation, command
 
 ## Why speccode
 
-- ✅ **Parallel multi-requirement development** — a three-layer trunk / feature / worktree topology; a reconciliation algorithm automatically assigns every worktree, so multiple features and worktrees proceed in parallel without interfering with each other.
+- ✅ **Parallel multi-requirement development** — a two-layer topology: development branches (`<type>/<slug>` git worktrees) cut straight from trunk in one step; a reconciliation algorithm automatically assigns every worktree, so multiple requirements proceed in parallel without interfering with each other.
 - ✅ **In-repo document hosting** — spec documents (`speccode/changes → spec/ → archive/`) are tracked on every branch and committed on save, riding the PR chain up to trunk.
-- ✅ **Standardized workflow** — 24 commands + hooks (14 lifecycle events) + cross-session memory turn team conventions into executable primitives.
+- ✅ **Standardized workflow** — the full `/speccode:*` command set + lifecycle hooks (closed enumeration) + cross-session memory turn team conventions into executable primitives.
 - ✅ **Self-hosting automated development** — this repo develops itself with speccode (dogfood): every change walks the full SDD chain, the spec master and archive live in-repo, and development-workflow skills automate the repo's own process. A working reference for an automated development system, not just a plugin to install.
 
 ## See It in Action
