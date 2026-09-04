@@ -616,16 +616,16 @@ Expected: `git status --porcelain` 为空 → 本任务零提交;非空(如顺�
 **Files:**
 - Verify: 全部门面文件
 
-- [ ] **Step 1: 计数与 v2 措辞终扫**
+- [x] **Step 1: 计数与 v2 措辞终扫**
 
 Run: `grep -in 'three-layer\|三层拓扑\|24 commands\|24 个命令\|24-Command\|24 命令\|11 capabilit\|11 个 capability\|merged back into feature\|worktree-a' README.md README_CN.md plugins/speccode/README.md plugins/speccode/README_CN.md`
 Expected: 零输出。允许命中逐条豁免并记录(预期仅 `Node.js ≥ 24` 与 badge URL)。
 
-- [ ] **Step 2: 基线测试回归**
+- [x] **Step 2: 基线测试回归**
 
 Run: `node --test ./plugins/speccode/tests/*.test.mjs 2>&1 | tail -4`
 Expected: `pass 279`,`fail 0`。
 
-- [ ] **Step 3: 提交(无内容变更则跳过)**
+- [x] **Step 3: 提交(无内容变更则跳过)**
 
 Expected: 零提交(纯验证);若终扫发现残留,回到对应任务修复后重跑本任务。
