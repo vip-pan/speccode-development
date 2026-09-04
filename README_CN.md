@@ -54,21 +54,16 @@ $ /speccode:finishing-worktree
 - **Node.js ≥ 24** —— 引擎运行于 Node(纯 ESM、零第三方依赖)
 - `git`
 - `gh` CLI(GitHub)或 `glab` CLI(GitLab)—— 可选;未安装时 `pr_tool` 自动降级为 `none`,命令会打印等价命令供你手动执行
+- **Windows 暂不支持** —— 仅 macOS / Linux
 
 ## Quickstart (5 分钟最小闭环)
 
-1. 安装插件:
+1. 先[安装](#安装)插件。
+2. 在你的项目里运行 `/speccode:init` 初始化配置。
+3. 运行 `/speccode:creating-worktree` 切出首个开发分支(git worktree),基线测试转绿。
+4. 运行 `/speccode:status` 查看全貌。
 
-   ```bash
-   /plugin marketplace add vip-pan/speccode-development
-   /plugin install speccode@speccode-development
-   ```
-
-2. 运行 `/speccode:init` 初始化配置。
-3. `/speccode:creating-feature` 建首个功能分支,`/speccode:creating-worktree` 切出开发 worktree。
-4. `/speccode:status` 查看全貌。
-
-安装后命令以 `/speccode:` 前缀出现,如 `/speccode:init`、`/speccode:status`、`/speccode:finishing-feature`。
+从需求到 PR 的完整路径见[基础工作流](#基础工作流)。
 
 ## 命令速览
 

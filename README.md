@@ -54,21 +54,16 @@ $ /speccode:finishing-worktree
 - **Node.js ≥ 24** — the engine runs on Node (pure ESM, zero third-party deps)
 - `git`
 - `gh` CLI (GitHub) or `glab` CLI (GitLab) — optional; when absent, `pr_tool` auto-degrades to `none` and commands print the equivalent command for you to run manually
+- **Windows is not supported** — macOS / Linux only
 
 ## Quickstart (5-Minute Minimal Loop)
 
-1. Install the plugin:
-
-   ```bash
-   /plugin marketplace add vip-pan/speccode-development
-   /plugin install speccode@speccode-development
-   ```
-
-2. Run `/speccode:init` to initialize configuration.
-3. Use `/speccode:creating-feature` to create your first feature branch, then `/speccode:creating-worktree` to check out a development worktree.
+1. [Install](#install) the plugin.
+2. Run `/speccode:init` in your project to initialize configuration.
+3. Run `/speccode:creating-worktree` to cut your first development branch (a git worktree) and get baseline tests green.
 4. Run `/speccode:status` to see the whole picture.
 
-After installation, commands appear under the `/speccode:` prefix, e.g. `/speccode:init`, `/speccode:status`, `/speccode:finishing-feature`.
+For the full path from requirement to PR, see [The Basic Workflow](#the-basic-workflow).
 
 ## Commands at a Glance
 
