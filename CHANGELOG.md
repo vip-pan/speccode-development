@@ -8,6 +8,16 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-04
+
+> EN: Migrate all 24 slash commands to the officially recommended `skills/` layout (`skills/<name>/SKILL.md`) — invocation names unchanged (`/speccode:<name>`), frontmatter trimmed to `description` only (nonstandard `category`/`tags` removed, following the 0.5.1 `name` removal), and skills now participate in model auto-invocation per their descriptions.
+
+### Changed
+
+- **命令布局迁移旧命令目录 → skills/(全部 24 个)**:命令 markdown 迁至 `plugins/speccode/skills/<name>/SKILL.md`(一 skill 一目录,调用名 = 目录名,`/speccode:<name>` 调用形态与迁移前完全一致);frontmatter 收敛为只含 `description`——非标 `category`/`tags` 随 `name` 之后一并移除,frontmatter 不再有非官方字段。skills 是官方对新插件的主推面,该迁移消灭「非标字段被 IDE 客户端捡用」整类问题(0.5.1 的 VS Code 菜单 name 歧义即此类显例),并解锁 `paths`/`when_to_use`/`context` 等 skill 专有字段的后续演进空间。
+- **语义增益:命令可被模型自动调用**:迁移前命令仅用户显式调用;skills 布局下 Claude 可按各 skill 的 description 触发时机自动调用(如实现功能时自动加载 test-driven-development),用户显式调用语义不变。
+- 命令正文对 `references/` 的引用全部为 `${CLAUDE_PLUGIN_ROOT}/references/...` 绝对路径,迁移零波及;引擎与测试零改动,测试基线不变。
+
 ## [0.5.1] - 2026-09-04
 
 > EN: Drop the nonstandard `name` frontmatter field from all 24 command markdown files. IDE extensions may misread it as the slash-command path, showing entries like `/speccode:SpecCode: Exploring` that fail with "Unknown command" — per official docs, `commands/*.md` ignores `name` and invocation names come from filenames.
@@ -233,6 +243,7 @@ v2 全量迭代:四层拓扑收敛为三层、SDD 方法论与文档生命周期
 - GitHub / GitLab remote 探测,自动选择 `gh` / `glab` CLI,无 CLI 时降级为打印等效命令。
 
 [Unreleased]: https://github.com/vip-pan/speccode-development/compare/v0.5.1...HEAD
+[0.6.0]: https://github.com/vip-pan/speccode-development/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/vip-pan/speccode-development/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/vip-pan/speccode-development/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/vip-pan/speccode-development/compare/v0.3.0...v0.4.0
