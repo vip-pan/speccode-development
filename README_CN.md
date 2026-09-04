@@ -97,14 +97,14 @@ origin/trunk ── 集成分支 ──┬── feature/s1 ── finishing-wor
 
 ## 和谁比
 
-| 能力 | speccode | [superpowers](https://github.com/obra/superpowers) | [spec-kit](https://github.com/github/spec-kit) | 手工约定 |
-|---|---|---|---|---|
-| 三层分支拓扑 + 对账 | ✅ | — | — | — |
-| spec 文档仓内托管(全分支 tracked) | ✅ | — | 部分 | — |
-| Claude Code 原生插件 | ✅ | ✅ | —(跨 agent CLI) | — |
-| SDD 方法论(探索/文档/计划/执行/评审) | ✅(自包含移植) | ✅(来源) | — | — |
-| 生命周期 hooks + 跨会话 memory | ✅ | — | — | — |
-| PR/MR 流程标准化 | ✅ | — | — | — |
+| 能力 | speccode | [superpowers](https://github.com/obra/superpowers) | [spec-kit](https://github.com/github/spec-kit) | [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) | 手工约定 |
+|---|---|---|---|---|---|
+| 双层分支拓扑 + 对账(多 worktree 并行) | ✅ | — | — | — | — |
+| spec 文档仓内托管(全分支 tracked) | ✅ | — | 部分 | 部分 | — |
+| Claude Code 原生插件 | ✅ | ✅ | —(跨 agent CLI) | —(npx 安装器) | — |
+| SDD 方法论(探索/文档/计划/执行/评审) | ✅(自包含移植) | ✅(来源) | — | ✅(自有体系) | — |
+| 生命周期 hooks + 跨会话 memory | ✅ | — | — | — | — |
+| PR/MR 流程标准化 | ✅ | — | — | — | — |
 
 手工约定把「文档放哪 / 从哪个分支切 / PR 谁开」留给人脑,speccode 把三者固化为默认路径。
 

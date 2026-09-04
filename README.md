@@ -97,14 +97,14 @@ See [plugin README §3](./plugins/speccode/README.md) for the full topology and 
 
 ## How We Compare
 
-| Capability | speccode | [superpowers](https://github.com/obra/superpowers) | [spec-kit](https://github.com/github/spec-kit) | ad-hoc |
-|---|---|---|---|---|
-| Three-layer branch topology + reconciliation | ✅ | — | — | — |
-| In-repo spec document hosting (tracked on all branches) | ✅ | — | partial | — |
-| Native Claude Code plugin | ✅ | ✅ | — (cross-agent CLI) | — |
-| SDD methodology (explore / document / plan / execute / review) | ✅ (self-contained port) | ✅ (source) | — | — |
-| Lifecycle hooks + cross-session memory | ✅ | — | — | — |
-| Standardized PR/MR flow | ✅ | — | — | — |
+| Capability | speccode | [superpowers](https://github.com/obra/superpowers) | [spec-kit](https://github.com/github/spec-kit) | [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) | ad-hoc |
+|---|---|---|---|---|---|
+| Two-layer branch topology + reconciliation (parallel worktrees) | ✅ | — | — | — | — |
+| In-repo spec document hosting (tracked on all branches) | ✅ | — | partial | partial | — |
+| Native Claude Code plugin | ✅ | ✅ | — (cross-agent CLI) | — (npx installer) | — |
+| SDD methodology (explore / document / plan / execute / review) | ✅ (self-contained port) | ✅ (source) | — | ✅ (own system) | — |
+| Lifecycle hooks + cross-session memory | ✅ | — | — | — | — |
+| Standardized PR/MR flow | ✅ | — | — | — | — |
 
 Where ad-hoc conventions leave "where do docs go / which branch to cut / who opens the PR" to human memory, speccode turns all three into a default path.
 
