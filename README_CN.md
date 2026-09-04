@@ -22,6 +22,16 @@
 - ✅ **流程标准化** —— 全套 `/speccode:*` 命令 + 生命周期 hooks(封闭枚举)+ 跨会话 memory,团队约定变成可执行原语。
 - ✅ **自托管自动化开发** —— 本仓库用 speccode 开发自身(dogfood):每次变更走完整 SDD 链路,规格主档与归档仓内托管,开发工作流 skills 自动化仓库自身流程。一个可运行的自动化开发体系样板,而不只是一个待安装的插件。
 
+## 基础工作流
+
+1. **exploring** —— 在 trunk 上把需求聊清楚,出口判定形态(单需求 / 多个独立 / 大需求)。
+2. **creating-worktree** —— 从 trunk 一步切出开发分支(git worktree),基线测试全绿。
+3. **proposing** —— 落地 proposal / design / specs / tasks 四类文档,落盘即提交,出口定层。
+4. **applying**(极小需求)或 **writing-plans + subagent-driven-development / executing-plans** —— 实现。
+5. **requesting-code-review** —— 派发审查子代理,技术化处理反馈。
+6. **syncing → archiving** —— delta 并入规格主档,归档本次变更。
+7. **finishing-worktree** —— 测试门禁,PR → trunk。(大需求:本地 squash 汇入 opt-in 集成分支,终局 finishing-feature。)
+
 ## 看它干活
 
 ```console

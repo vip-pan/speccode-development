@@ -22,6 +22,16 @@ Requires [Node.js ≥ 24](#prerequisites) and `git`. After installation, command
 - ✅ **Standardized workflow** — the full `/speccode:*` command set + lifecycle hooks (closed enumeration) + cross-session memory turn team conventions into executable primitives.
 - ✅ **Self-hosting automated development** — this repo develops itself with speccode (dogfood): every change walks the full SDD chain, the spec master and archive live in-repo, and development-workflow skills automate the repo's own process. A working reference for an automated development system, not just a plugin to install.
 
+## The Basic Workflow
+
+1. **exploring** — clarify the requirement on trunk; the exit decides its shape (single / several independent / large).
+2. **creating-worktree** — one step from trunk to a development branch in its own worktree, baseline tests green.
+3. **proposing** — land proposal / design / specs / tasks documents; commits on save; the exit assigns a tier.
+4. **applying** (tiny changes) or **writing-plans + subagent-driven-development / executing-plans** — implement.
+5. **requesting-code-review** — dispatch a review subagent; process feedback technically.
+6. **syncing → archiving** — merge the delta into the spec master, archive the change.
+7. **finishing-worktree** — test gate, then PR → trunk. (Large requirements: squash into an opt-in integration branch, finale via finishing-feature.)
+
 ## See It in Action
 
 ```console
