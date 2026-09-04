@@ -168,7 +168,7 @@ git commit -m "docs(readme): two-layer topology wording + count literals out of 
 **Interfaces:**
 - Produces: 锚点 `#the-basic-workflow` / `#基础工作流`(Task 5 的 Quickstart 引用)。
 
-- [ ] **Step 1: EN 插入块**
+- [x] **Step 1: EN 插入块**
 
 ````markdown
 
@@ -183,7 +183,7 @@ git commit -m "docs(readme): two-layer topology wording + count literals out of 
 7. **finishing-worktree** — test gate, then PR → trunk. (Large requirements: squash into an opt-in integration branch, finale via finishing-feature.)
 ````
 
-- [ ] **Step 2: CN 插入块**
+- [x] **Step 2: CN 插入块**
 
 ````markdown
 
@@ -198,12 +198,12 @@ git commit -m "docs(readme): two-layer topology wording + count literals out of 
 7. **finishing-worktree** —— 测试门禁,PR → trunk。(大需求:本地 squash 汇入 opt-in 集成分支,终局 finishing-feature。)
 ````
 
-- [ ] **Step 3: 校验**
+- [x] **Step 3: 校验**
 
 Run: `grep -c '^[0-9]\.' README.md README_CN.md`
 Expected: 两文件各含 Basic Workflow 的 7 条 + 原有有序清单;人工确认两版新段各 7 步、段序一致(Why 之后、See It in Action / 看它干活 之前)。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add README.md README_CN.md
