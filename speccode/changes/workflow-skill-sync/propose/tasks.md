@@ -2,7 +2,7 @@
 
 ## 迁移与重写
 
-- [ ] 1. `git mv scripts/install-skills.sh support/install-skills.sh`;`git mv skills/speccode-workflow support/speccode-workflow`
+- [x] 1. `git mv scripts/install-skills.sh support/install-skills.sh`;`git mv skills/speccode-workflow support/speccode-workflow`
 - [ ] 2. 重写 `support/speccode-workflow/SKILL.md`(按 design.md 蓝图:frontmatter 去 `name:`、去版本化标题「原生链路(双层拓扑)」、链路修 5 错位、新增知识集节、发布节补 tag/Release + syncing 顺序 + 轻档=Tier 1)
 - [ ] 3. 改 `support/install-skills.sh`:SRC=`$REPO_ROOT/support`;安装判据「含 SKILL.md 的目录才装」;头部注释路径同步
 
