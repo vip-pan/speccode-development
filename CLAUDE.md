@@ -41,7 +41,7 @@ speccode 编排的分支拓扑是**双层**:普通需求从 trunk 直接切 `<ty
 
 1. **引擎 lib**(`plugins/speccode/lib/*.mjs`)—— 14 个经单测的纯逻辑模块(atomic / config / detect / git / hooks / knowledge / memory / prtool / reconcile / sanitize / sdd / slug / state / timestamp)。所有 git 操作、JSON 读写、对账、hooks/memory、SDD 工件都在这里。改逻辑改这里,并配套改 `tests/`。
 2. **CLI 枢纽**(`plugins/speccode/bin/speccode.mjs`)—— 把 lib 暴露为输出 JSON 的一组 verb(清单以该文件的 `VERBS` 表为准)。读 verb 直接返回;**写 verb 必须走 `--json-stdin`**(`echo '<json>' | node ... write-state --json-stdin`),从 stdin 读 JSON 而不从 argv 读,避免超长/转义。未知 verb 或抛错 → `{ok:false,error}` + exit 1。
-3. **命令交互层**(`plugins/speccode/commands/*.md`)—— 24 个 slash 命令的 prose 指令,只负责提问/确认/调用 CLI verb/解析 JSON/报告。**不重复实现逻辑**,纯 git 动作(如 `git worktree add`)可直接写,其余走 verb。其中 `applying` 是 Tier 1(极小需求)的手动执行入口:按 tasks.md 逐条实现、勾选回填 + 簿记 commit,完成后必经 code review。
+3. **命令交互层**(`plugins/speccode/skills/<name>/SKILL.md`,一 skill 一目录)—— 24 个 slash 命令的 prose 指令,只负责提问/确认/调用 CLI verb/解析 JSON/报告。**不重复实现逻辑**,纯 git 动作(如 `git worktree add`)可直接写,其余走 verb。其中 `applying` 是 Tier 1(极小需求)的手动执行入口:按 tasks.md 逐条实现、勾选回填 + 簿记 commit,完成后必经 code review。
 4. **references 层**(`plugins/speccode/references/`)—— 命令可引用的辅助文档(评审提示 / 调试与防御方法 / 测试要点等),与命令 markdown 分离、不承载交互逻辑,随插件源码跟踪。
 
 5. **插件自带 hooks 层**(`plugins/speccode/hooks/`)—— Claude Code settings hook(`hooks/hooks.json` 声明、经 `${CLAUDE_PLUGIN_ROOT}` 引用,如 PreToolUse 工具输入清洗)——与 `lib/hooks.mjs` 的 config 生命周期事件是两个家族,别混淆。
