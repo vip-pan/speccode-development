@@ -32,7 +32,7 @@ description: "把 changes/<slug>/ 的 delta specs 智能合并进 speccode/spec/
 - **新目录已存在**(重复 syncing / 此前已改名)→ 跳过 `git mv`,直接把 delta 合并进新目录;合并幂等,重跑无 diff。若此时旧目录竟仍存在,MUST 报告给用户并请其确认如何处置,MUST NOT 自动删除。
 - **旧目录与新目录都不存在**(旧名主规格从未建过)→ 跳过 `git mv`,对 `<新>` 走下方「新建主规格」路径,不报错。
 
-**改名后交叉引用检查**:MUST 全仓 grep 旧 capability 名(至少覆盖 `speccode/spec/`、`plugins/speccode/skills/`、README 与 CLAUDE.md),确认无遗留引用。若其他 capability 的主规格引用了旧名,该引用 MUST 由一份独立的 MODIFIED delta 修正后再经本命令合并,MUST NOT 在 syncing 中顺手直改未被 delta 覆盖的主规格内容。
+**改名后交叉引用检查**:MUST 全仓 grep 旧 capability 名(至少覆盖 `speccode/spec/`、`skills/`、根 README 与 AGENTS.md),确认无遗留引用。若其他 capability 的主规格引用了旧名,该引用 MUST 由一份独立的 MODIFIED delta 修正后再经本命令合并,MUST NOT 在 syncing 中顺手直改未被 delta 覆盖的主规格内容。
 
 ## 合并语义(对每个 capability delta)
 

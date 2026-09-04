@@ -1,4 +1,4 @@
-// plugins/speccode/tests/knowledge.test.mjs
+// tests/knowledge.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, realpathSync, rmSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';

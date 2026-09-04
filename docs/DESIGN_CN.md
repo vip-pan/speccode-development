@@ -1,8 +1,8 @@
 # speccode
 
-[English](README.md) | [简体中文](README_CN.md)
+[English](DESIGN.md) | [简体中文](DESIGN_CN.md)
 
-> 用户门面(安装 / Quickstart / 对比定位)见根 README_CN.md;本文档是插件设计文档。
+> 用户门面(安装 / Quickstart / 对比定位)见根 [README_CN.md](../README_CN.md);本文档是插件设计文档。
 
 ## 1. speccode 是什么
 
@@ -165,7 +165,7 @@ speccode/
 - **同 feature 多轮重建不冲突**:changes/<slug>/ 归档后目录释放,同一 slug 可再次 proposing 开新一轮;未归档重建时 proposing 会询问「续写 / 先归档 / 取消」。
 - **知识集:以能力为键的当前态快照**:`knowledge/` 下每个 topic 文件混合两类内容。`distilling-knowledge` 把 `spec/`(全量读——新鲜度锚点)与 `archive/`(**增量**,经 `knowledge/_distilled.meta.json` 追踪,纯为读成本控制)蒸馏为**蒸馏块(distilled blocks)**,用 `<!-- distilled-from: cap/<slug> --> ... <!-- /distilled -->` 标记包裹:键是能力 slug,每文件唯一,每次运行 upsert——后蒸覆盖先蒸,退役知识经闸门附理由删除(不留墓碑;历史在 `archive/` 与 CHANGELOG 里),且每次运行都把既有蒸馏块对照当前 spec 做新鲜度审查。`recording-knowledge` 在这些标记之外写入并整理自由格式的**手写(hand-written)**内容(replace-hand 模式:每次写入整建整个手写区,distilled 块逐字节存活;整理动作——合并/删除——附理由,裁决权归当下用户而非 spec)。两类写入都产出规范布局:手写在前,蒸馏块在后。知识集只策展 SDD 过程知识(`development/*`;pitfalls 兼收评审中反复出现的问题模式与团队评审共识)。业务知识交由外部 RAG 系统:`recording-knowledge` 写入前做适配判断(建议而非硬拦),`distilling-knowledge` 对范围外 topic 的蒸馏块经同一人工闸门日落,hand-written 段逐字节保留。读侧仍解析旧 `promoted-from`/`/promoted` marker 与旧 provenance 来源值;存量文件随首次蒸馏经闸门迁移为能力键。
 
-> 插件侧辅助资源:`plugins/speccode/references/` 内含 visual-companion(brainstorming 的可视化伴侣,见 `references/visual-companion.md`)、评审提示与调试方法论等,随插件源码跟踪。
+> 插件侧辅助资源:`references/` 内含 visual-companion(brainstorming 的可视化伴侣,见 `references/visual-companion.md`)、评审提示与调试方法论等,随插件源码跟踪。
 
 ## 6. `.speccode/` 目录结构
 
@@ -251,16 +251,16 @@ speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>_
 
 ## 11. 从 0.1 迁移
 
-各版本完整变更记录见仓库根目录 [CHANGELOG.md](../../CHANGELOG.md)。
+各版本完整变更记录见仓库根目录 [CHANGELOG.md](../CHANGELOG.md)。
 
 ### 升级动作
 
 插件升级对用户来说是一组 Claude Code 命令,不是重新克隆:
 
 ```text
-/plugin marketplace update speccode-development   # 刷新 marketplace 缓存(git 拉取)
+/plugin marketplace update speccode   # 刷新 marketplace 缓存(git 拉取)
 → 检测到 plugin.json version 变化触发更新检测
-→ /plugin install speccode@speccode-development   # 按提示更新安装
+→ /plugin install speccode@speccode   # 按提示更新安装
 ```
 
 注意:GitHub Release / tag 只是给人看的发布标记,**不触发**任何自动更新;更新检测完全由 marketplace git 拉取后的 `plugin.json` version 比对驱动。

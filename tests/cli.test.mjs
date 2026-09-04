@@ -1039,9 +1039,9 @@ test('code_intel_tools 6 命令 prose: 每命令用 code_intel_tools/代码智�
   }
 });
 
-test('README.md / README_CN.md 字段集 + 探测描述用 code_intel_tools,不残留 knowledge_tools 字段名', () => {
-  for (const f of ['README.md', 'README_CN.md']) {
-    const md = readFileSync(join(__dirname, '..', f), 'utf8');
+test('docs/DESIGN.md / DESIGN_CN.md 字段集 + 探测描述用 code_intel_tools,不残留 knowledge_tools 字段名', () => {
+  for (const f of ['DESIGN.md', 'DESIGN_CN.md']) {
+    const md = readFileSync(join(__dirname, '..', 'docs', f), 'utf8');
     assert.ok(md.includes('code_intel_tools'), `${f} 必须含 code_intel_tools`);
     assert.ok(!md.includes('knowledge_tools'), `${f} 不得残留 knowledge_tools 字段名`);
     // 措辞(非字段名):代码工具一律叫 code intelligence / 代码智能工具
@@ -1051,7 +1051,7 @@ test('README.md / README_CN.md 字段集 + 探测描述用 code_intel_tools,不�
 });
 
 test('根 README.md / README_CN.md 用 code intelligence / 代码智能工具 措辞,不残留 knowledge-base / 知识库工具', () => {
-  const repoRoot = join(__dirname, '..', '..', '..');
+  const repoRoot = join(__dirname, '..');
   const en = readFileSync(join(repoRoot, 'README.md'), 'utf8');
   assert.ok(en.includes('code intelligence'), '根 README.md 必须含 "code intelligence" 措辞');
   assert.ok(!en.includes('knowledge-base'), '根 README.md 不得残留 "knowledge-base" 措辞');

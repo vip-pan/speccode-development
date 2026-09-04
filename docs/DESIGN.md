@@ -1,8 +1,8 @@
 # speccode
 
-[English](README.md) | [简体中文](README_CN.md)
+[English](DESIGN.md) | [简体中文](DESIGN_CN.md)
 
-> User-facing docs (installation / Quickstart / comparison & positioning) live in the root README.md; this document is the plugin design document.
+> User-facing docs (installation / Quickstart / comparison & positioning) live in the root [README.md](../README.md); this document is the plugin design document.
 
 ## 1. What is speccode
 
@@ -165,7 +165,7 @@ Conventions:
 - **Multi-round rebuilds of the same feature don't collide**: once changes/<slug>/ is archived the directory is freed, and the same slug can start a new round via proposing again; when rebuilding without archiving first, proposing asks "continue / archive first / cancel".
 - **Knowledge set: a current-state snapshot, keyed by capability**: each topic file under `knowledge/` mixes two kinds of content. `distilling-knowledge` distills `spec/` (full read — the freshness anchor) and `archive/` (**incrementally**, tracked in `knowledge/_distilled.meta.json` purely as read-cost control) into **distilled blocks** wrapped in `<!-- distilled-from: cap/<slug> --> ... <!-- /distilled -->` markers: the key is a capability slug, unique per file, upserted on every run — later knowledge overrides earlier, retired knowledge is deleted through the gate with a reason (no tombstones; history lives in `archive/` and the CHANGELOG), and every existing block is freshness-audited against the current specs on each run. `recording-knowledge` writes and tidies the free-form **hand-written** prose outside those markers (replace-hand mode: the whole hand region is rebuilt on each write while distilled blocks survive byte-for-byte; tidy actions — merge/delete — carry reasons and answer to the present user, not to the specs). Both writes emit the canonical layout: hand-written first, distilled blocks after. The set curates SDD process knowledge only (`development/*`; pitfalls also covers recurring review findings and team review consensus). Business knowledge is left to external RAG systems: `recording-knowledge` runs a fit check before writing (a recommendation, not a hard block), and `distilling-knowledge` sunsets distilled blocks of out-of-scope topics through the same human gate while preserving hand-written content byte-for-byte. Legacy `promoted-from`/`/promoted` markers and legacy provenance-valued sources are still parsed on read; existing files migrate to capability keys through the gate on their first distill.
 
-> Plugin-side helper resources: `plugins/speccode/references/` contains visual-companion (the visual companion for brainstorming, see `references/visual-companion.md`), review prompts, and debugging methodology; all tracked with the plugin source.
+> Plugin-side helper resources: `references/` contains visual-companion (the visual companion for brainstorming, see `references/visual-companion.md`), review prompts, and debugging methodology; all tracked with the plugin source.
 
 ## 6. The `.speccode/` Directory Structure
 
@@ -252,16 +252,16 @@ Usage convention: `/speccode:exploring`, `/speccode:proposing`, and `/speccode:b
 
 ## 11. Migrating from 0.1
 
-The complete change log for every version lives in [CHANGELOG.md](../../CHANGELOG.md) at the repo root.
+The complete change log for every version lives in [CHANGELOG.md](../CHANGELOG.md) at the repo root.
 
 ### Upgrade actions
 
 For users, a plugin upgrade is a set of Claude Code commands, not a fresh clone:
 
 ```text
-/plugin marketplace update speccode-development   # refreshes the marketplace cache (git pull)
+/plugin marketplace update speccode   # refreshes the marketplace cache (git pull)
 → a plugin.json version change triggers the update check
-→ /plugin install speccode@speccode-development   # update the installation when prompted
+→ /plugin install speccode@speccode   # update the installation when prompted
 ```
 
 Note: GitHub Releases / tags are just release markers for humans and **trigger no automatic update**; the update check is driven entirely by the `plugin.json` version comparison after the marketplace git pull.

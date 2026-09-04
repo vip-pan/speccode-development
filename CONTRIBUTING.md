@@ -22,11 +22,11 @@ Spec changes go through the `speccode/changes/` workflow:
 ## Running tests
 
 ```bash
-node --test ./plugins/speccode/tests/*.test.mjs   # glob form (avoid Node v24 MODULE_NOT_FOUND)
+node --test ./tests/*.test.mjs   # glob form (avoid Node v24 MODULE_NOT_FOUND)
 ```
 
 ## Release discipline
 
-Bumping `plugins/speccode/.claude-plugin/plugin.json` `version` MUST be in the same commit/PR as the matching `CHANGELOG.md` section. Tag `v<version>` on trunk and create a GitHub Release whose notes are excerpted from the CHANGELOG section.
+Bumping `.claude-plugin/plugin.json` `version` MUST be in the same commit/PR as the matching `CHANGELOG.md` section. Tag `v<version>` on trunk and create a GitHub Release whose notes are excerpted from the CHANGELOG section.
 
 PRs to speccode, written with speccode, are welcome.

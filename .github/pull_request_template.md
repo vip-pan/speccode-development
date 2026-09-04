@@ -8,7 +8,7 @@
 
 ## Checklist
 
-- [ ] Tests pass: `node --test ./plugins/speccode/tests/*.test.mjs`
+- [ ] Tests pass: `node --test ./tests/*.test.mjs`
 - [ ] If docs changed: EN/zh versions kept in sync (1:1 structure)
 - [ ] No hardcoded version numbers / test counts in READMEs
 - [ ] CHANGELOG updated if `plugin.json` version bumped

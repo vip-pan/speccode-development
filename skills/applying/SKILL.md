@@ -48,7 +48,7 @@ description: "Tier 1 手动执行入口:按 tasks.md 勾选清单逐条实现(�
 
 ## 完成后(必经 review,无商量余地)
 
-1. **全量测试**:`node --test ./plugins/speccode/tests/*.test.mjs`(或项目等效全量测试命令),失败 → 停下修复,不得带病进 review。
+1. **全量测试**:`node --test ./tests/*.test.mjs`(或项目等效全量测试命令),失败 → 停下修复,不得带病进 review。
 2. **code review**:调用 `/speccode:requesting-code-review`,BASE 用前置第 5 步记录的 commit;审查反馈按 `/speccode:receiving-code-review` 核实处理。**review 未通过前 MUST NOT 进入 syncing。**
 3. **写记忆**:把实现进度摘要(完成条目、验证结果、回写记录)追加到本 feature 的 memory:
    ```bash

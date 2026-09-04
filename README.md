@@ -4,7 +4,7 @@ An end-to-end SDD (Spec-Driven Development) and automated development system bui
 
 [English](README.md) | [简体中文](README_CN.md)
 
-[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![platform: macOS/Linux](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)]() [![version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/vip-pan/speccode-development/main/plugins/speccode/.claude-plugin/plugin.json&query=$.version&label=version&color=blue)](https://github.com/vip-pan/speccode-development/releases) [![tests](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml/badge.svg)](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml) [![GitHub stars](https://img.shields.io/github/stars/vip-pan/speccode-development)]()
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![platform: macOS/Linux](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)]() [![version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/vip-pan/speccode/main/.claude-plugin/plugin.json&query=$.version&label=version&color=blue)](https://github.com/vip-pan/speccode/releases) [![tests](https://github.com/vip-pan/speccode/actions/workflows/test.yml/badge.svg)](https://github.com/vip-pan/speccode/actions/workflows/test.yml) [![GitHub stars](https://img.shields.io/github/stars/vip-pan/speccode)]()
 
 ## Why speccode
 
@@ -41,8 +41,8 @@ $ /speccode:finishing-feature
 1. Install the plugin:
 
    ```bash
-   /plugin marketplace add vip-pan/speccode-development
-   /plugin install speccode@speccode-development
+   /plugin marketplace add vip-pan/speccode
+   /plugin install speccode@speccode
    ```
 
 2. Run `/speccode:init` to initialize configuration.
@@ -60,7 +60,7 @@ After installation, commands appear under the `/speccode:` prefix, e.g. `/specco
 | Knowledge | `distilling-knowledge` `recording-knowledge` |
 | Methodology | `subagent-driven-development` `executing-plans` `dispatching-parallel-agents` `test-driven-development` `systematic-debugging` `requesting-code-review` `receiving-code-review` `verification-before-completion` |
 
-See [plugin README §2 command table](./plugins/speccode/README.md) for each command's purpose and prerequisites.
+See [design doc §2 command table](./docs/DESIGN.md) for each command's purpose and prerequisites.
 
 The flow is tiered by requirement size: tiny changes can take Tier 1 (after proposing, `/speccode:applying` implements tasks.md item-by-item by hand), small-to-medium ones go `writing-plans` + SDD/`executing-plans`, and complex ones brainstorm first.
 
@@ -72,7 +72,7 @@ origin/trunk ── feature/<slug> ──┬── worktree-a (parallel work)
 spec documents are tracked on all branches and ride the PR chain up to trunk
 ```
 
-See [plugin README §3](./plugins/speccode/README.md) for the full topology and key points.
+See [design doc §3](./docs/DESIGN.md) for the full topology and key points.
 
 ## How We Compare
 
@@ -95,9 +95,9 @@ Test-driven · systematic over improvisation · reduce complexity · evidence ov
 
 | Document | Contents |
 |---|---|
-| [Plugin README](./plugins/speccode/README.md) | 24-command reference, three-layer topology, R1-R13 risks, 0.1 → 0.2 migration (plugin design document) |
+| [Design Doc](./docs/DESIGN.md) | 24-command reference, three-layer topology, R1-R13 risks, 0.1 → 0.2 migration (plugin design document) |
 | [CHANGELOG](./CHANGELOG.md) | Release history (Keep a Changelog, all in Chinese) |
-| [CLAUDE.md](./CLAUDE.md) | Development documentation: three-layer engine architecture, testing conventions, speccode workflow |
+| [AGENTS.md](./AGENTS.md) | Development documentation (source of truth; `CLAUDE.md` is a thin Claude Code shell): three-layer engine architecture, testing conventions, speccode workflow |
 | `support/` | Dev-workflow skill (true source) and helper scripts — `speccode-workflow` installed to `.claude/skills/` via `support/install-skills.sh` for Claude Code lazy-loading |
 | `speccode/spec/` · `speccode/archive/` | SDD spec master (11 capabilities) and archived change records — the system's own living documentation |
 

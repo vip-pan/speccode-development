@@ -35,6 +35,6 @@ description: 本仓库(speccode 插件)自身的开发工作流与发布纪律�
 
 ## 发布纪律
 
-bump `plugins/speccode/.claude-plugin/plugin.json` `version` 的提交**必须同步更新** `CHANGELOG.md` 对应版本小节(见 `speccode/spec/plugin-packaging/spec.md`「版本发布纪律」);发版打 `v<version>` tag 并建 GitHub Release(notes 摘自 CHANGELOG);syncing 顺序 = 先 bump+CHANGELOG 再 sync,使「version 与 CHANGELOG 最新小节一致」合并后立即为真。
+bump `.claude-plugin/plugin.json` `version` 的提交**必须同步更新** `CHANGELOG.md` 对应版本小节(见 `speccode/spec/plugin-packaging/spec.md`「版本发布纪律」);发版打 `v<version>` tag 并建 GitHub Release(notes 摘自 CHANGELOG);syncing 顺序 = 先 bump+CHANGELOG 再 sync,使「version 与 CHANGELOG 最新小节一致」合并后立即为真。
 
 release bump 类 chore 走 proposing 轻档(空 delta,design.md/specs/ 可省;空 delta 轻档专属 Tier 1)→ `/speccode:applying` → syncing → archiving 链路,不再零文档直提。

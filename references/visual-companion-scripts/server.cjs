@@ -200,7 +200,7 @@ const helperInjection = '<script>\n' + helperScript + '\n</script>';
 // ========== Helper Functions ==========
 
 function readSpeccodeManifest() {
-  const fallback = { version: 'unknown', homepage: 'https://github.com/vip-pan/speccode-development' };
+  const fallback = { version: 'unknown', homepage: 'https://github.com/vip-pan/speccode' };
   try {
     const manifest = path.join(__dirname, '..', '..', '.claude-plugin', 'plugin.json');
     const data = JSON.parse(fs.readFileSync(manifest, 'utf-8'));

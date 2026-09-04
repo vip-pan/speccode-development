@@ -10,6 +10,6 @@ about: Something in speccode behaves wrong
 <!-- Expected behavior -->
 
 ## Repro
-- speccode version: (run `node plugins/speccode/bin/speccode.mjs read-config --cwd .` or check `.claude-plugin/plugin.json`)
+- speccode version: (run `node bin/speccode.mjs read-config --cwd .` or check `.claude-plugin/plugin.json`)
 - OS:
 - Steps:

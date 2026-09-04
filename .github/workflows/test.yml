@@ -14,4 +14,4 @@ jobs:
         with:
           node-version: '24'
       - name: Run engine tests
-        run: node --test ./plugins/speccode/tests/*.test.mjs
+        run: node --test ./tests/*.test.mjs

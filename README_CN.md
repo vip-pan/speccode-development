@@ -4,7 +4,7 @@
 
 [English](README.md) | [简体中文](README_CN.md)
 
-[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![platform: macOS/Linux](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)]() [![version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/vip-pan/speccode-development/main/plugins/speccode/.claude-plugin/plugin.json&query=$.version&label=version&color=blue)](https://github.com/vip-pan/speccode-development/releases) [![tests](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml/badge.svg)](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml) [![GitHub stars](https://img.shields.io/github/stars/vip-pan/speccode-development)]()
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![platform: macOS/Linux](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)]() [![version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/vip-pan/speccode/main/.claude-plugin/plugin.json&query=$.version&label=version&color=blue)](https://github.com/vip-pan/speccode/releases) [![tests](https://github.com/vip-pan/speccode/actions/workflows/test.yml/badge.svg)](https://github.com/vip-pan/speccode/actions/workflows/test.yml) [![GitHub stars](https://img.shields.io/github/stars/vip-pan/speccode)]()
 
 ## 为什么用 speccode
 
@@ -41,8 +41,8 @@ $ /speccode:finishing-feature
 1. 安装插件:
 
    ```bash
-   /plugin marketplace add vip-pan/speccode-development
-   /plugin install speccode@speccode-development
+   /plugin marketplace add vip-pan/speccode
+   /plugin install speccode@speccode
    ```
 
 2. 运行 `/speccode:init` 初始化配置。
@@ -60,7 +60,7 @@ $ /speccode:finishing-feature
 | 知识 | `distilling-knowledge` `recording-knowledge` |
 | 方法论 | `subagent-driven-development` `executing-plans` `dispatching-parallel-agents` `test-driven-development` `systematic-debugging` `requesting-code-review` `receiving-code-review` `verification-before-completion` |
 
-各命令作用与前置条件见 [插件 README §2 命令表](./plugins/speccode/README_CN.md)。
+各命令作用与前置条件见 [设计文档 §2 命令表](./docs/DESIGN_CN.md)。
 
 流程按需求体量分三层:极小需求可走 Tier 1(proposing 后由 `/speccode:applying` 按 tasks.md 逐条手动实现),中小型走 writing-plans + SDD/executing-plans,复杂需求先 brainstorming。
 
@@ -72,7 +72,7 @@ origin/trunk ── feature/<slug> ──┬── worktree-a(并行施工)
 spec 文档在所有分支 tracked,随 PR 链路上 trunk
 ```
 
-完整拓扑与要点见 [插件 README §3](./plugins/speccode/README_CN.md)。
+完整拓扑与要点见 [设计文档 §3](./docs/DESIGN_CN.md)。
 
 ## 和谁比
 
@@ -95,9 +95,9 @@ spec 文档在所有分支 tracked,随 PR 链路上 trunk
 
 | 文档 | 内容 |
 |---|---|
-| [插件 README](./plugins/speccode/README_CN.md) | 24 命令详表、三层拓扑、R1-R13 风险、0.1→0.2 迁移(插件设计文档) |
+| [设计文档](./docs/DESIGN_CN.md) | 24 命令详表、三层拓扑、R1-R13 风险、0.1→0.2 迁移(插件设计文档) |
 | [CHANGELOG](./CHANGELOG.md) | 版本发布记录(Keep a Changelog,全中文) |
-| [CLAUDE.md](./CLAUDE.md) | 开发文档:引擎三层架构、测试约定、speccode 工作流 |
+| [AGENTS.md](./AGENTS.md) | 开发文档真源(`CLAUDE.md` 为 Claude Code 薄壳):引擎三层架构、测试约定、speccode 工作流 |
 | `support/` | 开发工作流 skill(真源)与辅助脚本——`speccode-workflow` 经 `support/install-skills.sh` 安装到 `.claude/skills/`,供 Claude Code 懒加载 |
 | `speccode/spec/` · `speccode/archive/` | SDD 规格主档(11 个 capability)与变更归档——体系自身的活文档 |
 

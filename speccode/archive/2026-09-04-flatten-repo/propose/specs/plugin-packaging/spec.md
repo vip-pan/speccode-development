@@ -1,10 +1,6 @@
-# plugin-packaging Specification
+# plugin-packaging Delta
 
-## Purpose
-
-speccode 作为 Claude Code 插件的打包结构契约——marketplace 仓 + plugin 子目录布局、plugin.json/marketplace.json 字段、命令通过 `bin/` PATH 裸调引擎的引用方式、插件源码与运行时数据 `.speccode/` 的边界、安装与命名空间机制。
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Marketplace 仓库结构
 
@@ -54,10 +50,6 @@ speccode 插件根 SHALL 为仓库根本身,并 MUST 含 `.claude-plugin/plugin.
 - **WHEN** 检查 `skills/*/SKILL.md`
 - **THEN** 引擎调用写作 `speccode.mjs <verb> --cwd .`,不存在 `node plugins/speccode/bin/speccode.mjs`、`node .claude/speccode/bin/speccode.mjs` 或 `node ${CLAUDE_PLUGIN_ROOT}` 形态的引用
 
-#### Scenario: stdin 管道写法兼容
-- **WHEN** 命令需写入 config/state
-- **THEN** 写作 `echo '<json>' | speccode.mjs <verb> --cwd . --json-stdin`,shebang 负责以 node 执行,管道数据正常进入 stdin
-
 #### Scenario: speccode.mjs 可执行性
 - **WHEN** 检查 `bin/speccode.mjs` 文件权限与首行
 - **THEN** 首行为 `#!/usr/bin/env node`,文件具备可执行位(`+x`)
@@ -74,18 +66,6 @@ speccode 插件根 SHALL 为仓库根本身,并 MUST 含 `.claude-plugin/plugin.
 - **WHEN** 检查插件根目录树
 - **THEN** 不含 `.speccode/`、`config.json`、`state/` 等运行时数据;这些只出现在目标项目根
 
-### Requirement: 命令正文手写路径与引擎一致
-
-命令正文里手写的 `.speccode/` 相对路径(`reset` 的 `rm -rf .speccode/state/`、`reset` 询问清理的 `.speccode/memory/` 与 `.speccode/sdd/` 等)SHALL 以 `--cwd` 指向的项目根为基准,与引擎 `speccodeDirOf(cwd)` 解析的目录一致。这保证裸调方案下命令正文的手写路径与引擎写入路径落在同一 `.speccode/` 目录。
-
-#### Scenario: 手写路径与引擎写入路径一致
-- **WHEN** 命令正文执行 `rm -rf .speccode/state/`(reset)或引用 `.speccode/memory/`、`.speccode/sdd/`(reset 清理询问、SDD 工作区),且 `--cwd .` 指向目标项目根
-- **THEN** 这些手写路径解析到的目录与 `speccode.mjs resolve-speccode-dir --cwd .` 返回的 `speccodeDir` 相同(均为 `<repoRoot>/.speccode`),不会因裸调方式改变基准
-
-#### Scenario: 不出现已删除机制的用例
-- **WHEN** 检查本 requirement 的正文与 Scenario
-- **THEN** MUST NOT 以 display-reset-to-trunk 命令、`untracked_permanent` 字段或 `.speccode/backup/` 等 v2 已删除的机制作为用例
-
 ### Requirement: 命令命名空间
 
 speccode 的全部 slash 命令 SHALL 通过 `plugin.json` 的 `name: "speccode"` 自动获得 `/speccode:` 前缀命名空间,skill markdown 位于 `skills/<name>/SKILL.md`(一 skill 一目录,调用名 = 目录名),SHALL NOT 通过 `commands/speccode/` 或 `skills/speccode/` 子目录前缀实现命名空间。
@@ -94,14 +74,6 @@ speccode 的全部 slash 命令 SHALL 通过 `plugin.json` 的 `name: "speccode"
 - **WHEN** 用户安装 speccode 插件后列出可用命令
 - **THEN** 24 个命令以 `/speccode:` 前缀形式出现:`init`、`exploring`、`creating-feature`、`creating-worktree`、`proposing`、`brainstorming`、`writing-plans`、`applying`、`executing-plans`、`subagent-driven-development`、`dispatching-parallel-agents`、`test-driven-development`、`systematic-debugging`、`requesting-code-review`、`receiving-code-review`、`verification-before-completion`、`syncing`、`archiving`、`finishing-worktree`、`finishing-feature`、`status`、`reset`、`recording-knowledge`、`distilling-knowledge`
 
-#### Scenario: 旧知识命令名不再出现
-- **WHEN** 用户安装含本变更的版本后列出可用命令
-- **THEN** `/speccode:memorize`、`/speccode:promote-knowledge` MUST NOT 出现
-
-#### Scenario: 旧命令名不再出现
-- **WHEN** 用户安装 0.2.x 后列出可用命令
-- **THEN** `/speccode:start`、`/speccode:develop-start`、`/speccode:develop-complete`、`/speccode:finish`、`/speccode:display-merge-trunk`、`/speccode:display-rebase-trunk`、`/speccode:display-reset-to-trunk` MUST NOT 出现
-
 ### Requirement: skill frontmatter 契约
 
 `skills/<name>/SKILL.md` 的 frontmatter SHALL 只含 `description`(中文,含触发时机语义,同时作为模型自动调用的匹配面);MUST NOT 含 `name`(调用名回落目录名)、`category`、`tags` 等非 commands 时代遗留或非标字段。skill SHALL 保持模型可自动调用(MUST NOT 设 `disable-model-invocation`),用户显式 `/speccode:<name>` 调用语义不变。
@@ -109,14 +81,6 @@ speccode 的全部 slash 命令 SHALL 通过 `plugin.json` 的 `name: "speccode"
 #### Scenario: frontmatter 只含 description
 - **WHEN** 检查 24 个 `skills/<name>/SKILL.md` 的 frontmatter
 - **THEN** 每个仅含 `description` 一个字段,无 `name`/`category`/`tags` 残留
-
-#### Scenario: 调用名不变
-- **WHEN** 用户显式输入 `/speccode:<name>`(如 `/speccode:exploring`)
-- **THEN** 调用目录名为 `<name>` 的 skill,与迁移前 command 的调用名一致
-
-#### Scenario: 模型自动调用可用
-- **WHEN** Claude 会话中出现匹配某 skill description 触发时机的任务(如实现功能时匹配 test-driven-development)
-- **THEN** 该 skill 可被模型自动调用,且用户显式调用路径不受影响
 
 ### Requirement: 测试路径解耦 cwd
 
@@ -145,7 +109,7 @@ speccode 的全部 slash 命令 SHALL 通过 `plugin.json` 的 `name: "speccode"
 
 #### Scenario: 根 README 两版门面要素齐全且结构一致
 - **WHEN** 检查仓库根 README.md 与 README_CN.md
-- **THEN** 两版段落一一对应(中文版为英文版全量翻译),版本徽章为 shields.io `dynamic/json` 形态(从 raw `.claude-plugin/plugin.json` 读 `$.version`),MUST NOT 出现硬编码版本号字面量
+- **THEN** 两版段落一一对应(中文版为英文版全量翻译),版本徽章为 shields.io `dynamic/json` 形态(从 raw `.claude-plugin/plugin.json` 读 `$.version`)
 
 #### Scenario: 设计文档两版指针与 ToC
 - **WHEN** 检查 docs/DESIGN.md 与 docs/DESIGN_CN.md
@@ -154,10 +118,6 @@ speccode 的全部 slash 命令 SHALL 通过 `plugin.json` 的 `name: "speccode"
 #### Scenario: AGENTS.md 承载开发文档且 CLAUDE.md 为薄壳
 - **WHEN** 检查 AGENTS.md 与 CLAUDE.md
 - **THEN** AGENTS.md 含发布纪律指针与多语言维护说明、不硬编码用例数量;CLAUDE.md 含 `@AGENTS.md` 引入且不复制 AGENTS.md 正文
-
-#### Scenario: 设计文档与 v2 一致
-- **WHEN** 检查 `docs/DESIGN.md` 与 `docs/DESIGN_CN.md`
-- **THEN** 两版命令表 MUST 为 24 个命令,拓扑图 MUST 为 trunk/feature/worktree 三层,且 MUST 含 0.1→0.2 迁移对照表,不存在 display / `-complete` 分支的现行行为描述
 
 ### Requirement: 仓库层重命名
 
@@ -195,10 +155,6 @@ speccode 的全部 slash 命令 SHALL 通过 `plugin.json` 的 `name: "speccode"
 - **WHEN** 维护者发布版本 `x.y.z`
 - **THEN** 主干上存在 `vx.y.z` 标签,且 GitHub 上存在同名 Release,其 notes 与 `CHANGELOG.md` 该版本小节一致或为其摘录
 
-#### Scenario: Release 不替代更新检测
-- **WHEN** 审计插件更新机制的文档与 spec
-- **THEN** 更新触发条件仅表述为「marketplace 仓库 git 拉取后 `plugin.json` version 变化」,任何文档 MUST NOT 声称 GitHub Release/tag 会触发用户侧自动更新
-
 ### Requirement: references 自包含与品牌中立
 
 `references/` 下的辅助资源(脚本、模板、文档)SHALL 自包含:渲染产物 MUST NOT 引用第三方品牌标识(名称、logo、链接),MUST NOT 在运行时请求第三方远程资源(图片、脚本、样式);所需版本号、仓库链接等元数据 MUST 读自 `.claude-plugin/plugin.json`,MUST NOT 硬编码(读取失败时的兜底常量除外)或从不存在的路径探测;仓库链接在渲染前 MUST 通过 http/https scheme 校验,非法值 MUST 回退到兜底常量。
@@ -210,10 +166,6 @@ speccode 的全部 slash 命令 SHALL 通过 `plugin.json` 的 `name: "speccode"
 #### Scenario: 版本与链接读自 plugin.json
 - **WHEN** 检查 `references/visual-companion-scripts/server.cjs` 的元数据读取逻辑
 - **THEN** 其 manifest 路径解析为仓库根 `.claude-plugin/plugin.json`(相对脚本文件上溯两级,扁平化后深度不变),且页脚品牌条不含 `<img>` 远程图片引用
-
-#### Scenario: visual companion 页脚渲染真实版本
-- **WHEN** 启动 visual-companion server 并请求其等待页(需先带 ?key= 取 cookie、再携 cookie 请求;直接 curl ?key= 只会得到 bootstrap 跳转页)
-- **THEN** 页脚含 `speccode v` + 当前 plugin.json 的 version 值(非 `unknown`),链接指向 plugin.json 的 homepage,页面 HTML 不含任何第三方远程资源 URL
 
 #### Scenario: homepage 非 http(s) 回退
 - **WHEN** plugin.json 的 `homepage` 为非 http/https scheme、非字符串或缺失
@@ -231,17 +183,17 @@ speccode 的全部 slash 命令 SHALL 通过 `plugin.json` 的 `name: "speccode"
 - **WHEN** 检索 AGENTS.md 中的测试数量字面量
 - **THEN** 不存在;测试约定以命令与文件路径表达
 
-### Requirement: 许可证文件
+### Requirement: 持续集成测试
 
-仓库根 SHALL 存在 `LICENSE` 文件,许可证文本 MUST 与 `.claude-plugin/plugin.json` 的 `license` 字段声明一致(当前为 MIT);根 README 的 License 节 MUST 链接该文件。
+仓库 SHALL 含 `.github/workflows/test.yml`,在 `push` 与 `pull_request` 事件触发时运行 `node --test ./tests/*.test.mjs`(glob 形式,避免 Node v24 `MODULE_NOT_FOUND`),MUST NOT 引入 lint 或 build 步骤(测试 ≠ build)。根 README(EN/zh)badges 段 SHALL 含指向该 workflow 的 CI 状态徽章。
 
-#### Scenario: LICENSE 存在且与声明一致
-- **WHEN** 检查仓库根 LICENSE 文件与 plugin.json 的 `license` 字段
-- **THEN** LICENSE 存在、内容为 MIT 许可证全文,plugin.json `license` 为 `MIT`
+#### Scenario: CI workflow 存在且仅跑测试
+- **WHEN** 检查 `.github/workflows/test.yml`
+- **THEN** 触发为 `push` 与 `pull_request`;步骤为 `node --test ./tests/*.test.mjs`;不含 lint/build 步骤
 
-#### Scenario: 根 README 引用 LICENSE
-- **WHEN** 检查根 README 的 License 节
-- **THEN** 存在指向 `LICENSE` 文件的链接
+#### Scenario: 根 README 含 CI 徽章
+- **WHEN** 检查根 README.md 与 README_CN.md badges 段
+- **THEN** 含指向 `workflows/test.yml` 的 GitHub Actions 状态徽章
 
 ### Requirement: 文档双语互链
 
@@ -264,26 +216,14 @@ speccode 的全部 slash 命令 SHALL 通过 `plugin.json` 的 `name: "speccode"
 - **WHEN** 检查根 README 对设计文档的引用,以及设计文档对根 README 的门面指针
 - **THEN** 英文版引用指向英文版、中文版引用指向中文版,无跨语言错链
 
-### Requirement: 持续集成测试
+### Requirement: 许可证文件
 
-仓库 SHALL 含 `.github/workflows/test.yml`,在 `push` 与 `pull_request` 事件触发时运行 `node --test ./tests/*.test.mjs`(glob 形式,避免 Node v24 `MODULE_NOT_FOUND`),MUST NOT 引入 lint 或 build 步骤(测试 ≠ build)。根 README(EN/zh)badges 段 SHALL 含指向该 workflow 的 CI 状态徽章。
+仓库根 SHALL 存在 `LICENSE` 文件,许可证文本 MUST 与 `.claude-plugin/plugin.json` 的 `license` 字段声明一致(当前为 MIT);根 README 的 License 节 MUST 链接该文件。
 
-#### Scenario: CI workflow 存在且仅跑测试
-- **WHEN** 检查 `.github/workflows/test.yml`
-- **THEN** 触发为 `push` 与 `pull_request`;步骤为 `node --test ./tests/*.test.mjs`;不含 lint/build 步骤
+#### Scenario: LICENSE 存在且与声明一致
+- **WHEN** 检查仓库根 LICENSE 文件与 plugin.json 的 `license` 字段
+- **THEN** LICENSE 存在、内容为 MIT 许可证全文,plugin.json `license` 为 `MIT`
 
-#### Scenario: 根 README 含 CI 徽章
-- **WHEN** 检查根 README.md 与 README_CN.md badges 段
-- **THEN** 含指向 `workflows/test.yml` 的 GitHub Actions 状态徽章
-
-### Requirement: 社区贡献文件
-
-仓库根 SHALL 含 `CONTRIBUTING.md`(说明 dogfood 贡献流程:exploring → creating-worktree → proposing → 实现(applying 或 writing-plans → executing-plans / subagent-driven-development)→ requesting-code-review → syncing → archiving → finishing-worktree,以及 clone 后 `bash support/install-skills.sh` 安装开发 skill);`.github/` SHALL 含 Issue 模板(`.github/ISSUE_TEMPLATE/`)与 `pull_request_template.md`。根 README 的贡献段 SHALL 链接 `CONTRIBUTING.md`。
-
-#### Scenario: 社区文件存在
-- **WHEN** 检查仓库根与 `.github/`
-- **THEN** 根含 `CONTRIBUTING.md`;`.github/` 含 Issue 模板目录与 `pull_request_template.md`
-
-#### Scenario: 根 README 贡献段指向 CONTRIBUTING
-- **WHEN** 检查根 README.md 与 README_CN.md 贡献段
-- **THEN** 含指向 `CONTRIBUTING.md` 的链接
+#### Scenario: 根 README 引用 LICENSE
+- **WHEN** 检查根 README 的 License 节
+- **THEN** 存在指向 `LICENSE` 文件的链接
