@@ -16,4 +16,4 @@
 ## 收尾校验
 
 - [x] 8. 重跑 `bash support/install-skills.sh` 并 `--check` 通过(worktree 内验证安装链路与 SKILL.md 判据;主仓 `.claude/skills/` 副本的漂移修复在合并回 trunk 后于主仓重跑本脚本同步)
-- [ ] 9. 全仓 grep 校验:活文档零残留——`scripts/install-skills`、`skills/speccode-workflow`、`v2 原生链路` / `v2 native chain`(豁免:CHANGELOG、`speccode/archive/`、`.ua/`、`.claude/`)
+- [x] 9. 全仓 grep 校验:活文档零残留——`scripts/install-skills`、`skills/speccode-workflow`、`v2 原生链路` / `v2 native chain`(豁免:CHANGELOG、`speccode/archive/`、`.ua/`、`.claude/`)
