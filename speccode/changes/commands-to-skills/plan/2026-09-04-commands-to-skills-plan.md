@@ -137,7 +137,7 @@ git commit -m "docs(skills): update syncing grep checklist to skills/ path"
 - Consumes: Task 1 的 skills/ 布局
 - Produces: 开发文档与插件实际布局一致
 
-- [ ] **Step 1: 更新命令交互层条目**
+- [x] **Step 1: 更新命令交互层条目**
 
 把:
 
@@ -153,7 +153,7 @@ git commit -m "docs(skills): update syncing grep checklist to skills/ path"
 
 (该条目其余文字「**不重复实现逻辑**,纯 git 动作…」原样保留;条目内后文如有 `applying` 描述不动。)
 
-- [ ] **Step 2: 验证 CLAUDE.md 无 commands/ 残留**
+- [x] **Step 2: 验证 CLAUDE.md 无 commands/ 残留**
 
 ```bash
 grep -n 'commands/' CLAUDE.md
@@ -161,7 +161,7 @@ grep -n 'commands/' CLAUDE.md
 
 Expected: 无输出。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add CLAUDE.md
