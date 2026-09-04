@@ -173,6 +173,7 @@ git commit -m "docs(CLAUDE): point command layer at skills/ layout"
 **Files:**
 - Modify: `speccode/knowledge/development/standards.md`(「命令 markdown 规范」行)
 - Modify: `speccode/knowledge/development/environment.md`(「Claude Code 插件机制结构」行)
+- Modify(执行期范围补正):`speccode/knowledge/development/standards.md` 行 58「改名触点清单化」——触点枚举 `lib/bin/tests/commands/README×4/...` 中的 `commands` → `skills`(实现者发现的既有残留,触点类别已被迁移证伪;integrations.md/pitfalls.md 的「commands-only」生态概念表述不动)
 
 **Interfaces:**
 - Consumes: Task 1-3 的新布局事实
@@ -187,6 +188,10 @@ git commit -m "docs(CLAUDE): point command layer at skills/ layout"
 ```
 
 行尾「(出自 …)」出处括号整段保留原文,并在末尾追加:`;0.6.0 由 commands-to-skills 变更修正`(0.5.1 同型先例的追加方式)。注意:替换文本 MUST NOT 含字面 `commands/`(Task 5 的全仓清扫禁区要求)。
+
+- [ ] **Step 1b: 改 standards.md 行 58 触点枚举(执行期范围补正)**
+
+把行 58「改名触点清单化」中的 `lib/bin/tests/commands/README×4/CHANGELOG/spec Purpose` 改为 `lib/bin/tests/skills/README×4/CHANGELOG/spec Purpose`(仅这个词;该行若有「(出自 …)」出处括号,末尾追加 `;0.6.0 由 commands-to-skills 变更修正`,与行 22 同型)。
 
 - [ ] **Step 2: 改 environment.md「组件(commands/bin 等)」措辞**
 
