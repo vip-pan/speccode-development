@@ -8,10 +8,10 @@
 
 ## 引用同步
 
-- [ ] 4. `CLAUDE.md`(真源路径、install 路径、「support/ 有改动后重跑」、v2 字样)
-- [ ] 5. `README.md`(Documentation Map 表行 `skills/`→`support/`、贡献段链路表述、install 命令路径、v2 字样)
-- [ ] 6. `README_CN.md`(同 5 触点,与 README.md 逐段对齐,双语同步)
-- [ ] 7. `CONTRIBUTING.md`(setup 步骤 2 路径 + v2 字样;Making a change 六步改 0.6.0 双层链路,见 design.md「CONTRIBUTING『Making a change』新链路」)
+- [x] 4. `CLAUDE.md`(真源路径、install 路径、「support/ 有改动后重跑」、v2 字样)
+- [x] 5. `README.md`(Documentation Map 表行 `skills/`→`support/`、贡献段链路表述、install 命令路径、v2 字样)
+- [x] 6. `README_CN.md`(同 5 触点,与 README.md 逐段对齐,双语同步)
+- [x] 7. `CONTRIBUTING.md`(setup 步骤 2 路径 + v2 字样;Making a change 六步改 0.6.0 双层链路,见 design.md「CONTRIBUTING『Making a change』新链路」)
 
 ## 收尾校验
 
