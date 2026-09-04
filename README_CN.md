@@ -116,11 +116,11 @@ origin/trunk ── 集成分支 ──┬── feature/s1 ── finishing-wor
 
 | 文档 | 内容 |
 |---|---|
-| [插件 README](./plugins/speccode/README_CN.md) | 24 命令详表、三层拓扑、R1-R13 风险、0.1→0.2 迁移(插件设计文档) |
+| [插件 README](./plugins/speccode/README_CN.md) | 全套命令详表、双层拓扑、R1-R13 风险、0.1→0.2 迁移(插件设计文档) |
 | [CHANGELOG](./CHANGELOG.md) | 版本发布记录(Keep a Changelog,全中文) |
 | [CLAUDE.md](./CLAUDE.md) | 开发文档:引擎三层架构、测试约定、speccode 工作流 |
 | `support/` | 开发工作流 skill(真源)与辅助脚本——`speccode-workflow` 经 `support/install-skills.sh` 安装到 `.claude/skills/`,供 Claude Code 懒加载 |
-| `speccode/spec/` · `speccode/archive/` | SDD 规格主档(11 个 capability)与变更归档——体系自身的活文档 |
+| `speccode/spec/` · `speccode/archive/` | SDD 规格主档与变更归档——体系自身的活文档 |
 
 ## 贡献
 

@@ -116,11 +116,11 @@ Test-driven · systematic over improvisation · reduce complexity · evidence ov
 
 | Document | Contents |
 |---|---|
-| [Plugin README](./plugins/speccode/README.md) | 24-command reference, three-layer topology, R1-R13 risks, 0.1 → 0.2 migration (plugin design document) |
+| [Plugin README](./plugins/speccode/README.md) | Full command reference, two-layer topology, R1-R13 risks, 0.1 → 0.2 migration (plugin design document) |
 | [CHANGELOG](./CHANGELOG.md) | Release history (Keep a Changelog, all in Chinese) |
 | [CLAUDE.md](./CLAUDE.md) | Development documentation: three-layer engine architecture, testing conventions, speccode workflow |
 | `support/` | Dev-workflow skill (true source) and helper scripts — `speccode-workflow` installed to `.claude/skills/` via `support/install-skills.sh` for Claude Code lazy-loading |
-| `speccode/spec/` · `speccode/archive/` | SDD spec master (11 capabilities) and archived change records — the system's own living documentation |
+| `speccode/spec/` · `speccode/archive/` | SDD spec master and archive of every change — the system's own living documentation |
 
 ## Contributing
 
