@@ -549,36 +549,36 @@ git commit -m "docs(readme): front-load git clean safety warning (EN/CN)"
 **Interfaces:**
 - Consumes: 无。Produces: 插件 README 计数零字面量(spec delta「全套命令表」落地);§1-14 节号节序不变。
 
-- [ ] **Step 1: EN 标题与 ToC**
+- [x] **Step 1: EN 标题与 ToC**
 
 `## 2. 24-Command Quick Reference` → `## 2. Command Quick Reference`
 ToC 内 `2. [24-Command Quick Reference](#2-24-command-quick-reference)` → `2. [Command Quick Reference](#2-command-quick-reference)`
 
-- [ ] **Step 2: EN 知识两行替换(distilling-knowledge / recording-knowledge 两个表格行整行)**
+- [x] **Step 2: EN 知识两行替换(distilling-knowledge / recording-knowledge 两个表格行整行)**
 
 ````markdown
 | `/speccode:distilling-knowledge` | Distill the `speccode/knowledge/` topic files from `spec/` (full read — the freshness anchor) + `archive/` (**incremental**, tracked via `knowledge/_distilled.meta.json`); distilled blocks are keyed by capability and upserted each run, every block freshness-audited against the current specs; human gate before write; commits on save | chore/knowledge-* worktree branch (unified creating-worktree entry, finishing-worktree finish) |
 | `/speccode:recording-knowledge` | Record knowledge directly into hand-written sections (fit check: process knowledge stays, business knowledge is pointed to external RAG; draft → human gate → atomic `replace-hand` write, distilled blocks preserved byte-for-byte); also tidies the topic's existing hand-written section each run; commits on save | chore/knowledge-* worktree branch (unified entry/finish) |
 ````
 
-- [ ] **Step 3: CN 标题与 ToC**
+- [x] **Step 3: CN 标题与 ToC**
 
 `## 2. 24 个命令快速参考表` → `## 2. 命令快速参考表`
 ToC 内 `2. [24 个命令快速参考表](#2-24-个命令快速参考表)` → `2. [命令快速参考表](#2-命令快速参考表)`
 
-- [ ] **Step 4: CN 知识两行替换**
+- [x] **Step 4: CN 知识两行替换**
 
 ````markdown
 | `/speccode:distilling-knowledge` | 从 spec/(全量读——新鲜度锚点)+ archive/(**增量**,经 `knowledge/_distilled.meta.json` 追踪)蒸馏 knowledge/ 各 topic;蒸馏块以能力为键、每次运行 upsert,且逐块对照当前 spec 做新鲜度审查;人工闸门后落盘,落盘即提交 | chore/knowledge-* worktree 分支(creating-worktree 统一入口、finishing-worktree 统一收尾)|
 | `/speccode:recording-knowledge` | 知识直接记录进 hand-written 段(适配判断:过程知识收录,业务知识建议进外部 RAG;草稿 → 人工闸门 → 经 `replace-hand` 原子整写,distilled 块逐字节保留;每次运行同时整理该 topic 既有 hand-written 段),落盘即提交 | chore/knowledge-* worktree 分支(统一入口/收尾)|
 ````
 
-- [ ] **Step 5: 校验**
+- [x] **Step 5: 校验**
 
 Run: `grep -n '24-Command\|24 个命令\|24 commands' plugins/speccode/README.md plugins/speccode/README_CN.md`
 Expected: 零输出。另:`grep -c '^## ' plugins/speccode/README.md` 确认 §1-14 共 15 个二级标题(含文档头注记行以外的节),两版节号一致。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add plugins/speccode/README.md plugins/speccode/README_CN.md
