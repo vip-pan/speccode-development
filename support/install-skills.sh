@@ -1,28 +1,40 @@
 #!/usr/bin/env bash
-# 把项目根 skills/ 下的 skill 安装(复制)到 .claude/skills/,供 Claude Code 懒加载。
+# 把项目根 support/ 下的 skill 安装(复制)到 .claude/skills/,供 Claude Code 懒加载。
 #
-# 真源在 skills/（进 git）,安装产物在 .claude/skills/（untracked,本机生成）。
+# 真源在 support/<name>/（进 git,含 SKILL.md 的目录才算 skill）,安装产物在 .claude/skills/（untracked,本机生成）。
 # 这样既保持真源独立于 plugins/、随仓库版本化,又让 Claude Code 从标准路径加载。
-# 修改 skills/ 后重跑本脚本即可同步。
+# 修改 support/ 后重跑本脚本即可同步。
 #
-# 用法:bash scripts/install-skills.sh [--check]
-#   --check  只检查 skills/ 与 .claude/skills/ 是否一致,不实际复制(退出码 0=一致,1=不一致)
+# 用法:bash support/install-skills.sh [--check]
+#   --check  只检查 support/ 下各 skill 与 .claude/skills/ 是否一致,不实际复制(退出码 0=一致,1=不一致)
 
 set -euo pipefail
 
-# 定位仓库根(脚本在 scripts/ 下)
+# 定位仓库根(脚本在 support/ 下)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-SRC="$REPO_ROOT/skills"
+SRC="$REPO_ROOT/support"
 DST="$REPO_ROOT/.claude/skills"
 
-# --check 模式:比较源与产物是否一致
+# 安装判据:support/ 下含 SKILL.md 的目录才装(其余文件/目录不参与)
+
+# --check 模式:逐 skill 比较源与产物是否一致(只比 SKILL.md 目录,support/ 内其余条目不参与)
 if [ "${1:-}" = "--check" ]; then
   if [ ! -d "$SRC" ]; then echo "FAIL: 源目录 $SRC 不存在"; exit 1; fi
-  # 用 diff 递归比较(源目录 vs 安装产物)
-  # 先同步目录结构再 diff 内容
-  diff -rq "$SRC" "$DST" >/dev/null 2>&1 && { echo "OK: skills 已同步"; exit 0; } || { echo "DRIFTED: skills 与 .claude/skills/ 不一致,重跑 install-skills.sh"; exit 1; }
+  rc=0
+  for skill_dir in "$SRC"/*/; do
+    [ -d "$skill_dir" ] || continue
+    [ -f "$skill_dir/SKILL.md" ] || continue
+    skill_name="$(basename "$skill_dir")"
+    if diff -rq "$skill_dir" "$DST/$skill_name" >/dev/null 2>&1; then
+      echo "  ok: $skill_name"
+    else
+      echo "DRIFTED: $skill_name 与 .claude/skills/$skill_name 不一致,重跑 install-skills.sh"
+      rc=1
+    fi
+  done
+  if [ "$rc" -eq 0 ]; then echo "OK: skills 已同步"; exit 0; else exit 1; fi
 fi
 
 # 实际安装
@@ -37,6 +49,7 @@ mkdir -p "$DST"
 installed=0
 for skill_dir in "$SRC"/*/; do
   [ -d "$skill_dir" ] || continue
+  [ -f "$skill_dir/SKILL.md" ] || continue
   skill_name="$(basename "$skill_dir")"
   # 幂等:先清掉旧产物目录,再复制
   rm -rf "$DST/$skill_name"
@@ -46,7 +59,7 @@ for skill_dir in "$SRC"/*/; do
 done
 
 if [ "$installed" -eq 0 ]; then
-  echo "skills/ 下无 skill 目录"
+  echo "support/ 下无含 SKILL.md 的 skill 目录"
 else
   echo "完成:安装 $installed 个 skill 到 .claude/skills/(重启 Claude Code 会话后生效)"
 fi
