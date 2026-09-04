@@ -99,7 +99,7 @@ git commit -m "refactor: migrate commands/ to skills/<name>/SKILL.md layout"
 - Consumes: Task 1 的 skills/ 布局(文件已位于 `skills/syncing/SKILL.md`)
 - Produces: 命令正文的 grep 清单覆盖 `plugins/speccode/skills/`
 
-- [ ] **Step 1: 修改交叉引用检查清单中的路径**
+- [x] **Step 1: 修改交叉引用检查清单中的路径**
 
 把该段的:
 
@@ -113,7 +113,7 @@ MUST 全仓 grep 旧 capability 名(至少覆盖 `speccode/spec/`、`plugins/spe
 MUST 全仓 grep 旧 capability 名(至少覆盖 `speccode/spec/`、`plugins/speccode/skills/`、README 与 CLAUDE.md)
 ```
 
-- [ ] **Step 2: 验证无其他 commands/ 残留于命令正文**
+- [x] **Step 2: 验证无其他 commands/ 残留于命令正文**
 
 ```bash
 grep -rn 'commands/' plugins/speccode/skills/
@@ -121,7 +121,7 @@ grep -rn 'commands/' plugins/speccode/skills/
 
 Expected: 无输出。
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add plugins/speccode/skills/syncing/SKILL.md
