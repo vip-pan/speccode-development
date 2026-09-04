@@ -508,7 +508,7 @@ git commit -m "docs(readme): doc map and contributing chain to two-layer reality
 **Interfaces:**
 - Consumes: 插件 README §14 详文(保留不迁,仅指向)。Produces: spec delta「安全警告节」落地。
 
-- [ ] **Step 1: EN 插入块**(链接用文件级链接 + 「§14」文字,不用锚点——规避 emoji 标题锚点死链风险)
+- [x] **Step 1: EN 插入块**(链接用文件级链接 + 「§14」文字,不用锚点——规避 emoji 标题锚点死链风险)
 
 ````markdown
 
@@ -517,7 +517,7 @@ git commit -m "docs(readme): doc map and contributing chain to two-layer reality
 `.speccode/` is untracked by design and **not** added to `.gitignore` — `git clean -fdx` (and even `-fd`) will delete your speccode config, branch states, and session memory. Prefer a dry-run first (`git clean -n`) or exclude the path explicitly. See [plugin README §14](./plugins/speccode/README.md) for the full details.
 ````
 
-- [ ] **Step 2: CN 插入块**
+- [x] **Step 2: CN 插入块**
 
 ````markdown
 
@@ -526,12 +526,12 @@ git commit -m "docs(readme): doc map and contributing chain to two-layer reality
 `.speccode/` 目录按设计不被 git 跟踪、**不会**被加入 `.gitignore` —— `git clean -fdx`(乃至 `-fd`)会删除你的 speccode 配置、分支状态与会话记忆。建议先 dry-run(`git clean -n`)或显式排除该路径。详见[插件 README §14](./plugins/speccode/README_CN.md)。
 ````
 
-- [ ] **Step 3: 校验**
+- [x] **Step 3: 校验**
 
 Run: `grep -n 'git clean' README.md README_CN.md`
 Expected: 各 3+ 命中(标题 + 正文 dry-run + 链接行),两版结构一致。
 
-- [ ] **Step 4: 提交**
+- [x] **Step 4: 提交**
 
 ```bash
 git add README.md README_CN.md
