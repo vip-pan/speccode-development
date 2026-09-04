@@ -461,7 +461,7 @@ git commit -m "docs(readme): comparison matrix gains BMAD column, two-layer row 
 **Interfaces:**
 - Consumes: 无。Produces: 无计数、双层表述的文档地图(spec delta 元素落地)。
 
-- [ ] **Step 1: EN 文档地图两行替换**
+- [x] **Step 1: EN 文档地图两行替换**
 
 `| [Plugin README](./plugins/speccode/README.md) | 24-command reference, three-layer topology, R1-R13 risks, 0.1 → 0.2 migration (plugin design document) |` →
 `| [Plugin README](./plugins/speccode/README.md) | Full command reference, two-layer topology, R1-R13 risks, 0.1 → 0.2 migration (plugin design document) |`
@@ -469,11 +469,11 @@ git commit -m "docs(readme): comparison matrix gains BMAD column, two-layer row 
 `| `speccode/spec/` · `speccode/archive/` | SDD spec master (11 capabilities) and archived change records — the system's own living documentation |` →
 `| `speccode/spec/` · `speccode/archive/` | SDD spec master and archive of every change — the system's own living documentation |`
 
-- [ ] **Step 2: EN 贡献段流程链——已由上游修复,核对即跳过**
+- [x] **Step 2: EN 贡献段流程链——已由上游修复,核对即跳过**
 
 > 回写修订(执行期):上游 #50(fe1747e)已把贡献段链路改为普通链路(exploring → creating-worktree → … → finishing-worktree),本步骤原计划的替换(creating-feature 链 → 普通链)已无事可做,执行时核对现状并跳过,不再添加 opt-in 注记(上游已选详细链路表述,追加属范围蔓延)。
 
-- [ ] **Step 3: CN 文档地图两行替换**
+- [x] **Step 3: CN 文档地图两行替换**
 
 `| [插件 README](./plugins/speccode/README_CN.md) | 24 命令详表、三层拓扑、R1-R13 风险、0.1→0.2 迁移(插件设计文档) |` →
 `| [插件 README](./plugins/speccode/README_CN.md) | 全套命令详表、双层拓扑、R1-R13 风险、0.1→0.2 迁移(插件设计文档) |`
@@ -481,16 +481,16 @@ git commit -m "docs(readme): comparison matrix gains BMAD column, two-layer row 
 `| `speccode/spec/` · `speccode/archive/` | SDD 规格主档(11 个 capability)与变更归档——体系自身的活文档 |` →
 `| `speccode/spec/` · `speccode/archive/` | SDD 规格主档与变更归档——体系自身的活文档 |`
 
-- [ ] **Step 4: CN 贡献段流程链——已由上游修复,核对即跳过**
+- [x] **Step 4: CN 贡献段流程链——已由上游修复,核对即跳过**
 
 > 回写修订(执行期):同 Step 2,CN 版贡献段链路已由上游 #50 修复,核对现状并跳过。
 
-- [ ] **Step 5: 校验**
+- [x] **Step 5: 校验**
 
 Run: `grep -n '11 capabilit\|11 个 capability\|three-layer topology\|三层拓扑' README.md README_CN.md`
 Expected: 零输出。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add README.md README_CN.md
