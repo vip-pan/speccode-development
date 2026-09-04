@@ -19,7 +19,7 @@
 
 **版本发布纪律**:bump plugin.json version 的提交 MUST 同一提交(或同一 PR)同步更新根 CHANGELOG.md 对应版本小节;未完成的 version bump MUST NOT 合入 trunk。发版 MUST 打 `v<version>` tag 并建 GitHub Release(notes 摘自 CHANGELOG);Release 是给人看的标记,更新检测实际走 marketplace git 拉取 + plugin.json version 比对,Release 不触发自动更新。**CHANGELOG 格式**:中文条目为主体 + Keep a Changelog 骨架(Added/Changed/Fixed/Removed + semver 比较链接),版本小节顶部加一句英文 highlights(控成本);CHANGELOG 是版本号与测试数量的单一数据源。**patch vs minor 判据**:全部为修复与小变更、无新能力、无 BREAKING 不发 minor/major(不夸大变更面);Fixed 对应修复项,Changed 收录清理与规格演进,对照 squash commit 逐一核对防漏。**syncing 顺序**:先 bump+CHANGELOG 再 sync,使「version 与 CHANGELOG 最新小节一致」合并后立即为真。**BREAKING 需在 CHANGELOG 显式标注**(含升级路径)。
 
-**命令 markdown 规范**:全程中文交互;frontmatter 为 description + 非标遗留 category/tags(name 已于 0.5.1 移除——官方文档明文 commands/*.md 忽略 name,调用名=文件名,VS Code 扩展会把 name 误用为菜单条目致 Unknown command;category/tags 无证据参与症状,留待 0.6.0 skills 迁移一并清理);未知 verb 或抛错 → {ok:false, error} + exit 1。(出自 archive/2026-07-13-add-speccode-plugin、2026-08-07-restructure-as-claude-code-plugin、2026-08-09-plugin-release-process、2026-08-09-speccode-v2-sdd-flow、2026-08-10-release-0-2-1、2026-08-11-release-0-2-2;0.5.1 由 vscode-slash-command-name 变更修正,归档 archive/2026-09-04-vscode-slash-command-name)
+**命令 markdown 规范**:全程中文交互;0.6.0 起旧命令目录已全量迁移为 skills/ 布局(命令位于 plugins/speccode/skills/<name>/SKILL.md,一 skill 一目录,调用名 = 目录名,与迁移前的 /speccode:<name> 形态完全一致),frontmatter 只含 description(name/category/tags 全部移除——name 致 VS Code 菜单歧义已于 0.5.1 删,category/tags 非标遗留随 0.6.0 skills 迁移一并清理;description 兼作模型自动调用的匹配面,不设 disable-model-invocation);未知 verb 或抛错 → {ok:false, error} + exit 1。(出自 archive/2026-07-13-add-speccode-plugin、2026-08-07-restructure-as-claude-code-plugin、2026-08-09-plugin-release-process、2026-08-09-speccode-v2-sdd-flow、2026-08-10-release-0-2-1、2026-08-11-release-0-2-2;0.5.1 由 vscode-slash-command-name 变更修正,归档 archive/2026-09-04-vscode-slash-command-name;0.6.0 由 commands-to-skills 变更修正)
 <!-- /distilled -->
 
 <!-- distilled-from: cap/documentation-facade -->
@@ -55,7 +55,7 @@
 
 **写 verb 纪律**:命令层绝不手写 speccode/knowledge/ 或 JSON 文件,一律经 write-knowledge verb(现行四模式:replace / replace-hand / replace-distilled / index;append-hand 已退役);--json-stdin 从 stdin 读 JSON 避免超长/转义;knowledge/ 写入走 writeTextAtomic。sidecar 纪律:consumed_archives 存归档目录裸名(无 archive/ 前缀无尾斜杠),与能力键两套表示勿混;sidecar 更新与蒸馏落盘在同一命令事务内,失败整体报告并提示重跑;人工删归档包后残留旧条目指向不存在的包,不影响判定(无副作用)。
 
-**改名触点清单化**:tasks 列全触点(lib/bin/tests/commands/README×4/CHANGELOG/spec Purpose),收尾全仓 grep 校验禁区(旧名仅允许命中 archive/、CHANGELOG 历史小节);主规格 Purpose 含旧名需单独 editorial 手改(syncing 不动既有 Purpose)。一次性迁移脚本坑:全量重蒸重建语义使其不必要,且多一个要永久维护的命令。
+**改名触点清单化**:tasks 列全触点(lib/bin/tests/skills/README×4/CHANGELOG/spec Purpose),收尾全仓 grep 校验禁区(旧名仅允许命中 archive/、CHANGELOG 历史小节);主规格 Purpose 含旧名需单独 editorial 手改(syncing 不动既有 Purpose)。一次性迁移脚本坑:全量重蒸重建语义使其不必要,且多一个要永久维护的命令。
 
 **闸门哲学**:distilling/recording 的候选 diff 经人工确认才落盘;判定为业务知识时给出「建议进 RAG」陈述,用户坚持则允许指定/新建 topic 写入,不硬拦(硬拒绝会在灰色地带误伤)。蒸馏目标 = 骨架 6 development topic ∪ development/ 下用户自建 topic;pitfalls 语义扩展为「踩坑 + 评审共识」,不单列 review topic。**命令间复用手段**:prose 引用既有命令(如知识命令引用 creating-worktree/finishing-worktree),既不内联复刻机制段(第三套实现)也不下沉 lib(命令编排属交互层);被否选项与理由记 design.md Decisions 段。(出自 archive/2026-08-14-knowledge-set、2026-08-15-knowledge-command-rename、2026-08-15-knowledge-set-refocus、2026-08-16-distill-incremental-archive、2026-09-03-knowledge-unified-entry;mode 清单与 marker 语义按本需求 delta 改写)
 <!-- /distilled -->
