@@ -54,7 +54,7 @@ $ /speccode:finishing-worktree
 - **Node.js ≥ 24** —— 引擎运行于 Node(纯 ESM、零第三方依赖)
 - `git`
 - `gh` CLI(GitHub)或 `glab` CLI(GitLab)—— 可选;未安装时 `pr_tool` 自动降级为 `none`,命令会打印等价命令供你手动执行
-- **Windows 暂不支持** —— 仅 macOS / Linux
+- **Windows 不支持** —— 仅 macOS / Linux
 
 ## Quickstart (5 分钟最小闭环)
 
