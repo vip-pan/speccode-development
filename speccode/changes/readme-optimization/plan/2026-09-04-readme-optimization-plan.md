@@ -595,17 +595,17 @@ git commit -m "docs(readme): plugin readme count literals out, knowledge rows tr
 **Interfaces:**
 - Consumes: Task 1-10 的全部产出。
 
-- [ ] **Step 1: 段落一一对应**
+- [x] **Step 1: 段落一一对应**
 
 Run: `grep -c '^## ' README.md README_CN.md && grep -n '^## ' README.md | sed 's/^[0-9]*:## //' && echo --- && grep -n '^## ' README_CN.md | sed 's/^[0-9]*:## //'`
 Expected: 两版 `## ` 数量一致;逐行人工比对段序:Why speccode(为什么用 speccode)→ The Basic Workflow(基础工作流)→ See It in Action(看它干活)→ Prerequisites(前置依赖)→ Quickstart → Commands at a Glance(命令速览)→ Two-Layer Branch Topology(双层分支拓扑)→ How We Compare(和谁比)→ Philosophy(理念)→ Documentation Map(文档地图)→ ⚠ git clean(⚠ 执行 git clean 前必读)→ Contributing(贡献)→ License;外加 EN 的 Install 与 CN 的 安装。
 
-- [ ] **Step 2: 互链矩阵 4 组点检**
+- [x] **Step 2: 互链矩阵 4 组点检**
 
 Run: `head -6 README.md README_CN.md plugins/speccode/README.md plugins/speccode/README_CN.md | grep -n 'README'` 与 `grep -n 'plugins/speccode/README' README.md README_CN.md | grep -v '#'`
 Expected: 根 EN↔CN 语言切换互链、插件 EN↔CN 互链、根 EN→插件 EN / 根 CN→插件 CN、插件→根同语言指针,四组均指向存在文件(`test -e` 抽查)。
 
-- [ ] **Step 3: 提交(无内容变更则跳过)**
+- [x] **Step 3: 提交(无内容变更则跳过)**
 
 Expected: `git status --porcelain` 为空 → 本任务零提交;非空(如顺手修正的死链)→ 一并提交 `docs(readme): fix bilingual/link nits from verification (EN/CN)`。
 
