@@ -1,10 +1,19 @@
 # speccode
 
-An end-to-end SDD (Spec-Driven Development) and automated development system built on Claude Code — not just a plugin, but a complete methodology: parallel multi-requirement development, in-repo spec document hosting, a standardized PR flow, and a self-hosting toolchain that dogfoods the whole workflow. The `speccode` plugin (24 `/speccode:*` commands) is the runtime that crystallizes the SDD methodology (explore / document / plan / subagent execution / review) into the default path; this repo also hosts the spec master (`speccode/spec/`), the archive of every change, and the development-workflow skills that automate the repo's own development.
+**An end-to-end SDD (Spec-Driven Development) and automated development system built on Claude Code** — parallel multi-requirement development, in-repo spec document hosting, and a standardized PR flow, crystallized into a default path by the full `/speccode:*` command set. This repo dogfoods all of it: the spec master, every archived change, and the workflow skills that automate the repo's own development live in-repo.
 
 [English](README.md) | [简体中文](README_CN.md)
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![platform: macOS/Linux](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)]() [![version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/vip-pan/speccode-development/main/plugins/speccode/.claude-plugin/plugin.json&query=$.version&label=version&color=blue)](https://github.com/vip-pan/speccode-development/releases) [![tests](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml/badge.svg)](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml) [![GitHub stars](https://img.shields.io/github/stars/vip-pan/speccode-development)]()
+
+## Install
+
+```bash
+/plugin marketplace add vip-pan/speccode-development
+/plugin install speccode@speccode-development
+```
+
+Requires [Node.js ≥ 24](#prerequisites) and `git`. After installation, commands appear under the `/speccode:` prefix, e.g. `/speccode:init`, `/speccode:status`, `/speccode:finishing-worktree`.
 
 ## Why speccode
 
@@ -51,7 +60,7 @@ $ /speccode:finishing-feature
 
 After installation, commands appear under the `/speccode:` prefix, e.g. `/speccode:init`, `/speccode:status`, `/speccode:finishing-feature`.
 
-## 24 Commands at a Glance
+## Commands at a Glance
 
 | Group | Commands |
 |---|---|

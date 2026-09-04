@@ -1,10 +1,19 @@
 # speccode
 
-基于 Claude Code 的整套 SDD(规格驱动开发)与自动化开发体系——不只是插件,而是一套完整方法论:多需求并行开发、spec 文档仓内托管、PR 流程标准化,外加自托管工具链 dogfood 整条工作流。`speccode` 插件(24 个 `/speccode:*` 命令)是把 SDD 方法论(探索/文档/计划/子代理执行/评审)固化成默认路径的运行时;本仓库还托管规格主档(`speccode/spec/`)、每次变更的归档,以及自动化本仓库自身开发的开发工作流 skills。
+**基于 Claude Code 的整套 SDD(规格驱动开发)与自动化开发体系** —— 多需求并行开发、spec 文档仓内托管、PR 流程标准化,由全套 `/speccode:*` 命令固化为默认路径。本仓库 dogfood 全部成果:规格主档、每次变更的归档、自动化仓库自身开发的开发工作流 skills,全部仓内托管。
 
 [English](README.md) | [简体中文](README_CN.md)
 
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![platform: macOS/Linux](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)]() [![version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/vip-pan/speccode-development/main/plugins/speccode/.claude-plugin/plugin.json&query=$.version&label=version&color=blue)](https://github.com/vip-pan/speccode-development/releases) [![tests](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml/badge.svg)](https://github.com/vip-pan/speccode-development/actions/workflows/test.yml) [![GitHub stars](https://img.shields.io/github/stars/vip-pan/speccode-development)]()
+
+## 安装
+
+```bash
+/plugin marketplace add vip-pan/speccode-development
+/plugin install speccode@speccode-development
+```
+
+依赖 [Node.js ≥ 24](#前置依赖) 与 `git`。安装后命令以 `/speccode:` 前缀出现,如 `/speccode:init`、`/speccode:status`、`/speccode:finishing-worktree`。
 
 ## 为什么用 speccode
 
@@ -51,7 +60,7 @@ $ /speccode:finishing-feature
 
 安装后命令以 `/speccode:` 前缀出现,如 `/speccode:init`、`/speccode:status`、`/speccode:finishing-feature`。
 
-## 24 个命令速览
+## 命令速览
 
 | 组 | 命令 |
 |---|---|
