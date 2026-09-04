@@ -105,7 +105,7 @@ git commit -m "docs(readme): front-load install section, compress hero, drop cou
 **Interfaces:**
 - Consumes: 无。Produces: Why 段双层拓扑表述(spec delta 元素「痛点(Why,拓扑表述为双层)」的落地)。
 
-- [ ] **Step 1: 改 EN 第 1 条**
+- [x] **Step 1: 改 EN 第 1 条**
 
 旧:`- ✅ **Parallel multi-requirement development** — a three-layer trunk / feature / worktree topology; a reconciliation algorithm automatically assigns every worktree, so multiple features and worktrees proceed in parallel without interfering with each other.`
 
@@ -115,7 +115,7 @@ git commit -m "docs(readme): front-load install section, compress hero, drop cou
 - ✅ **Parallel multi-requirement development** — a two-layer topology: development branches (`<type>/<slug>` git worktrees) cut straight from trunk in one step; a reconciliation algorithm automatically assigns every worktree, so multiple requirements proceed in parallel without interfering with each other.
 ````
 
-- [ ] **Step 2: 改 EN 第 3 条**
+- [x] **Step 2: 改 EN 第 3 条**
 
 旧:`- ✅ **Standardized workflow** — 24 commands + hooks (14 lifecycle events) + cross-session memory turn team conventions into executable primitives.`
 
@@ -125,7 +125,7 @@ git commit -m "docs(readme): front-load install section, compress hero, drop cou
 - ✅ **Standardized workflow** — the full `/speccode:*` command set + lifecycle hooks (closed enumeration) + cross-session memory turn team conventions into executable primitives.
 ````
 
-- [ ] **Step 3: 改 CN 第 1 条**
+- [x] **Step 3: 改 CN 第 1 条**
 
 旧:`- ✅ **多需求并行** —— trunk / feature / worktree 三层拓扑,对账算法自动归属每个 worktree,多 feature、多 worktree 并行施工互不干扰。`
 
@@ -135,7 +135,7 @@ git commit -m "docs(readme): front-load install section, compress hero, drop cou
 - ✅ **多需求并行** —— 双层拓扑:开发分支(`<type>/<slug>`,git worktree)从 trunk 一步直达;对账算法自动归属每个 worktree,多需求并行施工互不干扰。
 ````
 
-- [ ] **Step 4: 改 CN 第 3 条**
+- [x] **Step 4: 改 CN 第 3 条**
 
 旧:`- ✅ **流程标准化** —— 24 命令 + hooks(14 个生命周期事件)+ 跨会话 memory,团队约定变成可执行原语。`
 
@@ -145,12 +145,12 @@ git commit -m "docs(readme): front-load install section, compress hero, drop cou
 - ✅ **流程标准化** —— 全套 `/speccode:*` 命令 + 生命周期 hooks(封闭枚举)+ 跨会话 memory,团队约定变成可执行原语。
 ````
 
-- [ ] **Step 5: 校验**
+- [x] **Step 5: 校验**
 
 Run: `grep -in 'three-layer\|三层拓扑\|24 commands\|24 命令\|14 lifecycle\|14 个生命周期' README.md README_CN.md`
 Expected: 零输出。
 
-- [ ] **Step 6: 提交**
+- [x] **Step 6: 提交**
 
 ```bash
 git add README.md README_CN.md
