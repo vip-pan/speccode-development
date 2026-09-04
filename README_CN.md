@@ -122,6 +122,10 @@ origin/trunk ── 集成分支 ──┬── feature/s1 ── finishing-wor
 | `support/` | 开发工作流 skill(真源)与辅助脚本——`speccode-workflow` 经 `support/install-skills.sh` 安装到 `.claude/skills/`,供 Claude Code 懒加载 |
 | `speccode/spec/` · `speccode/archive/` | SDD 规格主档与变更归档——体系自身的活文档 |
 
+## ⚠ 执行 `git clean` 前必读
+
+`.speccode/` 目录按设计不被 git 跟踪、**不会**被加入 `.gitignore` —— `git clean -fdx`(乃至 `-fd`)会删除你的 speccode 配置、分支状态与会话记忆。建议先 dry-run(`git clean -n`)或显式排除该路径。详见[插件 README §14](./plugins/speccode/README_CN.md)。
+
 ## 贡献
 
 本仓库由 speccode 自托管开发——完整流程见 [CONTRIBUTING.md](./CONTRIBUTING.md)。spec 变更走 `speccode/changes/` 工作流,贡献即走同一条 workflow(exploring → creating-worktree → proposing → 实现 → 评审 → syncing → archiving → finishing-worktree)。欢迎用 speccode 给 speccode 提 PR。

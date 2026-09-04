@@ -122,6 +122,10 @@ Test-driven · systematic over improvisation · reduce complexity · evidence ov
 | `support/` | Dev-workflow skill (true source) and helper scripts — `speccode-workflow` installed to `.claude/skills/` via `support/install-skills.sh` for Claude Code lazy-loading |
 | `speccode/spec/` · `speccode/archive/` | SDD spec master and archive of every change — the system's own living documentation |
 
+## ⚠ Before You Run `git clean`
+
+`.speccode/` is untracked by design and **not** added to `.gitignore` — `git clean -fdx` (and even `-fd`) will delete your speccode config, branch states, and session memory. Prefer a dry-run first (`git clean -n`) or exclude the path explicitly. See [plugin README §14](./plugins/speccode/README.md) for the full details.
+
 ## Contributing
 
 This repo is dogfooded by speccode itself — see [CONTRIBUTING.md](./CONTRIBUTING.md) for the full workflow. Spec changes go through the `speccode/changes/` workflow, so contributing means walking the same workflow (exploring → creating-worktree → proposing → implementation → review → syncing → archiving → finishing-worktree). PRs to speccode, written with speccode, are welcome.
