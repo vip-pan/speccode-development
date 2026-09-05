@@ -12,8 +12,8 @@ description: "收到代码审查反馈时使用,实施建议之前先核实;要�
 
 ## 知识库入口
 
-1. 运行 `speccode.mjs read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
-2. 判断本任务相关主题 → `speccode.mjs read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
+1. 运行 `speccode read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
+2. 判断本任务相关主题 → `speccode read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
 3. 读取失败或目录不存在 → 静默跳过,绝不阻断主流程(T0 兜底,永不报错)。
 
 ## 响应模式(The Response Pattern)
@@ -118,7 +118,7 @@ description: "收到代码审查反馈时使用,实施建议之前先核实;要�
 全部反馈处理完成(逐项实施、单独测试、无回归)后,触发 onCodeReviewCompleted 钩子:
 
 ```bash
-echo '{"command":"receiving-code-review","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onCodeReviewCompleted
+echo '{"command":"receiving-code-review","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode run-hook --cwd . --event onCodeReviewCompleted
 ```
 
 输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。

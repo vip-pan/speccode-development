@@ -204,7 +204,7 @@ npm test path/to/test.test.ts
 | **清晰** | 名字描述行为 | `test('test1')` |
 | **表达意图** | 展示期望的 API | 让人看不出代码该做什么 |
 
-写或改任何测试时,读 `${CLAUDE_PLUGIN_ROOT}/references/writing-good-tests.md`,里面是让测试保持诚实的规则:
+写或改任何测试时,读 `$(speccode plugin-root --cwd .)/references/writing-good-tests.md`,里面是让测试保持诚实的规则:
 - 在写测试之前,先说出「什么样的生产代码改动会让这个测试失败」
 - 对真实行为断言,绝不对 mock 的行为断言
 - 只服务测试的代码放在测试工具里,不进生产类

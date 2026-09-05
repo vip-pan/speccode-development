@@ -7,16 +7,16 @@ description: "把探索结论落地为 proposal/design/specs/tasks 四类文档(
 ## 前置
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
-2. 运行 `speccode.mjs reconcile --cwd . --advance-pr`,用返回的 features 找到当前 worktree 所属的功能分支 F;找不到 → 报错"当前 worktree 无法关联任何 active feature",退出。
+2. 运行 `speccode reconcile --cwd . --advance-pr`,用返回的 features 找到当前 worktree 所属的功能分支 F;找不到 → 报错"当前 worktree 无法关联任何 active feature",退出。
 3. 计算 slug = F 的 slug 段(`feature/payment-api` → `payment-api`)。
-4. **冲突检查**:若 `speccode/changes/<slug>/` 已存在且未归档 → 用 AskUserQuestion 询问:「续写补充 / 先 archiving 再重建 / 取消」。取消 → 退出;先归档 → 引导用户先执行 `/speccode:archiving` 后重跑本命令;续写 → 在既有内容上增量修改。
+4. **冲突检查**:若 `speccode/changes/<slug>/` 已存在且未归档 → 向用户提问(给出选项)询问:「续写补充 / 先 archiving 再重建 / 取消」。取消 → 退出;先归档 → 引导用户先执行 `/speccode:archiving` 后重跑本命令;续写 → 在既有内容上增量修改。
 5. **代码智能工具咨询**:若 `code_intel_tools` 非空且其能力在会话中可用,参考代码时优先使用;不可用回退 Grep/Glob/Read,不报错。
-6. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
+6. **读记忆**:运行 `speccode read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ## 知识库入口
 
-1. 运行 `speccode.mjs read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
-2. 判断本任务相关主题 → `speccode.mjs read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
+1. 运行 `speccode read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
+2. 判断本任务相关主题 → `speccode read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
 3. 读取失败或目录不存在 → 静默跳过,绝不阻断主流程(T0 兜底,永不报错)。
 
 ## 需求澄清(提问环节)
@@ -24,7 +24,7 @@ description: "把探索结论落地为 proposal/design/specs/tasks 四类文档(
 在写文档前,先把探索结论对齐成可落地的需求:
 - 从会话上下文梳理 exploring 结论;上下文不足时,一次一个问题地询问(目的、约束、成功标准),优先选择题。
 - 主动探索需求漏洞:边界场景、错误处理、与既有功能的交互。
-- **定层(建议 + 用户确认)**:文档生成完成后,按复杂度输出三岔定层建议并经 AskUserQuestion 确认(用户可改):**Tier 1**(极小,proposing 产物足以覆盖需求,无 plan 跟进,后续 applying 手动实现)/ **Tier 2**(中小型,大部分场景,后续 writing-plans → SDD 或 executing-plans)/ **Tier 3**(大型或仍有不明确、寻求更优解,后续 brainstorming → writing-plans 硬门禁)。Tier 2/3 建议 MUST 校验 specs/ 下存在非空 delta,否则拒绝该定层(提示降为 Tier 1 或补充 delta)。确认结果写入 proposal.md frontmatter `tier:` 字段。
+- **定层(建议 + 用户确认)**:文档生成完成后,按复杂度输出三岔定层建议并经向用户提问确认(给出选项,用户可改):**Tier 1**(极小,proposing 产物足以覆盖需求,无 plan 跟进,后续 applying 手动实现)/ **Tier 2**(中小型,大部分场景,后续 writing-plans → SDD 或 executing-plans)/ **Tier 3**(大型或仍有不明确、寻求更优解,后续 brainstorming → writing-plans 硬门禁)。Tier 2/3 建议 MUST 校验 specs/ 下存在非空 delta,否则拒绝该定层(提示降为 Tier 1 或补充 delta)。确认结果写入 proposal.md frontmatter `tier:` 字段。
 
 ## 生成四类文档
 
@@ -55,7 +55,7 @@ git commit -m "docs(speccode): propose <slug>"
 commit 成功后触发 onProposed 钩子:
 
 ```bash
-echo '{"command":"proposing","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onProposed
+echo '{"command":"proposing","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode run-hook --cwd . --event onProposed
 ```
 
 输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
@@ -63,7 +63,7 @@ echo '{"command":"proposing","feature_branch":"<F>","worktree_branch":"<W>"}' | 
 **写记忆**:把本命令产出的决策/进度摘要(经用户确认或按本命令内置判据)追加到本 feature 的 memory。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,摘要含单引号也会破壳):
 
 ```bash
-speccode.mjs write-memory --cwd . --branch <F> --json-stdin <<'EOF'
+speccode write-memory --cwd . --branch <F> --json-stdin <<'EOF'
 {"mode":"append","content":"<摘要>"}
 EOF
 ```

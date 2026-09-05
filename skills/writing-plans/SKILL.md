@@ -9,15 +9,15 @@ description: "把批准的设计转化为细粒度实现计划(每任务 2-5 分
 ## 前置
 
 1. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须为非 trunk 的 `<type>/<slug>` 形态分支;否则退出并提示「请在开发分支上运行本命令」(防止直提 trunk)。(`read-config` 先跑,为 null → 提示先 `/speccode:init` 并退出)。
-2. 运行 `speccode.mjs reconcile --cwd .` 找到所属功能分支 F,计算 slug。
+2. 运行 `speccode reconcile --cwd .` 找到所属功能分支 F,计算 slug。
 3. **读输入文档(优先级固定)**:先读 `speccode/changes/<slug>/brainstorm/`(存在则以其为输入);不存在 → 回退读 `speccode/changes/<slug>/propose/`;两者都不存在 → 报错"未找到设计或需求文档,请先 `/speccode:proposing` 或 `/speccode:brainstorming`",退出。
 4. **tier 门禁**:读 `speccode/changes/<slug>/propose/proposal.md` 的 frontmatter `tier:` 字段(缺失或非法 → 报错要求修复并退出):tier 为 3 时 `brainstorm/` 必须已存在,缺失 → 报错「Tier 3 必须先脑暴:请先 `/speccode:brainstorming`」并退出;tier 为 1 → 提示「本变更定层为 Tier 1,通常无需 plan;确认升档为有意行为?」,用户确认后继续;tier 字段由用户手动更新或重跑 proposing 定层,本命令 MUST NOT 修改该字段。
-5. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
+5. **读记忆**:运行 `speccode read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ## 知识库入口
 
-1. 运行 `speccode.mjs read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
-2. 判断本任务相关主题 → `speccode.mjs read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
+1. 运行 `speccode read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
+2. 判断本任务相关主题 → `speccode read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
 3. 读取失败或目录不存在 → 静默跳过,绝不阻断主流程(T0 兜底,永不报错)。
 
 ## 范围检查
@@ -135,12 +135,12 @@ TDD 烙进步骤模板本身——每个任务都是「红-绿-提交」循环;�
 - 落盘即提交:`git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): plan <slug>"`。
 - commit 成功后触发 onPlanned 钩子:
   ```bash
-  echo '{"command":"writing-plans","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onPlanned
+  echo '{"command":"writing-plans","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode run-hook --cwd . --event onPlanned
   ```
   输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
 - **写记忆**:把本命令产出的决策/进度摘要(经用户确认或按本命令内置判据)追加到本 feature 的 memory。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,摘要含单引号也会破壳):
   ```bash
-  speccode.mjs write-memory --cwd . --branch <F> --json-stdin <<'EOF'
+  speccode write-memory --cwd . --branch <F> --json-stdin <<'EOF'
   {"mode":"append","content":"<摘要>"}
   EOF
   ```

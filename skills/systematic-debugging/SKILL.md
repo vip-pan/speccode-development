@@ -44,8 +44,8 @@ NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
 
 ## 知识库入口
 
-1. 运行 `speccode.mjs read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
-2. 判断本任务相关主题 → `speccode.mjs read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
+1. 运行 `speccode read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
+2. 判断本任务相关主题 → `speccode read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
 3. 读取失败或目录不存在 → 静默跳过,绝不阻断主流程(T0 兜底,永不报错)。
 
 ## 四个阶段(The Four Phases)
@@ -116,7 +116,7 @@ NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
 
    **当错误深在调用栈里:**
 
-   完整的回溯追踪技术见 `${CLAUDE_PLUGIN_ROOT}/references/root-cause-tracing.md`。
+   完整的回溯追踪技术见 `$(speccode plugin-root --cwd .)/references/root-cause-tracing.md`。
 
    **速览版:**
    - 坏值从哪来?
@@ -285,6 +285,6 @@ NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
 
 这些技术是系统化调试的一部分,以伴侣文件形式提供:
 
-- **`${CLAUDE_PLUGIN_ROOT}/references/root-cause-tracing.md`** - 沿调用栈向后追踪 bug,找到最初的触发点
-- **`${CLAUDE_PLUGIN_ROOT}/references/defense-in-depth.md`** - 找到根因之后,在多个层加校验
-- **`${CLAUDE_PLUGIN_ROOT}/references/condition-based-waiting.md`** - 用条件轮询替换拍脑袋的 timeout
+- **`$(speccode plugin-root --cwd .)/references/root-cause-tracing.md`** - 沿调用栈向后追踪 bug,找到最初的触发点
+- **`$(speccode plugin-root --cwd .)/references/defense-in-depth.md`** - 找到根因之后,在多个层加校验
+- **`$(speccode plugin-root --cwd .)/references/condition-based-waiting.md`** - 用条件轮询替换拍脑袋的 timeout

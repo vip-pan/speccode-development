@@ -6,6 +6,8 @@ description: "完成任务、实现重大功能或合并前,派发 code reviewer
 
 派发一个 code reviewer 子代理,在问题级联放大之前抓住它们。审查者拿到的是精确构造的评估上下文——绝不是你会话的历史。
 
+> **宿主能力依赖**:本 skill 依赖宿主的子代理派发能力。宿主无子代理时,由主代理按本 skill 的审查清单在当前会话自查(对照 BASE..HEAD diff 逐节过一遍),不降级到其他 skill。
+
 **核心原则:** 早审查,常审查。
 
 ## 何时请求审查
@@ -22,8 +24,8 @@ description: "完成任务、实现重大功能或合并前,派发 code reviewer
 
 ## 知识库入口
 
-1. 运行 `speccode.mjs read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
-2. 判断本任务相关主题 → `speccode.mjs read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
+1. 运行 `speccode read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
+2. 判断本任务相关主题 → `speccode read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
 3. 读取失败或目录不存在 → 静默跳过,绝不阻断主流程(T0 兜底,永不报错)。
 
 ## 如何请求
@@ -39,7 +41,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 **2. 派发 code reviewer 子代理:**
 
-派发一个 `general-purpose` 子代理,填充 `${CLAUDE_PLUGIN_ROOT}/references/code-reviewer.md` 的模板
+派发一个全新子代理(宿主通用实现代理),填充 `$(speccode plugin-root --cwd .)/references/code-reviewer.md` 的模板
 
 **占位符:**
 - `{DESCRIPTION}` - 你构建的东西的简短小结
@@ -50,7 +52,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 派发时触发 onCodeReviewRequested 钩子:
 
 ```bash
-echo '{"command":"requesting-code-review","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onCodeReviewRequested
+echo '{"command":"requesting-code-review","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode run-hook --cwd . --event onCodeReviewRequested
 ```
 
 输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
@@ -108,4 +110,4 @@ HEAD_SHA=$(git rev-parse HEAD)
 - 展示证明它能工作的代码/测试
 - 请求澄清
 
-模板见: `${CLAUDE_PLUGIN_ROOT}/references/code-reviewer.md`
+模板见: `$(speccode plugin-root --cwd .)/references/code-reviewer.md`

@@ -33,14 +33,14 @@ node bin/speccode.mjs <verb> --cwd . [--flags]
 
 无 lint / build 步骤。
 
-本仓库自身的开发工作流(原生链路、dogfood 约定、发布纪律)以 skill 形式维护:真源在 `support/speccode-workflow/SKILL.md`(进 git),经 `bash support/install-skills.sh` 安装到 `.claude/skills/`(本机,供 Claude Code 懒加载)。首次 clone 或 support/ 有改动后重跑该脚本同步。
+本仓库自身的开发工作流(原生链路、dogfood 约定、发布纪律)以 skill 形式维护:真源在 `support/speccode-workflow/SKILL.md`(进 git),经 `bash support/install-skills.sh` 安装到 `.claude/skills/`(本机,供 Claude Code 懒加载;支持 `--dest <dir>` 安装到其他宿主的 skills 目录)。首次 clone 或 support/ 有改动后重跑该脚本同步。
 
 ## 架构:双层分支拓扑 + 代码三层分工,必须理解的分工
 
 speccode 编排的分支拓扑是**双层**:普通需求从 trunk 直接切 `<type>/<slug>` 开发分支(git worktree,一步直达),大需求 opt-in 走集成分支 + 父实体(子分支从集成 head 切出,终局一次 PR 上 trunk)。开发流程由 proposing 定层(Tier 1/2/3)路由后续链路(Tier 1 → applying 手动实现 / Tier 2 → writing-plans + SDD / Tier 3 → 先 brainstorming 再 writing-plans),tier 字段落 proposal.md frontmatter。代码分三层(外加 `references/` 辅助层),改动前先定位属于哪一层——**确定性逻辑绝不写进命令 markdown,一律下沉到 lib**:
 
 1. **引擎 lib**(`lib/*.mjs`)—— 14 个经单测的纯逻辑模块(atomic / config / detect / git / hooks / knowledge / memory / prtool / reconcile / sanitize / sdd / slug / state / timestamp)。所有 git 操作、JSON 读写、对账、hooks/memory、SDD 工件都在这里。改逻辑改这里,并配套改 `tests/`。
-2. **CLI 枢纽**(`bin/speccode.mjs`)—— 把 lib 暴露为输出 JSON 的一组 verb(清单以该文件的 `VERBS` 表为准)。读 verb 直接返回;**写 verb 必须走 `--json-stdin`**(`echo '<json>' | node bin/speccode.mjs write-state --json-stdin`),从 stdin 读 JSON 而不从 argv 读,避免超长/转义。未知 verb 或抛错 → `{ok:false,error}` + exit 1。
+2. **CLI 枢纽**(`bin/speccode.mjs`)—— 把 lib 暴露为输出 JSON 的一组 verb(清单以该文件的 `VERBS` 表为准)。读 verb 直接返回;**写 verb 必须走 `--json-stdin`**(`echo '<json>' | speccode write-state --json-stdin`),从 stdin 读 JSON 而不从 argv 读,避免超长/转义。未知 verb 或抛错 → `{ok:false,error}` + exit 1。
 3. **命令交互层**(`skills/<name>/SKILL.md`,一 skill 一目录)—— 24 个 slash 命令的 prose 指令,只负责提问/确认/调用 CLI verb/解析 JSON/报告。**不重复实现逻辑**,纯 git 动作(如 `git worktree add`)可直接写,其余走 verb。其中 `applying` 是 Tier 1(极小需求)的手动执行入口:按 tasks.md 逐条实现、勾选回填 + 簿记 commit,完成后必经 code review。
 4. **references 层**(`references/`)—— 命令可引用的辅助文档(评审提示 / 调试与防御方法 / 测试要点等),与命令 markdown 分离、不承载交互逻辑,随插件源码跟踪。
 
@@ -54,7 +54,7 @@ speccode 编排的分支拓扑是**双层**:普通需求从 trunk 直接切 `<ty
 
 - **`.speccode/`(运行时数据)vs 插件源码**:仓库根的插件源码(`.claude-plugin/`、`skills/`、`bin/`、`lib/`、`hooks/`、`references/`、`tests/`——单仓三合一后插件根即仓库根)在本仓库被 git 跟踪。而 speccode **运行时**在目标项目产生的 `.speccode/`(config + `state/branches/`(v2 遗留为 `state/features/`)+ `memory/` + `sdd/` + `backup/`)是运行时数据,设计上保持 untracked、插件不往项目 `.gitignore` 加条目(靠命令维护,见设计文档 R4);其中 `memory/` 与 `sdd/` 由插件自写目录内 `.gitignore`(内容 `*`)自忽略。这两者别混淆。仓库根下的 `support/`、`speccode/`(dogfood 规格)、`docs/`、`.github/` 是本仓自用内容,SHALL NOT 被声明进插件组件(打包边界 = plugin.json 声明)。
 
-- **裸调与手动调试**:命令正文裸调 `speccode.mjs`(依赖插件 `bin/` 进 PATH,仅 Claude Code 启用本插件时生效);手动终端调试用 `node bin/speccode.mjs <verb> --cwd .`。
+- **裸调与手动调试**:命令正文裸调 `speccode <verb>`(经 `bin/speccode` wrapper 依赖插件 `bin/` 进 PATH,仅 Claude Code 启用本插件时生效;其他宿主由各自 adapter 提供 PATH shim);手动终端调试用 `node bin/speccode.mjs <verb> --cwd .`。
 
 - **对账算法**(`reconcile.mjs`)是核心:每个涉及 worktree 的命令(creating-worktree / finishing-worktree / finishing-feature / status 等)入口都跑它,扫 `git worktree list` ↔ `state/`(v3 `state/branches/` + v2 遗留 `state/features/` 双格式原样)。管辖识别 = **路径识别**:路径位于 `config.worktree_dir`(缺省 `.claude/worktrees`)之下的 worktree 才归 speccode 管,分支名 / ancestry / `worktree_overrides` 一概不参与(用户手工分支零误伤);orphan = 登记非 completed 的分支在 git 缺失 / worktree_dir 下存在未登记 worktree / `merge_target` 指向分支不存在;`conflicts` 恒 `[]`(输出形状保持兼容,出现即异常);带 `--advance-pr` 时查 PR 状态把 `pr_open` → `completed`(仅 v3 条目,v2 遗留原样跳过)。
 

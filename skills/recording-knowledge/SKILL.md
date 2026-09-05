@@ -7,15 +7,15 @@ description: "把知识直接记录进知识集:经人工闸门写入 speccode/k
 ## 前置
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
-2. **运行位置校验**:运行 `git rev-parse --abbrev-ref HEAD` 取当前分支,并运行 `speccode.mjs reconcile --cwd .` 取 `features`:
+2. **运行位置校验**:运行 `git rev-parse --abbrev-ref HEAD` 取当前分支,并运行 `speccode reconcile --cwd .` 取 `features`:
    - HEAD 为 `chore/knowledge-*` 且 `features` 中存在该分支的 state 登记(status ∈ {pending, in_progress, pr_open})→ 直接进入 §4(在本 knowledge worktree 中执行)。
    - HEAD 为 `config.trunk` → 走 §3「分支引导」。
    - 其他(非 trunk、非 state 登记的 `chore/knowledge-*`)→ 退出并提示「知识维护请在 chore/knowledge-* worktree 分支上进行:回 trunk 运行本命令引导建分支,或 cd 到既有 knowledge worktree」。
 3. **分支引导(仅 trunk 上运行时)**:从 §2 的 reconcile `features` 输出筛选 `branch` 匹配 `^chore/knowledge-` 且 `status ∈ {pending, in_progress, pr_open}` 的条目:
-   - 有命中 → AskUserQuestion 询问「续跑(cd 到该分支 worktree)/ 新建」;续跑 → `cd <该条目的 worktree>` 后进入 §4;新建 → 按无命中流程另起 slug(不得复用同一分支名,该分支仍有未完成 state)。
-   - 无命中 → AskUserQuestion 确认 slug(默认取待记录内容的主题命名 `knowledge-<主题>`,无主题时 `knowledge-record`;须匹配 `^[a-z0-9-]+$`),引导执行 `/speccode:creating-worktree chore/knowledge-<slug>`(type=`chore`,基点 trunk,登记 state)→ 建成后 `cd <worktree>` 进入 §4。若 creating-worktree 检测到大需求父实体并提议从集成分支切出,MUST 坚持基点为 `config.trunk`(知识维护不挂在任何大需求下),不接受其集成基点提议。
+   - 有命中 → 向用户提问(给出选项)询问「续跑(cd 到该分支 worktree)/ 新建」;续跑 → `cd <该条目的 worktree>` 后进入 §4;新建 → 按无命中流程另起 slug(不得复用同一分支名,该分支仍有未完成 state)。
+   - 无命中 → 向用户提问确认(给出选项) slug(默认取待记录内容的主题命名 `knowledge-<主题>`,无主题时 `knowledge-record`;须匹配 `^[a-z0-9-]+$`),引导执行 `/speccode:creating-worktree chore/knowledge-<slug>`(type=`chore`,基点 trunk,登记 state)→ 建成后 `cd <worktree>` 进入 §4。若 creating-worktree 检测到大需求父实体并提议从集成分支切出,MUST 坚持基点为 `config.trunk`(知识维护不挂在任何大需求下),不接受其集成基点提议。
    - 「未完成」判定 MUST 基于 state 查询(reconcile 输出),MUST NOT 依赖 `git branch --no-merged` 等 git merge 判定(squash-only 合并下对已合并分支永真,会把已收尾分支误判为未完成)。
-4. 运行 `speccode.mjs read-knowledge --cwd .`(无 flag)获取现状(topic 清单 + 索引)。
+4. 运行 `speccode read-knowledge --cwd .`(无 flag)获取现状(topic 清单 + 索引)。
 5. `speccode/knowledge/` 不存在 → 创建骨架(同 distilling-knowledge 的 6 development topic 空文件 + `_index.md`,经 write-knowledge 创建,绝不手写)。
 
 ## 收集内容
@@ -27,7 +27,7 @@ description: "把知识直接记录进知识集:经人工闸门写入 speccode/k
 ## 闸门
 
 1. **适配判断**:先对内容做归类陈述——属于 SDD 过程知识(开发守则、架构、环境、对接、坑与评审共识、安全等)→ 建议落入的 topic;属于业务知识(领域术语、业务流程、业务历史等)→ 陈述「更像业务知识,建议进外部 RAG 而非知识集」。归类是建议不是硬拦:用户坚持写入时,允许其指定既有 topic 或新建 topic(新建落在 `development/` 下,文件名小写连字符,`.md` 结尾)。pitfalls 语义含评审中反复出现的问题模式与团队评审共识,不单列 review topic。
-2. 展示草稿(写入位置 + 内容 + 归类陈述)→ AskUserQuestion 确认:
+2. 展示草稿(写入位置 + 内容 + 归类陈述)→ 向用户提问确认(给出选项):
    - 确认 → 收集「新内容 + 整理后的既有手写段」为完整手写区文本,经 `write-knowledge --rel <topic路径> --json-stdin`(mode=replace-hand,content=完整手写区文本)原子写(手写区整体替换,蒸馏块字节级保留,布局归位为手写段在前);
    - 坚持写入(被建议进 RAG 时)→ 按用户指定的 topic 写入;
    - 修改 → 按反馈调整后重展示。
@@ -48,9 +48,9 @@ description: "把知识直接记录进知识集:经人工闸门写入 speccode/k
    git commit -m "docs(knowledge): record <topic>"
    ```
 3. **收尾**:落盘提交完成后,引导执行 `/speccode:finishing-worktree` 收尾(测试门禁 + 按 `merge_target` 的 PR 路由 + squash-only 探测 + 切回 merge_target);建议在 PR 菜单选「PR+不等待」。从 finishing-worktree 的输出取得 PR url(或 `pr_tool=none` 时的等效命令)。
-4. **memory(trunk 级)**:finishing-worktree 收尾取得 PR url(或等效命令)**之后**,经 `speccode.mjs write-memory --cwd . --branch _knowledge --json-stdin`(mode=append)追加本次记录摘要(写入位置 + topic)**+ PR url**(`pr_tool=none` 时记等效命令与维护分支名):
+4. **memory(trunk 级)**:finishing-worktree 收尾取得 PR url(或等效命令)**之后**,经 `speccode write-memory --cwd . --branch _knowledge --json-stdin`(mode=append)追加本次记录摘要(写入位置 + topic)**+ PR url**(`pr_tool=none` 时记等效命令与维护分支名):
    ```bash
-   speccode.mjs write-memory --cwd . --branch _knowledge --json-stdin <<'EOF'
+   speccode write-memory --cwd . --branch _knowledge --json-stdin <<'EOF'
    {"mode":"append","content":"<摘要 + PR url>"}
    EOF
    ```

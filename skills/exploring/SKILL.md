@@ -34,15 +34,15 @@ description: "探索需求:学习/探索/提问澄清,结论留在会话上下�
 
 ## 代码智能工具咨询
 
-开头运行 `speccode.mjs read-config --cwd .` 读取 config:
+开头运行 `speccode read-config --cwd .` 读取 config:
 - 若 `code_intel_tools` 非空:逐项判断其能力在当前会话是否可用(对应 MCP server/agent/CLI 是否在场);可用 → 参考代码时 MUST 优先用它(减少代码索引的 token 消耗、更好理解项目);不可用 → 回退 Grep/Glob/Read。
 - 若 `code_intel_tools` 为空或 config 缺失:静默使用基础工具。
 - 任何情况下工具缺失或不可用 MUST NOT 导致报错。
 
 ## 知识库入口
 
-1. 运行 `speccode.mjs read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
-2. 判断本任务相关主题 → `speccode.mjs read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
+1. 运行 `speccode read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
+2. 判断本任务相关主题 → `speccode read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
 3. 读取失败或目录不存在 → 静默跳过,绝不阻断主流程(T0 兜底,永不报错)。
 
 ## 你不必做的事
@@ -58,7 +58,7 @@ description: "探索需求:学习/探索/提问澄清,结论留在会话上下�
 当用户表示探索结束(或结论已明朗)时,先触发 onExplored 钩子(探索在 trunk 上进行、尚无分支上下文,payload 只带 `command`):
 
 ```bash
-echo '{"command":"exploring"}' | speccode.mjs run-hook --cwd . --event onExplored
+echo '{"command":"exploring"}' | speccode run-hook --cwd . --event onExplored
 ```
 
 输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
@@ -68,7 +68,7 @@ echo '{"command":"exploring"}' | speccode.mjs run-hook --cwd . --event onExplore
 探索结论成形后、写记忆之前,MUST 做形态确认并经用户选择:
 
 1. agent 从探索内容找信号形成建议——**决定性信号**:「要么整体上线要么全不上线」的交付约束;辅助:工作可分解为多个子需求且共享同一次上线、子需求间依赖/共享基础设施、并行开发意图;**反例信号**:各部分可独立上线。
-2. AskUserQuestion 三岔:**单普通需求**(引导 `/speccode:creating-worktree`)/ **多个独立普通需求**(逐个走普通流程,不建集成)/ **大需求(整体上线)**(引导 `/speccode:creating-feature`)。
+2. 向用户三岔提问(给出选项):**单普通需求**(引导 `/speccode:creating-worktree`)/ **多个独立普通需求**(逐个走普通流程,不建集成)/ **大需求(整体上线)**(引导 `/speccode:creating-feature`)。
 3. 大需求确认后:父 slug 与子需求清单(语义化 slug)MUST 写入本探索 topic 的记忆内容;记忆写入的分支键:大需求 → `_exploring/<父 slug>`;各子需求如有独立探索 → 各自 topic。
 
 形态判断 MUST NOT 静默生效;误判无破坏性(误建集成可留用,漏判可手动补建),但确认一步 MUST 不省。
@@ -76,13 +76,13 @@ echo '{"command":"exploring"}' | speccode.mjs run-hook --cwd . --event onExplore
 **写记忆(按归属)**:先把探索结论摘要交给用户确认,再按归属写入 memory。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,摘要含单引号也会破壳):
 - 归属既有 feature → 追加到该 feature 的 memory:
   ```bash
-  speccode.mjs write-memory --cwd . --branch <F> --json-stdin <<'EOF'
+  speccode write-memory --cwd . --branch <F> --json-stdin <<'EOF'
   {"mode":"append","content":"<摘要>"}
   EOF
   ```
-- 无归属(尚无 feature)→ **先列 topic 再写入**:运行 `speccode.mjs list-memory --cwd .` 取既有探索 topic 清单(返回 `topics` 数组,形如 `["_exploring/payment-rework", ...]`;仅在返回 `ok:true` 时读取 `topics`);用 AskUserQuestion 让用户**选既有 topic 或新建**(topic 匹配 `^[a-z0-9-]+$`;清单为空则新建)。大需求的分期探索用共同前缀约定命名 topic(如 `<主题>-p1`、`<主题>-p2`)——各期承接互不携带他期内容,跨期进度与设计结论查 state、git history 与 spec 主规格,不进 memory。同名需求跨 session MUST 优先选既有 topic 追加,防碎片化。选定后追加到该 topic 文件,供后续 creating-feature 按 slug=topic 约定承接:
+- 无归属(尚无 feature)→ **先列 topic 再写入**:运行 `speccode list-memory --cwd .` 取既有探索 topic 清单(返回 `topics` 数组,形如 `["_exploring/payment-rework", ...]`;仅在返回 `ok:true` 时读取 `topics`);向用户提问(给出选项),让用户**选既有 topic 或新建**(topic 匹配 `^[a-z0-9-]+$`;清单为空则新建)。大需求的分期探索用共同前缀约定命名 topic(如 `<主题>-p1`、`<主题>-p2`)——各期承接互不携带他期内容,跨期进度与设计结论查 state、git history 与 spec 主规格,不进 memory。同名需求跨 session MUST 优先选既有 topic 追加,防碎片化。选定后追加到该 topic 文件,供后续 creating-feature 按 slug=topic 约定承接:
   ```bash
-  speccode.mjs write-memory --cwd . --branch _exploring/<topic> --json-stdin <<'EOF'
+  speccode write-memory --cwd . --branch _exploring/<topic> --json-stdin <<'EOF'
   {"mode":"append","content":"<摘要>"}
   EOF
   ```

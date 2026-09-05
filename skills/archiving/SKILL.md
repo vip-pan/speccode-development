@@ -9,13 +9,13 @@ description: "归档本次需求变更:speccode/changes/<slug>/ 移入 speccode/
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
 2. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须为非 trunk 的 `<type>/<slug>` 形态分支;否则退出并提示「请在开发分支上运行本命令」(防止直提 trunk)。
 3. 确定 slug:默认取当前 worktree 所属 feature 的 slug 段;用户也可在命令参数中显式指定。`speccode/changes/<slug>/` 不存在 → 报错退出。
-4. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
+4. **读记忆**:运行 `speccode read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ## 归档前检查(警告不硬阻断)
 
 1. **任务完成检查(按现存勾选清单计数)**:tasks.md 仍有勾选语义(存在 `- [ ]`)→ 数它的未完成条目;tasks.md 已被 plan 接管(无勾选、含接管标记)或 plan/ 存在 → 数 plan/ 下计划的未完成 step。两处都无勾选语义 → 跳过该检查。有未完成 → 展示数量并询问是否继续归档;用户确认才继续。
 2. **sync 状态评估**:对照 `changes/<slug>/propose/specs/` 的 delta 与 `speccode/spec/` 主规格,判断是否还有未合并的变更(逐 capability:ADDED 是否都在、MODIFIED 是否已应用、REMOVED 是否已删、RENAMED 是否已改名)。
-   - 有未合并 → 展示差异摘要,用 AskUserQuestion 提供:「先 syncing(推荐) / 不归档 / 仍然归档」。
+   - 有未合并 → 展示差异摘要,向用户提问(给出选项):「先 syncing(推荐) / 不归档 / 仍然归档」。
      - 先 syncing → 按 `/speccode:syncing` 的流程**同步执行**(不后台化——移动目录会抽掉 syncing 正在读的文件),完成后 MUST 重新逐 capability 复验全部 delta(不只是 syncing 报告触碰的那些);复验不一致 → 报告并停止,不归档。
      - 不归档 → 退出。
      - 仍然归档 → 继续。
@@ -41,7 +41,7 @@ git commit -m "docs(speccode): archive <slug>"
 commit 成功后触发 onArchived 钩子:
 
 ```bash
-echo '{"command":"archiving","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onArchived
+echo '{"command":"archiving","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode run-hook --cwd . --event onArchived
 ```
 
 输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
@@ -49,7 +49,7 @@ echo '{"command":"archiving","feature_branch":"<F>","worktree_branch":"<W>"}' | 
 **写记忆**:把本命令产出的决策/进度摘要(归档路径、sync 状态,经用户确认或按本命令内置判据)追加到本 feature 的 memory。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,摘要含单引号也会破壳):
 
 ```bash
-speccode.mjs write-memory --cwd . --branch <F> --json-stdin <<'EOF'
+speccode write-memory --cwd . --branch <F> --json-stdin <<'EOF'
 {"mode":"append","content":"<摘要>"}
 EOF
 ```

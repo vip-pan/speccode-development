@@ -8,11 +8,11 @@ description: "完成开发分支并按 merge_target 路由合并(集成分支本
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
 2. HEAD 必须在功能分支(`<type>/<slug>`、非 trunk);否则退出。
-3. `speccode.mjs reconcile --cwd . --advance-pr`;conflicts 非空 → 报告退出(v3 恒空,出现即异常);找到本分支 state,读取 `merge_target`(缺省语义 = trunk)。
+3. `speccode reconcile --cwd . --advance-pr`;conflicts 非空 → 报告退出(v3 恒空,出现即异常);找到本分支 state,读取 `merge_target`(缺省语义 = trunk)。
 4. 读记忆 `read-memory --branch <F>`。
 5. `--resume`:state 的 `pending_operation.command="finishing-worktree"` 时按 phase 续跑。
 
-- **变更文档存在性检查(Tier 0 防线)**:检查 `speccode/changes/<slug>/` 是否存在(本分支的变更文档);缺失 → 警告「本分支疑似未走文档链(vibe coding),成果将无法回溯」并用 AskUserQuestion 询问是否继续,用户确认才继续,警告不硬阻断。
+- **变更文档存在性检查(Tier 0 防线)**:检查 `speccode/changes/<slug>/` 是否存在(本分支的变更文档);缺失 → 警告「本分支疑似未走文档链(vibe coding),成果将无法回溯」并向用户提问(给出选项)询问是否继续,用户确认才继续,警告不硬阻断。
 
 ## 全量测试门禁
 
@@ -36,7 +36,7 @@ description: "完成开发分支并按 merge_target 路由合并(集成分支本
 ### merge_target 缺省(trunk)——菜单恰好三项
 
 1. 同步 base:`git push origin <config.trunk>`;non-fast-forward → 中止提示处理分叉。
-2. 建 PR 前探测:运行 `speccode.mjs repo-merge-config --cwd .`;`squashOnly:false` → 打印警告「建议在仓库设置启用 squash-only 合并」+ 指路,不阻断;`config:null` → 静默(无法探测)。
+2. 建 PR 前探测:运行 `speccode repo-merge-config --cwd .`;`squashOnly:false` → 打印警告「建议在仓库设置启用 squash-only 合并」+ 指路,不阻断;`config:null` → 静默(无法探测)。
 3. `git push -u origin <branch>`;pr_tool 建 PR(base=trunk);`pr_tool=none` → 打印等效命令并中止。
 4. onPrOpened 钩子(payload 带 pr_number)。
 5. **PR+等待**:每 30s `query-pr`,超时 30min;MERGED → 清理 + state completed;CLOSED/CONFLICTING → 报错退出;UNKNOWN 连续 3 次中止;TIMEOUT → 写 `pending_operation{command:"finishing-worktree", phase:"waiting_worktree_pr", pr_number}` 提示 `--resume`。
@@ -46,7 +46,7 @@ description: "完成开发分支并按 merge_target 路由合并(集成分支本
 
 ### 丢弃路径(仅显式要求)
 
-展示分支名、完整 commit 列表、worktree 路径 → 用户逐字输入 `discard` → 清理 + 从 state 删除(`speccode.mjs delete-state --cwd . --branch <branch>`;父实体 children 不动——slug 保留供重开)。
+展示分支名、完整 commit 列表、worktree 路径 → 用户逐字输入 `discard` → 清理 + 从 state 删除(`speccode delete-state --cwd . --branch <branch>`;父实体 children 不动——slug 保留供重开)。
 
 ## 清理(来源限定)
 

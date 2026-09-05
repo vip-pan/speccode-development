@@ -3,7 +3,7 @@
 Use this template when dispatching an implementer subagent.
 
 ```
-Subagent (general-purpose):
+Subagent:
   description: "Implement Task N: [task name]"
   model: [MODEL — REQUIRED: choose per the Model Selection section of
          /speccode:subagent-driven-development; an omitted

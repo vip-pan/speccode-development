@@ -8,19 +8,19 @@ description: "从 trunk 或集成分支切出开发分支(git worktree)并登记
 
 1. `read-config` 加载 config;为 null → 提示先 `/speccode:init` 并退出。
 2. HEAD 校验:基点判定为集成分支时,若主仓 HEAD 恰在该集成分支上则直接采用,否则以基点判定结果为准(显式 ref);普通需求(基点 trunk)对 HEAD 无要求——分支由本命令创建(`git worktree add -b`),不要求预先存在。
-3. 运行 `speccode.mjs reconcile --cwd . --advance-pr`:
+3. 运行 `speccode reconcile --cwd . --advance-pr`:
    - `conflicts` 非空 → 报告冲突并退出(v3 中应为恒空,出现即异常,提示人工检查 state)。
    - `orphans` 非空 → 告知用户,但不阻断创建。
-4. 运行 `speccode.mjs read-memory --cwd . --branch <基点分支>`(有父实体时读父实体,否则跳过)作为上下文。
+4. 运行 `speccode read-memory --cwd . --branch <基点分支>`(有父实体时读父实体,否则跳过)作为上下文。
 
 ## 决定分支名与基点
 
 1. **参数直给**:参数中已含 `<type>/<slug>` 形式完整分支名 → 直接采用;slug 即探索 topic 名(slug=topic 约定),按该约定查找承接。
-2. **topic 选择**:参数未直给时,运行 `speccode.mjs list-memory --cwd .` 取既有探索 topic 清单;非空 → AskUserQuestion 选既有 topic(或新建/跳过),slug 预填 topic 名,type 从所选 topic 内容推断;清单为空 → 直接询问。推断 MUST NOT 静默生效。
+2. **topic 选择**:参数未直给时,运行 `speccode list-memory --cwd .` 取既有探索 topic 清单;非空 → 向用户提问选既有 topic(给出选项)(或新建/跳过),slug 预填 topic 名,type 从所选 topic 内容推断;清单为空 → 直接询问。推断 MUST NOT 静默生效。
 3. **基点判定**(依 state 中的 `kind:"integration"` 父实体):
    - 0 个父实体 → 基点 = `config.trunk`(普通需求),打印「普通需求:从 <trunk> 切出」。
    - 恰好 1 个 → 打印「检测到父实体 <branch>(大需求),将从其集成 head 切出」并经用户确认。
-   - ≥2 个 → AskUserQuestion 列出父实体供选;直给完整分支名时跳过本判定。
+   - ≥2 个 → 向用户提问列出父实体供选(给出选项);直给完整分支名时跳过本判定。
 4. **校验 slug**:`^[a-z0-9-]+$`;非法 → 拒绝并提示合法字符集;确认恰好一个 `/`。
 
 ## 创建

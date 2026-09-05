@@ -8,7 +8,7 @@ new breakage. It is not a fresh review — the full review already happened.
 that the fix itself broke nothing.
 
 ```
-Subagent (general-purpose):
+Subagent:
   description: "Re-review Task N fix round R"
   model: [MODEL — REQUIRED: choose per the Model Selection section of
          /speccode:subagent-driven-development; an omitted
@@ -102,7 +102,7 @@ Subagent (general-purpose):
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
 - `[FIX_BASE_SHA]` — the head the previous review saw
 - `[HEAD_SHA]` — current commit
-- `[DIFF_FILE]` — the path `speccode.mjs review-package --cwd . --plan
+- `[DIFF_FILE]` — the path `speccode review-package --cwd . --plan
   PLAN_FILE --base FIX_BASE --head HEAD` printed as the JSON `path` field
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),

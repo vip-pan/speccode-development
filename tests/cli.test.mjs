@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { rmSync, mkdirSync, realpathSync, writeFileSync, readFileSync, mkdtempSync, existsSync } from 'node:fs';
+import { rmSync, mkdirSync, realpathSync, writeFileSync, readFileSync, mkdtempSync, existsSync, readdirSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -1151,5 +1151,56 @@ test('reconcile resolves a relative config worktree_dir against the repo root, n
   assert.ok(json.orphans.length === 1 && json.orphans[0].includes('stray'),
     `expected the stray worktree as orphan, got ${JSON.stringify(json.orphans)}`);
   rmSync(elsewhere, { recursive: true, force: true });
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('skills 宿主中立守卫:无宿主专属 token、无 speccode.mjs 调用形态', () => {
+  const skillsDir = join(__dirname, '..', 'skills');
+  const files = readdirSync(skillsDir, { recursive: true })
+    .map((f) => String(f))
+    .filter((f) => f.endsWith('SKILL.md'));
+  assert.ok(files.length >= 24, `expected >=24 SKILL.md, found ${files.length}`);
+  const refDir = join(__dirname, '..', 'references');
+  const refFiles = readdirSync(refDir).filter((f) => f.endsWith('.md'));
+  for (const rel of [...files.map((f) => `skills/${f}`), ...refFiles.map((f) => `references/${f}`)]) {
+    const md = readFileSync(join(__dirname, '..', rel), 'utf8');
+    for (const token of ['AskUserQuestion', 'CLAUDE_PLUGIN_ROOT', 'general-purpose', 'subagent_type', 'TodoWrite']) {
+      assert.ok(!md.includes(token), `${rel} 不得残留宿主专属 token: ${token}`);
+    }
+    assert.ok(!/speccode\.mjs\s+[a-z]/.test(md), `${rel} 不得残留 speccode.mjs 调用形态(应为 speccode <verb>)`);
+  }
+});
+
+test('bin/speccode wrapper 可执行且与 node 直调输出一致', () => {
+  const repo = makeRepo();
+  const wrapper = join(__dirname, '..', 'bin', 'speccode');
+  const viaWrapper = spawnSync(wrapper, ['resolve-speccode-dir', '--cwd', repo], { encoding: 'utf8' });
+  const viaNode = spawnSync('node', [BIN, 'resolve-speccode-dir', '--cwd', repo], { encoding: 'utf8' });
+  assert.equal(viaWrapper.status, 0, `wrapper exit ${viaWrapper.status}: ${viaWrapper.stderr}`);
+  assert.equal(viaWrapper.stdout.trim(), viaNode.stdout.trim(), 'wrapper 与 node 直调输出必须一致');
+
+  // 符号链接 shim:非 CC 宿主的 PATH shim 可以 symlink 到本 wrapper,$0 必须解析到真实位置
+  const shimDir = mkdtempSync(join(tmpdir(), 'speccode-shim-'));
+  symlinkSync(wrapper, join(shimDir, 'speccode'));
+  const viaShim = spawnSync(join(shimDir, 'speccode'), ['resolve-speccode-dir', '--cwd', repo], { encoding: 'utf8' });
+  assert.equal(viaShim.status, 0, `symlink shim exit ${viaShim.status}: ${viaShim.stderr}`);
+  assert.equal(viaShim.stdout.trim(), viaNode.stdout.trim(), 'symlink shim 与 node 直调输出必须一致');
+
+  // stdin 管道写法:写 verb 经 wrapper 必须正确接收管道输入
+  const viaWrite = spawnSync(wrapper, ['write-config', '--cwd', repo, '--json-stdin'],
+    { input: JSON.stringify({ version: 2, worktree_dir: 'wts' }), encoding: 'utf8' });
+  assert.equal(viaWrite.status, 0, `write via wrapper exit ${viaWrite.status}: ${viaWrite.stderr}`);
+  assert.ok(JSON.parse(viaWrite.stdout.trim()).ok, 'write-config via wrapper must return ok');
+
+  rmSync(shimDir, { recursive: true, force: true });
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('plugin-root verb 输出有效插件根', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'plugin-root', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.ok(json.ok);
+  assert.ok(existsSync(join(json.root, 'bin', 'speccode.mjs')), '插件根下必须存在 bin/speccode.mjs');
   rmSync(repo, { recursive: true, force: true });
 });

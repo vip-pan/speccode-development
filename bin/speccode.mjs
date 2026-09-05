@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
 import { join, dirname, resolve, isAbsolute } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { isatty } from 'node:tty';
 import { git } from '../lib/git.mjs';
 import { detectPrToolFromUrl, isInstalled, queryPrState, repoMergeConfig, isSquashOnly } from '../lib/prtool.mjs';
@@ -54,6 +55,10 @@ function speccodeDirOf(cwd) {
 
 const VERBS = {
   'resolve-speccode-dir': ({ cwd }) => ({ ok: true, speccodeDir: speccodeDirOf(cwd) }),
+  // Self-locating plugin root: anchored on this file's own location, so it is
+  // independent of how the plugin is installed and of the invoking cwd. Skills
+  // use it to reference in-plugin files without host-specific variables.
+  'plugin-root': () => ({ ok: true, root: resolve(dirname(fileURLToPath(import.meta.url)), '..') }),
 
   'detect-remote': ({ cwd }) => {
     const remote = 'origin';

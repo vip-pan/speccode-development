@@ -1,0 +1,14 @@
+#!/bin/sh
+# speccode CLI shim — resolves speccode.mjs next to this wrapper. The plugin
+# bin/ directory is added to PATH by the Claude Code plugin mechanism; other
+# hosts reach this wrapper through a PATH shim installed by their adapter.
+# Symlinks are resolved so a shim may symlink to this wrapper.
+self="$0"
+while [ -L "$self" ]; do
+  target="$(readlink "$self")"
+  case "$target" in
+    /*) self="$target" ;;
+    *) self="$(dirname "$self")/$target" ;;
+  esac
+done
+exec node "$(dirname "$self")/speccode.mjs" "$@"

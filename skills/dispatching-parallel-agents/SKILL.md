@@ -6,6 +6,8 @@ description: "面对 2+ 个无共享状态、无顺序依赖的独立任务时,�
 
 ## 概览
 
+> **宿主能力依赖**:本 skill 依赖宿主的子代理派发能力。宿主无子代理时,各任务由主代理在当前会话串行完成(不并行、不降级到其他 skill)。
+
 你把任务委派给拥有隔离上下文的专门代理。通过精确构造它们的指令与上下文,你确保它们聚焦并胜任自己的任务。它们绝不应继承你会话的上下文或历史——你要精确构造它们需要的一切。这也把你自己的上下文留给协调工作。
 
 当你有多个互不相关的失败(不同的测试文件、不同的子系统、不同的 bug)时,串行逐个调查是在浪费时间。每个调查都是独立的,可以并行进行。
@@ -72,9 +74,9 @@ digraph when_to_use {
 在同一条回复里发出全部三个子代理派发——它们并行运行:
 
 ```text
-Subagent (general-purpose): "Fix agent-tool-abort.test.ts failures"
-Subagent (general-purpose): "Fix batch-completion-behavior.test.ts failures"
-Subagent (general-purpose): "Fix tool-approval-race-conditions.test.ts failures"
+Subagent: "Fix agent-tool-abort.test.ts failures"
+Subagent: "Fix batch-completion-behavior.test.ts failures"
+Subagent: "Fix tool-approval-race-conditions.test.ts failures"
 # All three run concurrently.
 ```
 

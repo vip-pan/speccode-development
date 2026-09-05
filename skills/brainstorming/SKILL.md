@@ -15,15 +15,15 @@ description: "苏格拉底式设计精化:一次一问、多方案权衡、分�
 ## 前置
 
 1. **trunk 防护**:`git rev-parse --abbrev-ref HEAD` 必须为非 trunk 的 `<type>/<slug>` 形态分支;否则退出并提示「请在开发分支上运行本命令」(防止直提 trunk)。(`read-config` 先跑,为 null → 提示先 `/speccode:init` 并退出)。
-2. 运行 `speccode.mjs reconcile --cwd .`,用返回的 features 找到当前 worktree 所属的功能分支 F;找不到 → 报错退出。计算 slug = F 的 slug 段。
+2. 运行 `speccode reconcile --cwd .`,用返回的 features 找到当前 worktree 所属的功能分支 F;找不到 → 报错退出。计算 slug = F 的 slug 段。
 3. **读既有文档**:若 `speccode/changes/<slug>/propose/` 存在,读其中的 proposal/design/specs/tasks 作为脑暴起点;不存在 → 本命令将从零产出设计(简单场景可不经 proposing 直接使用本命令)。
 4. **代码智能工具咨询**:若 `code_intel_tools` 非空且其能力在会话中可用,参考代码时优先使用;不可用回退 Grep/Glob/Read,不报错。
-5. **读记忆**:运行 `speccode.mjs read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
+5. **读记忆**:运行 `speccode read-memory --cwd . --branch <F>`;返回非 null 时把 memory 内容作为既有上下文参考,再继续。
 
 ## 知识库入口
 
-1. 运行 `speccode.mjs read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
-2. 判断本任务相关主题 → `speccode.mjs read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
+1. 运行 `speccode read-knowledge --cwd . --index` 读 `_index.md`(恒读,便宜);`exists:false` → 静默跳过本节。
+2. 判断本任务相关主题 → `speccode read-knowledge --cwd . --topic <名称>` 读对应 topic 文件;`exists:false` → 静默跳过该主题。
 3. 读取失败或目录不存在 → 静默跳过,绝不阻断主流程(T0 兜底,永不报错)。
 
 ## 检查清单
@@ -90,12 +90,12 @@ description: "苏格拉底式设计精化:一次一问、多方案权衡、分�
 - `git add speccode/changes/<slug>/` + `git commit -m "docs(speccode): brainstorm <slug>"`
 - commit 成功后触发 onBrainstormed 钩子:
   ```bash
-  echo '{"command":"brainstorming","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode.mjs run-hook --cwd . --event onBrainstormed
+  echo '{"command":"brainstorming","feature_branch":"<F>","worktree_branch":"<W>"}' | speccode run-hook --cwd . --event onBrainstormed
   ```
   输出 `hook.ok=false` 或含 `warning` 时打印警告(含事件名与错误摘要),MUST NOT 阻断主流程。
 - **写记忆**:把本命令产出的决策/进度摘要(经用户确认或按本命令内置判据)追加到本 feature 的 memory。用 heredoc 经 stdin 传 JSON(不用 `echo '<json>'`:zsh 会把 `\n` 解释成字面换行,摘要含单引号也会破壳):
   ```bash
-  speccode.mjs write-memory --cwd . --branch <F> --json-stdin <<'EOF'
+  speccode write-memory --cwd . --branch <F> --json-stdin <<'EOF'
   {"mode":"append","content":"<摘要>"}
   EOF
   ```
@@ -116,4 +116,4 @@ description: "苏格拉底式设计精化:一次一问、多方案权衡、分�
 
 **逐问题决策:** 即使已接受,每个问题都要判断走浏览器还是终端。判据:**用户看比读更好理解吗?** mockup/线框/布局对比/架构图/并排视觉设计 → 浏览器;需求问题、概念选择、权衡列表、A/B/C/D 文字选项、范围决策 → 终端。UI 话题不自动等于可视化问题。
 
-用户同意后,先读详细指南再操作:`${CLAUDE_PLUGIN_ROOT}/references/visual-companion.md`。启动命令:`bash ${CLAUDE_PLUGIN_ROOT}/references/visual-companion-scripts/start-server.sh --project-dir <项目根> --open`(产物持久化到 `.speccode/brainstorm/`)。
+用户同意后,先读详细指南再操作:`$(speccode plugin-root --cwd .)/references/visual-companion.md`。启动命令:`bash $(speccode plugin-root --cwd .)/references/visual-companion-scripts/start-server.sh --project-dir <项目根> --open`(产物持久化到 `.speccode/brainstorm/`)。
