@@ -6,7 +6,7 @@
 
 ## 1. speccode 是什么
 
-speccode 是一个 Claude Code 流程编排插件,用一组 `/speccode:*` slash 命令把「多需求并行开发 + spec 文档托管 + PR/MR 流程标准化」这些原本靠人工约定的环节固化为可执行原语。
+speccode 是一个面向 coding-agent CLI 的流程编排插件——Claude Code 为经过持续 dogfood 的主宿主,并提供 Codex、Kimi Code、ZCode、OpenCode、Pi 适配(各宿主安装状态见 §11 的多宿主入口表)——用一组 `/speccode:*` slash 命令把「多需求并行开发 + spec 文档托管 + PR/MR 流程标准化」这些原本靠人工约定的环节固化为可执行原语。
 
 **适用场景**:在同一仓库内**并行开发多个需求**的小团队或个人开发者——当你需要同时跑几个需求、大需求再拆多个子分支并行施工,又不想在「文档放哪」「该从哪个分支切」「PR 谁来开」这些问题上反复纠结时,speccode 提供了一条端到端的默认路径。
 

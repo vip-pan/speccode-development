@@ -1,6 +1,6 @@
 # speccode
 
-基于 Claude Code 的整套 SDD(规格驱动开发)与自动化开发体系——不只是插件,而是一套完整方法论:多需求并行开发、spec 文档仓内托管、PR 流程标准化,外加自托管工具链 dogfood 整条工作流。`speccode` 插件(24 个 `/speccode:*` 命令)是把 SDD 方法论(探索/文档/计划/子代理执行/评审)固化成默认路径的运行时;本仓库还托管规格主档(`speccode/spec/`)、每次变更的归档,以及自动化本仓库自身开发的开发工作流 skills。
+面向 coding-agent CLI 的整套 SDD(规格驱动开发)与自动化开发体系——Claude Code 为经过持续 dogfood 的主宿主,并提供 Codex、Kimi Code、ZCode、OpenCode、Pi 适配(各宿主安装状态见 [references/host-mapping/README.md](./references/host-mapping/README.md))——不只是插件,而是一套完整方法论:多需求并行开发、spec 文档仓内托管、PR 流程标准化,外加自托管工具链 dogfood 整条工作流。`speccode` 插件(24 个 `/speccode:*` 命令)是把 SDD 方法论(探索/文档/计划/子代理执行/评审)固化成默认路径的运行时;本仓库还托管规格主档(`speccode/spec/`)、每次变更的归档,以及自动化本仓库自身开发的开发工作流 skills。
 
 [English](README.md) | [简体中文](README_CN.md)
 
@@ -8,7 +8,7 @@
 
 ## 为什么用 speccode
 
-- ✅ **多需求并行** —— trunk / feature / worktree 三层拓扑,对账算法自动归属每个 worktree,多 feature、多 worktree 并行施工互不干扰。
+- ✅ **多需求并行** —— 双层拓扑:普通需求从 trunk 直切 `<type>/<slug>` 开发分支(git worktree),大需求 opt-in 集成分支;对账算法自动归属每个 worktree,多 feature、多 worktree 并行施工互不干扰。
 - ✅ **文档仓内托管** —— spec 文档(`speccode/changes → spec/ → archive/`)所有分支 tracked、落盘即提交,随 PR 链路上 trunk。
 - ✅ **流程标准化** —— 24 命令 + hooks(14 个生命周期事件)+ 跨会话 memory,团队约定变成可执行原语。
 - ✅ **自托管自动化开发** —— 本仓库用 speccode 开发自身(dogfood):每次变更走完整 SDD 链路,规格主档与归档仓内托管,开发工作流 skills 自动化仓库自身流程。一个可运行的自动化开发体系样板,而不只是一个待安装的插件。
@@ -51,6 +51,8 @@ $ /speccode:finishing-feature
 
 安装后命令以 `/speccode:` 前缀出现,如 `/speccode:init`、`/speccode:status`、`/speccode:finishing-feature`。
 
+**其他 coding agent?** speccode 为 Codex、Kimi Code、ZCode、OpenCode、Pi 提供薄适配——各宿主的安装入口、工具映射与验证状态见 [references/host-mapping/README.md](./references/host-mapping/README.md)。非 Claude Code 宿主还需把引擎 shim 装进 PATH:`bash scripts/install-shim.sh`。
+
 ## 24 个命令速览
 
 | 组 | 命令 |
@@ -64,11 +66,12 @@ $ /speccode:finishing-feature
 
 流程按需求体量分三层:极小需求可走 Tier 1(proposing 后由 `/speccode:applying` 按 tasks.md 逐条手动实现),中小型走 writing-plans + SDD/executing-plans,复杂需求先 brainstorming。
 
-## 三层分支拓扑
+## 双层分支拓扑
 
 ```
-origin/trunk ── feature/<slug> ──┬── worktree-a(并行施工)
-                                 └── worktree-b(并行施工)
+origin/trunk ── <type>/<slug> 开发分支(git worktree)──┬── worktree-a(并行施工)
+                                                      └── worktree-b(并行施工)
+大需求(opt-in):trunk ── 集成分支 ── 子开发分支
 spec 文档在所有分支 tracked,随 PR 链路上 trunk
 ```
 
@@ -78,9 +81,9 @@ spec 文档在所有分支 tracked,随 PR 链路上 trunk
 
 | 能力 | speccode | [superpowers](https://github.com/obra/superpowers) | [spec-kit](https://github.com/github/spec-kit) | 手工约定 |
 |---|---|---|---|---|
-| 三层分支拓扑 + 对账 | ✅ | — | — | — |
+| 双层分支拓扑(开发分支即 worktree)+ 对账 | ✅ | — | — | — |
 | spec 文档仓内托管(全分支 tracked) | ✅ | — | 部分 | — |
-| Claude Code 原生插件 | ✅ | ✅ | —(跨 agent CLI) | — |
+| 多宿主安装(6 个 coding agent) | ✅(CC 已验证;其余宿主状态见 host-mapping) | ✅ | ✅(跨 agent CLI) | — |
 | SDD 方法论(探索/文档/计划/执行/评审) | ✅(自包含移植) | ✅(来源) | — | — |
 | 生命周期 hooks + 跨会话 memory | ✅ | — | — | — |
 | PR/MR 流程标准化 | ✅ | — | — | — |
@@ -95,11 +98,12 @@ spec 文档在所有分支 tracked,随 PR 链路上 trunk
 
 | 文档 | 内容 |
 |---|---|
-| [设计文档](./docs/DESIGN_CN.md) | 24 命令详表、三层拓扑、R1-R13 风险、0.1→0.2 迁移(插件设计文档) |
+| [设计文档](./docs/DESIGN_CN.md) | 24 命令详表、双层拓扑、R1-R13 风险、0.1→0.2 迁移(插件设计文档) |
 | [CHANGELOG](./CHANGELOG.md) | 版本发布记录(Keep a Changelog,全中文) |
+| [宿主映射](./references/host-mapping/README.md) | 六个受支持 coding agent 的安装入口、工具映射与验证状态 |
 | [AGENTS.md](./AGENTS.md) | 开发文档真源(`CLAUDE.md` 为 Claude Code 薄壳):引擎三层架构、测试约定、speccode 工作流 |
 | `support/` | 开发工作流 skill(真源)与辅助脚本——`speccode-workflow` 经 `support/install-skills.sh` 安装到 `.claude/skills/`,供 Claude Code 懒加载 |
-| `speccode/spec/` · `speccode/archive/` | SDD 规格主档(11 个 capability)与变更归档——体系自身的活文档 |
+| `speccode/spec/` · `speccode/archive/` | SDD 规格主档(能力键制的当前态快照含于其中)与变更归档——体系自身的活文档 |
 
 ## 贡献
 

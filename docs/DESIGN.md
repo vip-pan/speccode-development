@@ -6,7 +6,7 @@
 
 ## 1. What is speccode
 
-speccode is a Claude Code workflow orchestration plugin that turns the practices previously held together by manual convention — parallel development of multiple requirements, spec document hosting, and a standardized PR/MR flow — into executable primitives exposed as `/speccode:*` slash commands.
+speccode is a workflow orchestration plugin for coding-agent CLIs — Claude Code as the primary, dogfooded host, with adapters for Codex, Kimi Code, ZCode, OpenCode, and Pi (per-host install status in Section 11's multi-host table) — that turns the practices previously held together by manual convention — parallel development of multiple requirements, spec document hosting, and a standardized PR/MR flow — into executable primitives exposed as `/speccode:*` slash commands.
 
 **Who it's for**: small teams or solo developers running **multiple requirements in parallel inside the same repo** — when you need to run several requirements at once, split a large requirement into multiple child branches for parallel work, and don't want to keep second-guessing "where do the docs go", "which branch do I branch from", "who opens the PR" — speccode offers an end-to-end default path.
 

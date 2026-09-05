@@ -5,7 +5,7 @@
     {
       "name": "speccode",
       "source": "./",
-      "description": "多需求并行开发 + spec 文档托管 + PR/MR 流程标准化 + SDD 方法论(探索/文档/计划/子代理执行/评审)的流程编排插件"
+      "description": "多需求并行开发 + spec 文档托管 + PR/MR 流程标准化 + SDD 方法论(探索/文档/计划/子代理执行/评审)的多宿主流程编排插件——Claude Code 主宿主,附 Codex / Kimi Code / ZCode / OpenCode / Pi 适配(各宿主安装状态见仓库 references/host-mapping/)"
     }
   ]
 }
