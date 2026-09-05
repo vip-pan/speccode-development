@@ -280,7 +280,7 @@ test('resolve-worktree-dir returns default when config lacks the key', () => {
   const { code, json } = runCli(repo, 'resolve-worktree-dir', '--cwd', repo);
   assert.equal(code, 0);
   assert.deepEqual({ dir: json.dir, source: json.source },
-    { dir: '.claude/worktrees', source: 'default' });
+    { dir: '.speccode/worktrees', source: 'default' });
   rmSync(repo, { recursive: true, force: true });
 });
 
@@ -1202,5 +1202,26 @@ test('plugin-root verb 输出有效插件根', () => {
   assert.equal(code, 0);
   assert.ok(json.ok);
   assert.ok(existsSync(join(json.root, 'bin', 'speccode.mjs')), '插件根下必须存在 bin/speccode.mjs');
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('detect-host verb: explicit override wins, invalid id errors', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'detect-host', '--cwd', repo, '--host', 'zcode');
+  assert.equal(code, 0);
+  assert.deepEqual({ ok: json.ok, host: json.host, source: json.source },
+    { ok: true, host: 'zcode', source: 'explicit' });
+  const bad = runCli(repo, 'detect-host', '--cwd', repo, '--host', 'cursor');
+  assert.equal(bad.code, 1);
+  assert.equal(bad.json.ok, false);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('detect-code-intel-tools passes config.host to probes', () => {
+  const repo = makeRepo();
+  const { code, json } = runCli(repo, 'detect-code-intel-tools', '--cwd', repo);
+  assert.equal(code, 0);
+  assert.equal(json.host, null, 'config 缺失时 host 为 null(全量探测)');
+  assert.equal(json.tools.length, 5);
   rmSync(repo, { recursive: true, force: true });
 });

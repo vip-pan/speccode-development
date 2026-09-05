@@ -178,7 +178,7 @@ speccode/
 └── sdd/                                 # SDD 执行工件:task brief / review 包 / ledger(自忽略 .gitignore)
 ```
 
-- **`config.json`**:全局静态配置,config v3 字段集:`version`(=3)、`initialized_at`、`trunk`、`remote`、`pr_tool`、`worktree_dir`、`code_intel_tools`;`hooks` 仅在用户配置时存在(v2 的 `worktree_prefix` 已随双层拓扑退役,幂等 init 会经字段 diff 移除)。整体写入只发生在 `/speccode:init`(全新或幂等)与 `/speccode:reset`;此外 `/speccode:creating-worktree` 在 config 缺少 `worktree_dir` 时会询问存放目录,并经 `write-config` 把该字段回写进 config(读当前 config → 加字段 → 整体写回)。**备份不是 `write-config` 的自动行为**:`config.json.bak.<timestamp>` 由 init 幂等流程与 reset 流程在改写前显式调用 `backup-config` 生成,creating-worktree 的单字段回写不产生备份。
+- **`config.json`**:全局静态配置,config v3 字段集:`version`(=3)、`initialized_at`、`trunk`、`remote`、`pr_tool`、`worktree_dir`、`code_intel_tools`;`host`(可选,init 时经用户确认;缺失 = 未记录,走全量探测)仅在确认后存在;`hooks` 仅在用户配置时存在(v2 的 `worktree_prefix` 已随双层拓扑退役,幂等 init 会经字段 diff 移除)。整体写入只发生在 `/speccode:init`(全新或幂等)与 `/speccode:reset`;此外 `/speccode:creating-worktree` 在 config 缺少 `worktree_dir` 时会询问存放目录,并经 `write-config` 把该字段回写进 config(读当前 config → 加字段 → 整体写回)。**备份不是 `write-config` 的自动行为**:`config.json.bak.<timestamp>` 由 init 幂等流程与 reset 流程在改写前显式调用 `backup-config` 生成,creating-worktree 的单字段回写不产生备份。
 - **`state/branches/`**:每条 active 分支一个独立文件(`<type>__<slug>.json`,双下划线分隔 type 与 slug),记录该分支状态(`pending | in_progress | pr_open | completed`)与挂起的 `pending_operation`(供 `--resume` 续跑);父实体(`kind:"integration"`)另存 children 清单(仅子 slug,纯身份),子分支状态实时派生、不存储于父实体。v2 遗留的 `state/features/` 文件按 v2 语义原样读写(双格式兼容,init 可显式迁移)。多分支并行各写各的文件,无需加锁。
 - **`memory/`**:feature 级会话记忆(见第 8 节),插件自写 `.gitignore`(内容 `*`)使其对 `git status` 隐身、免于 `git clean -fd`。
 - **`sdd/`**:SDD 执行工件,归属**当前 worktree 根**(而非主仓根),随 `git worktree remove` 一并清理;同样自忽略。
@@ -225,8 +225,8 @@ speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>_
 
 `/speccode:init` 探测五类代码智能工具:**understand-anything / CodeGraph / Graphify / CodeMap / GitNexus**,覆盖四类来源:
 
-1. **插件**:`~/.claude/plugins/installed_plugins.json`
-2. **MCP**:项目 `.mcp.json`、`~/.claude.json`(含项目 local scope)
+1. **插件**:`~/.claude/plugins/installed_plugins.json`(仅 claude-code 宿主 / 未记录宿主)
+2. **MCP**:项目 `.mcp.json`、`~/.claude.json`(含项目 local scope;仅 claude-code 宿主 / 未记录宿主)
 3. **CLI**:`command -v <bin>`
 4. **项目目录**:如 `.ua/`、`.codegraph/` 等
 
@@ -242,7 +242,7 @@ speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>_
 - **R3 — init 逐字段幂等时用户可能误改 trunk 等字段** → 缓解:每个变化字段确认时 MUST 显示 `[旧值] → [新值]` diff,只有用户选择「改用新值」后才写入。
 - **R4 — `.speccode/` 不在 `.gitignore`,`git clean -fdx` 会丢配置** → 缓解:在 init 提示与本 README 中明确警告;不在命令层面强制保护(与「插件不改 `.gitignore`、不越权改写用户 git 机制」的原则一致)。见第 14 节的重要警告。
 - **R5 — 阻塞等 PR 合并默认 30 分钟超时,长 PR review 可能不够** → 缓解:超时是软限制,挂起态写入 `pending_operation`,`--resume` 允许后续续跑,不会永久卡死命令。
-- **R6 — worktree 目录可配置,默认 `.claude/worktrees`** → 缓解:`.claude/` 本身已是 untracked,git 不会误扫为待提交内容;init 时可通过 config `worktree_dir` 覆盖默认值,`creating-worktree` 建目录前做 check-ignore 校验。
+- **R6 — worktree 目录可配置,默认 `.speccode/worktrees`** → 缓解:`.speccode/` 本身是 untracked 的运行时数据域,git 不会误扫为待提交内容;init 时可通过 config `worktree_dir` 覆盖默认值,`creating-worktree` 建目录前做 check-ignore 校验。
 - **R8 — 跨平台(Windows / macOS / Linux)路径与命令差异** → 缓解:实现以 macOS / Linux 为主,Windows 支持不在目标范围内;命令实现尽量依赖 `git` / `gh` / `glab` 自身的跨平台行为,不在 shell 层做平台判断。
 - **R9 — `pr_open` 的分支依赖对账推进** → 缓解:`creating-worktree` / `finishing-worktree` / `finishing-feature` / `status` 入口都会跑对账,任一命令执行都会把已合并的 `pr_open` 分支推进为 `completed`;若用户合并 PR 后从不再跑任何 speccode 命令,状态不会自动更新——可接受,`status` 是显式查询入口,随时可手动触发。
 - **R11 — hooks 以 `sh -c` 在当前用户完整权限下执行** → 缓解与威胁模型:① 失败语义 warn-only(30s 超时、`run-hook` 永远 exit 0),hook 不能破坏主流程;② `config.hooks` 之所以安全,是因为 `.speccode/` **按约定 untracked**——hook 命令不可能经由 clone / PR / merge 进入他人仓库,能写 config 的只有本机用户自己跑的 `init`;③ hook payload 的取值由 `slug.mjs` 结构性约束(type 是封闭枚举、slug 匹配 `/^[a-z0-9-]+$/`),路径类字段由引擎生成,不含任意用户输入。

@@ -56,7 +56,7 @@ speccode 编排的分支拓扑是**双层**:普通需求从 trunk 直接切 `<ty
 
 - **裸调与手动调试**:命令正文裸调 `speccode <verb>`(经 `bin/speccode` wrapper 依赖插件 `bin/` 进 PATH,仅 Claude Code 启用本插件时生效;其他宿主由各自 adapter 提供 PATH shim);手动终端调试用 `node bin/speccode.mjs <verb> --cwd .`。
 
-- **对账算法**(`reconcile.mjs`)是核心:每个涉及 worktree 的命令(creating-worktree / finishing-worktree / finishing-feature / status 等)入口都跑它,扫 `git worktree list` ↔ `state/`(v3 `state/branches/` + v2 遗留 `state/features/` 双格式原样)。管辖识别 = **路径识别**:路径位于 `config.worktree_dir`(缺省 `.claude/worktrees`)之下的 worktree 才归 speccode 管,分支名 / ancestry / `worktree_overrides` 一概不参与(用户手工分支零误伤);orphan = 登记非 completed 的分支在 git 缺失 / worktree_dir 下存在未登记 worktree / `merge_target` 指向分支不存在;`conflicts` 恒 `[]`(输出形状保持兼容,出现即异常);带 `--advance-pr` 时查 PR 状态把 `pr_open` → `completed`(仅 v3 条目,v2 遗留原样跳过)。
+- **对账算法**(`reconcile.mjs`)是核心:每个涉及 worktree 的命令(creating-worktree / finishing-worktree / finishing-feature / status 等)入口都跑它,扫 `git worktree list` ↔ `state/`(v3 `state/branches/` + v2 遗留 `state/features/` 双格式原样)。管辖识别 = **路径识别**:路径位于 `config.worktree_dir`(缺省 `.speccode/worktrees`)之下的 worktree 才归 speccode 管,分支名 / ancestry / `worktree_overrides` 一概不参与(用户手工分支零误伤);orphan = 登记非 completed 的分支在 git 缺失 / worktree_dir 下存在未登记 worktree / `merge_target` 指向分支不存在;`conflicts` 恒 `[]`(输出形状保持兼容,出现即异常);带 `--advance-pr` 时查 PR 状态把 `pr_open` → `completed`(仅 v3 条目,v2 遗留原样跳过)。
 
 - **分支状态枚举**:`pending | in_progress | pr_open | completed`(定义在 `state.mjs` 的 `WORKTREE_STATUS`,reconcile/CLI/命令三处用法必须一致;v3 一分支一 state,v2 遗留 `state/features/` 的 worktree 条目沿用同一枚举)。
 

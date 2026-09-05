@@ -124,3 +124,19 @@ test('v3 reconcile: pr_open advances to completed via queryPr (unchanged semanti
   assert.equal(readState(sc, 'feature/pr').status, 'completed');
   rmSync(repo, { recursive: true, force: true });
 });
+
+test('reconcile: 不传 worktreeDir 时按中性缺省根解析(与 detect 单源)', () => {
+  // realpathSync: git worktree list prints real paths; on macOS /var is a
+  // symlink to /private/var — same discipline as the tests above.
+  const repo = realpathSync(makeRepo());
+  const sc = join(repo, '.speccode');
+  mkdirSync(join(sc, 'state', 'branches'), { recursive: true });
+  mkdirSync(join(repo, '.speccode', 'worktrees'), { recursive: true });
+  const add = spawnSync('git', ['worktree', 'add', join(repo, '.speccode/worktrees/stray'), '-b', 'feature/stray'],
+    { cwd: repo, encoding: 'utf8' });
+  assert.equal(add.status, 0, add.stderr);
+  // 不传 worktreeDir → 走 DEFAULT_WORKTREE_DIR 缺省(与 detect.mjs 单源)
+  const res = reconcile(sc, { cwd: repo });
+  assert.ok(res.orphans.some((o) => o.includes('stray')), 'stray 必须经缺省根识别为 orphan');
+  rmSync(repo, { recursive: true, force: true });
+});
