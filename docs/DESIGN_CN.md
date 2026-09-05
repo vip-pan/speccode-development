@@ -265,6 +265,21 @@ speccode 为每个 feature 维护一份跨会话记忆:`.speccode/memory/<type>_
 
 注意:GitHub Release / tag 只是给人看的发布标记,**不触发**任何自动更新;更新检测完全由 marketplace git 拉取后的 `plugin.json` version 比对驱动。
 
+### 多宿主安装入口
+
+Claude Code 是主宿主;另有五个宿主从同一仓库安装(薄 per-host adapter 指向共享 `skills/`)。标注「待验证」的入口未在真机验证——总览表与各宿主映射文档见 `references/host-mapping/README.md`。
+
+| 宿主 | 入口 | 映射载体 | 状态 |
+|---|---|---|---|
+| Claude Code | marketplace | prose 原生 | 主宿主,持续 dogfood |
+| Codex | `.codex-plugin/plugin.json` | `references/host-mapping/codex.md` | 安装待验证 |
+| Kimi Code | `.kimi-plugin/plugin.json` | manifest `skillInstructions` + 映射文档 | 安装待验证 |
+| ZCode | `.zcode-plugin/plugin.json` | manifest `skillInstructions` + 映射文档 | 待验证(按 Kimi 同款假设) |
+| OpenCode | `.opencode/INSTALL.md` | `references/host-mapping/opencode.md` | 待验证 |
+| Pi | `.pi/extensions/speccode.ts` | `references/host-mapping/pi.md` | 待验证 |
+
+非 Claude Code 宿主还需把引擎 shim 装进 PATH:`bash scripts/install-shim.sh`。
+
 ### 命令对照表
 
 | v0.1 | v0.2 |

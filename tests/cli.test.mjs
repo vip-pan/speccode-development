@@ -1225,3 +1225,58 @@ test('detect-code-intel-tools passes config.host to probes', () => {
   assert.equal(json.tools.length, 5);
   rmSync(repo, { recursive: true, force: true });
 });
+
+test('install-shim.sh: --dest installs a working symlink shim', () => {
+  const repo = realpathSync(makeRepo());
+  const dest = mkdtempSync(join(tmpdir(), 'speccode-shimdest-'));
+  const r = spawnSync('bash', [join(__dirname, '..', 'scripts', 'install-shim.sh'), '--dest', dest], { encoding: 'utf8' });
+  assert.equal(r.status, 0, `shim install exit ${r.status}: ${r.stderr || r.stdout}`);
+  // spec 场景:以该目录在 PATH 中调用(把 dest 前置进 PATH,而非绝对路径直调)
+  const out = spawnSync(join(dest, 'speccode'), ['plugin-root', '--cwd', repo],
+    { encoding: 'utf8', env: { ...process.env, PATH: `${dest}:${process.env.PATH}` } });
+  assert.equal(out.status, 0, `shim call exit ${out.status}: ${out.stderr}`);
+  const viaNode = spawnSync('node', [BIN, 'plugin-root', '--cwd', repo], { encoding: 'utf8' });
+  assert.equal(out.stdout.trim(), viaNode.stdout.trim(), 'shim 与 node 直调输出必须一致');
+  rmSync(dest, { recursive: true, force: true });
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test('install-shim.sh: unwritable dest fails loudly with manual command', () => {
+  // 父路径是一个已存在的文件 → mkdir -p 必然失败,与平台/权限无关的确定性拒绝
+  const blocker = mkdtempSync(join(tmpdir(), 'speccode-shimblock-'));
+  const filePath = join(blocker, 'file');
+  writeFileSync(filePath, 'x');
+  const r = spawnSync('bash', [join(__dirname, '..', 'scripts', 'install-shim.sh'), '--dest', join(filePath, 'x')], { encoding: 'utf8' });
+  assert.notEqual(r.status, 0, '不可写场景必须非零退出');
+  const output = `${r.stdout}${r.stderr}`;
+  assert.ok(output.includes('ln -sfn'), '必须打印等效手动命令');
+  rmSync(blocker, { recursive: true, force: true });
+});
+
+test('host-adapters: manifests parse, skills point at shared dir, zcode marked 待验证', () => {
+  for (const f of ['.codex-plugin/plugin.json', '.kimi-plugin/plugin.json', '.zcode-plugin/plugin.json']) {
+    const m = JSON.parse(readFileSync(join(__dirname, '..', f), 'utf8'));
+    assert.equal(m.name, 'speccode', `${f} name 必须为 speccode`);
+    assert.match(String(m.skills), /^\.\/skills\/?$/, `${f} skills 必须精确指向 ./skills/`);
+  }
+  // spec 场景「六宿主入口齐备」:五个非 CC 入口都必须在仓库根存在
+  assert.ok(existsSync(join(__dirname, '..', '.opencode', 'INSTALL.md')), '.opencode/INSTALL.md 必须存在');
+  assert.ok(existsSync(join(__dirname, '..', '.pi', 'extensions', 'speccode.ts')), '.pi/extensions/speccode.ts 必须存在');
+  const zc = readFileSync(join(__dirname, '..', '.zcode-plugin', 'plugin.json'), 'utf8');
+  assert.ok(zc.includes('待验证'), 'zcode manifest 必须显式标注待验证');
+});
+
+test('host-mapping docs: five hosts with three sections each, not referenced by skills', () => {
+  for (const h of ['codex', 'kimi-code', 'zcode', 'opencode', 'pi']) {
+    const md = readFileSync(join(__dirname, '..', 'references', 'host-mapping', `${h}.md`), 'utf8');
+    assert.ok(md.includes('## 安装'), `${h}.md 必须含「安装」段`);
+    assert.ok(md.includes('## 工具映射'), `${h}.md 必须含「工具映射」段`);
+    assert.ok(md.includes('## 宿主注意'), `${h}.md 必须含「宿主注意」段`);
+  }
+  const skillsDir = join(__dirname, '..', 'skills');
+  const files = readdirSync(skillsDir, { recursive: true }).map(String).filter((f) => f.endsWith('SKILL.md'));
+  for (const rel of files) {
+    const md = readFileSync(join(skillsDir, rel), 'utf8');
+    assert.ok(!md.includes('host-mapping'), `${rel} 不得引用宿主映射文档(host-neutral-prose)`);
+  }
+});

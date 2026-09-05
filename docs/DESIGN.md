@@ -266,6 +266,21 @@ For users, a plugin upgrade is a set of Claude Code commands, not a fresh clone:
 
 Note: GitHub Releases / tags are just release markers for humans and **trigger no automatic update**; the update check is driven entirely by the `plugin.json` version comparison after the marketplace git pull.
 
+### Multi-host install entries
+
+Claude Code is the primary host; five more hosts install from this same repository (thin per-host adapters pointing at the shared `skills/`). Entries marked 待验证 have not been verified on real machines — see `references/host-mapping/README.md` for the overview table and per-host mapping docs.
+
+| Host | Entry | Mapping | Status |
+|---|---|---|---|
+| Claude Code | marketplace | native | primary, dogfooded |
+| Codex | `.codex-plugin/plugin.json` | `references/host-mapping/codex.md` | install unverified |
+| Kimi Code | `.kimi-plugin/plugin.json` | manifest `skillInstructions` + mapping doc | install unverified |
+| ZCode | `.zcode-plugin/plugin.json` | manifest `skillInstructions` + mapping doc | unverified (Kimi-shaped assumption) |
+| OpenCode | `.opencode/INSTALL.md` | `references/host-mapping/opencode.md` | unverified |
+| Pi | `.pi/extensions/speccode.ts` | `references/host-mapping/pi.md` | unverified (extension API assumed) |
+
+Non-Claude-Code hosts also need the engine shim on PATH: `bash scripts/install-shim.sh`.
+
 ### Command mapping
 
 | v0.1 | v0.2 |

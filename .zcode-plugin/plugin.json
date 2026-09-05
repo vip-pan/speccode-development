@@ -1,0 +1,12 @@
+{
+  "name": "speccode",
+  "description": "Multi-requirement parallel development, in-repo spec hosting, standardized PR flow, and SDD methodology (explore / document / plan / subagent execution / review) — a process orchestration plugin.",
+  "author": { "name": "speccode" },
+  "license": "MIT",
+  "homepage": "https://github.com/vip-pan/speccode",
+  "repository": "https://github.com/vip-pan/speccode",
+  "keywords": ["workflow", "git", "worktree", "pr", "sdd", "tdd", "hooks", "memory"],
+  "_note": "ZCode adapter follows the Kimi Code manifest shape (user-confirmed assumption). 待验证: manifest schema, field names and install command have NOT been verified against official ZCode docs — verify before release.",
+  "skills": "./skills/",
+  "skillInstructions": "Speccode tool mapping for ZCode (待验证 — tool names below assume Kimi-Code-compatible semantics; verify against official ZCode docs):\n- When a speccode skill says to ask the user (one question at a time, presenting concrete options), call ZCode's structured question tool if it provides one; otherwise ask in plain text, one question at a time.\n- When a speccode skill says to dispatch a subagent, use ZCode's agent/subagent mechanism (待验证 tool name). Speccode skills that depend on subagents declare a fallback route — follow it when no subagent mechanism is available.\n- Speccode engine calls are written as `speccode <verb> --cwd .`. Ensure the engine shim is on PATH first: run `bash scripts/install-shim.sh` from the plugin root once. If the shim is missing, call `node <plugin-root>/bin/speccode.mjs <verb> --cwd .` instead (plugin root = the directory containing this manifest).\n- Use ZCode's file/shell/search tools by their actual exposed names.\n- For in-plugin reference files, resolve the plugin root via `speccode plugin-root --cwd .` rather than hardcoding paths."
+}

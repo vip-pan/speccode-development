@@ -1,0 +1,11 @@
+{
+  "name": "speccode",
+  "description": "Multi-requirement parallel development, in-repo spec hosting, standardized PR flow, and SDD methodology (explore / document / plan / subagent execution / review) — a process orchestration plugin.",
+  "author": { "name": "speccode" },
+  "license": "MIT",
+  "homepage": "https://github.com/vip-pan/speccode",
+  "repository": "https://github.com/vip-pan/speccode",
+  "keywords": ["workflow", "git", "worktree", "pr", "sdd", "tdd", "hooks", "memory"],
+  "skills": "./skills/",
+  "skillInstructions": "Speccode tool mapping for Kimi Code:\n- When a speccode skill says to ask the user (one question at a time, presenting concrete options), call Kimi Code's `AskUserQuestion` tool. Fall back to plain assistant text only if `AskUserQuestion` is unavailable or the session is in an auto permission mode.\n- When a speccode skill says to dispatch a subagent (implementer / reviewer / explorer), use Kimi Code's `Agent` tool. Speccode skills that depend on subagents declare a fallback route for hosts without subagents — follow it when the Agent tool is unavailable.\n- Speccode engine calls are written as `speccode <verb> --cwd .`. Ensure the engine shim is on PATH first: run `bash scripts/install-shim.sh` from the plugin root once. If the shim is missing, call `node <plugin-root>/bin/speccode.mjs <verb> --cwd .` instead (plugin root = the directory containing this manifest).\n- Use Kimi Code's `Read`, `Write`, `Edit`, `Bash`, `Grep`, `Glob`, and web tools by their actual exposed names.\n- For in-plugin reference files, resolve the plugin root via `speccode plugin-root --cwd .` rather than hardcoding paths."
+}

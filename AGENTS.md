@@ -8,7 +8,7 @@ speccode 是一个 **Claude Code 流程编排插件**,用一组 `/speccode:*` sl
 
 完整设计文档见 `docs/DESIGN.md`(定位、命令快速参考表、双层分支拓扑图、风险 R1-R13)。规格主档在 `speccode/spec/`(capability 目录以该目录现状为准),归档在 `speccode/archive/`。
 
-文档分工:根 `README.md`(英文)/ `README_CN.md`(中文)是 marketplace 用户门面,`docs/DESIGN.md`(英文)/ `docs/DESIGN_CN.md`(中文)是插件设计文档,本文件(AGENTS.md)是开发文档(不翻译)。本仓库是**单仓三合一**:仓库根即插件根,同时是 marketplace 仓(`.claude-plugin/` 内 `plugin.json` 与 `marketplace.json` 并存,`marketplace.json` 的 `plugins[0].source` 为 `"./"`)。
+文档分工:根 `README.md`(英文)/ `README_CN.md`(中文)是 marketplace 用户门面,`docs/DESIGN.md`(英文)/ `docs/DESIGN_CN.md`(中文)是插件设计文档,本文件(AGENTS.md)是开发文档(不翻译)。本仓库是**单仓三合一**:仓库根即插件根,同时是 marketplace 仓(`.claude-plugin/` 内 `plugin.json` 与 `marketplace.json` 并存,`marketplace.json` 的 `plugins[0].source` 为 `"./"`)。仓库根另有五个多宿主 adapter 目录(`.codex-plugin/`、`.kimi-plugin/`、`.zcode-plugin/`、`.opencode/`、`.pi/`,分发配置而非自用工具,惰性不进打包声明)与 `scripts/install-shim.sh`(非 CC 宿主的 PATH shim 安装器);宿主映射文档在 `references/host-mapping/`,总览见该目录 README。
 
 **多语言维护**:根 README 与设计文档各有中英两版(README.md=EN,README_CN.md=zh;DESIGN.md=EN,DESIGN_CN.md=zh),两版结构一一对应(根 11 段 / 设计文档 §1-14),任何内容改动 MUST 同步全部语言版本;两版均不得硬编码版本号与测试数量(以 CHANGELOG 链接为单一数据源)。
 
